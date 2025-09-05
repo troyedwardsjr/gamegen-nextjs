@@ -1,15 +1,17 @@
 "use client";
 
-import React from "react";
-import {
-  GlassmorphicCard,
-  GlassmorphicButton,
-  GlassmorphicInput,
-  GlassmorphicBadge,
-  GlassmorphicAlert
-} from "@/components/ui";
+import React, { useState } from "react";
+import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
+import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
+import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
+import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
+import { GlassmorphicAlert } from "@/components/ui/GlassmorphicAlert";
+import { GlassmorphicModal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@/components/ui/GlassmorphicModal";
+import { GlassmorphicDropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@/components/ui/GlassmorphicDropdown";
 
 export default function GlassmorphicTestPage() {
+  const {isOpen, onOpen, onClose} = useDisclosure();
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-purple-900 p-8">
       <div className="max-w-7xl mx-auto">
@@ -95,7 +97,74 @@ export default function GlassmorphicTestPage() {
             />
           </div>
         </section>
+
+        {/* Modal Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-white mb-4">Modal</h2>
+          <div className="flex gap-4">
+            <GlassmorphicButton variant="gaming" glow onPress={onOpen}>
+              Open Gaming Modal
+            </GlassmorphicButton>
+          </div>
+        </section>
+
+        {/* Dropdown Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-white mb-4">Dropdown</h2>
+          <div className="flex gap-4">
+            <GlassmorphicDropdown variant="gaming">
+              <DropdownTrigger>
+                <GlassmorphicButton variant="gaming">
+                  Gaming Menu
+                </GlassmorphicButton>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem key="new">New Game</DropdownItem>
+                <DropdownItem key="load">Load Game</DropdownItem>
+                <DropdownItem key="settings">Settings</DropdownItem>
+                <DropdownItem key="quit" className="text-danger" color="danger">
+                  Quit Game
+                </DropdownItem>
+              </DropdownMenu>
+            </GlassmorphicDropdown>
+          </div>
+        </section>
       </div>
+
+      {/* Modal */}
+      <GlassmorphicModal 
+        isOpen={isOpen} 
+        onClose={onClose}
+        variant="gaming"
+        size="md"
+        gamePattern
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            Game Settings
+          </ModalHeader>
+          <ModalBody>
+            <p>Configure your game preferences:</p>
+            <GlassmorphicInput
+              label="Player Name"
+              placeholder="Enter your name"
+              variant="gaming"
+            />
+            <div className="flex gap-2 flex-wrap">
+              <GlassmorphicBadge variant="gaming">Level 25</GlassmorphicBadge>
+              <GlassmorphicBadge variant="success">Online</GlassmorphicBadge>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <GlassmorphicButton variant="glass" onPress={onClose}>
+              Cancel
+            </GlassmorphicButton>
+            <GlassmorphicButton variant="gaming" glow onPress={onClose}>
+              Save Settings
+            </GlassmorphicButton>
+          </ModalFooter>
+        </ModalContent>
+      </GlassmorphicModal>
     </div>
   );
 }
