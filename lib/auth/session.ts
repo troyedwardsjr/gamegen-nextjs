@@ -273,29 +273,41 @@ export class SessionManager {
    * Get device fingerprint for session tracking
    */
   getDeviceFingerprint(): string {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    ctx!.textBaseline = 'top'
-    ctx!.font = '14px Arial'
-    ctx!.fillText('Device fingerprint', 2, 2)
-    
-    const fingerprint = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width + 'x' + screen.height,
-      new Date().getTimezoneOffset(),
-      canvas.toDataURL(),
-    ].join('|')
-    
-    // Simple hash function
-    let hash = 0
-    for (let i = 0; i < fingerprint.length; i++) {
-      const char = fingerprint.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash // Convert to 32-bit integer
+    // Only run in browser environment
+    if (typeof window === 'undefined') {
+      return 'server-side'
     }
-    
-    return hash.toString(36)
+
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.textBaseline = 'top'
+        ctx.font = '14px Arial'
+        ctx.fillText('Device fingerprint', 2, 2)
+      }
+      
+      const fingerprint = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        `${screen.width}x${screen.height}` || '0x0',
+        new Date().getTimezoneOffset().toString(),
+        canvas.toDataURL(),
+      ].join('|')
+      
+      // Simple hash function
+      let hash = 0
+      for (let i = 0; i < fingerprint.length; i++) {
+        const char = fingerprint.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // Convert to 32-bit integer
+      }
+      
+      return hash.toString(36)
+    } catch (error) {
+      console.warn('Error generating device fingerprint:', error)
+      return 'fallback-' + Math.random().toString(36).substr(2, 9)
+    }
   }
 
   private async enrichSession(session: Session): Promise<ExtendedSession> {
@@ -321,7 +333,7 @@ export class SessionManager {
         tier: profile.subscription_tier as ExtendedSession['tier'],
         permissions: profile.permissions || [],
         deviceInfo: {
-          userAgent: navigator.userAgent,
+          userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server-side',
           fingerprint: this.getDeviceFingerprint(),
           lastActive: new Date(),
         },
@@ -346,6 +358,11 @@ export class SessionManager {
   }
 
   private setupActivityTracking(): void {
+    // Only set up activity tracking in browser environment
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
     
     events.forEach(event => {

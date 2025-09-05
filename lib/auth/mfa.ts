@@ -4,8 +4,7 @@
  */
 
 import { createAuthClient } from './client'
-import { createAuthServerClient } from './server'
-import * as crypto from 'crypto'
+import { randomBytes, toBase32, fromBase32, sha256, hmacSha1, generateSecureRandomString } from './crypto-utils'
 
 export interface MFAConfiguration {
   enabled: boolean
@@ -31,7 +30,7 @@ export interface MFAVerificationResult {
 }
 
 export class MFAManager {
-  private supabase = typeof window !== 'undefined' ? createAuthClient() : createAuthServerClient()
+  private supabase = createAuthClient()
   
   /**
    * Enable MFA for a user
@@ -111,7 +110,7 @@ export class MFAManager {
         return false
       }
 
-      const isValid = this.verifyTOTPCode(config.totp_secret, code)
+      const isValid = await this.verifyTOTPCode(config.totp_secret, code)
       if (!isValid) {
         return false
       }
@@ -142,7 +141,7 @@ export class MFAManager {
 
       // Try TOTP first or if specified
       if (!method || method === 'totp') {
-        if (config.totp_secret && this.verifyTOTPCode(config.totp_secret, code)) {
+        if (config.totp_secret && await this.verifyTOTPCode(config.totp_secret, code)) {
           await this.updateLastVerified(userId)
           return { success: true, method: 'totp' }
         }
@@ -228,14 +227,14 @@ export class MFAManager {
   }
 
   private generateTOTPSecret(): string {
-    return crypto.randomBytes(20).toString('base32').replace(/=/g, '')
+    return toBase32(randomBytes(20)).replace(/=/g, '')
   }
 
   private generateBackupCodes(count = 10): string[] {
     const codes: string[] = []
     for (let i = 0; i < count; i++) {
       // Generate 8-digit backup codes
-      const code = Math.random().toString().slice(2, 10)
+      const code = generateSecureRandomString(8)
       codes.push(code)
     }
     return codes
@@ -243,18 +242,18 @@ export class MFAManager {
 
   private async hashBackupCodes(codes: string[]): Promise<string[]> {
     return Promise.all(codes.map(async (code) => {
-      return crypto.createHash('sha256').update(code).digest('hex')
+      return await sha256(code)
     }))
   }
 
-  private verifyTOTPCode(secret: string, code: string): boolean {
+  private async verifyTOTPCode(secret: string, code: string): Promise<boolean> {
     const window = 1 // Allow 1 time step tolerance (30 seconds before/after)
     const timeStep = 30
     const currentTime = Math.floor(Date.now() / 1000)
     
     for (let i = -window; i <= window; i++) {
       const time = Math.floor(currentTime / timeStep) + i
-      const expectedCode = this.generateTOTPCode(secret, time)
+      const expectedCode = await this.generateTOTPCode(secret, time)
       if (expectedCode === code) {
         return true
       }
@@ -263,18 +262,27 @@ export class MFAManager {
     return false
   }
 
-  private generateTOTPCode(secret: string, time: number): string {
-    const buffer = Buffer.alloc(8)
-    buffer.writeUInt32BE(0, 0)
-    buffer.writeUInt32BE(time, 4)
+  private async generateTOTPCode(secret: string, time: number): Promise<string> {
+    // Create time buffer (8 bytes)
+    const timeBuffer = new Uint8Array(8)
+    const dataView = new DataView(timeBuffer.buffer)
+    dataView.setUint32(0, 0)
+    dataView.setUint32(4, time)
 
-    const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'base32'))
-    hmac.update(buffer)
-    const digest = hmac.digest()
+    // Convert base32 secret to bytes
+    const secretBytes = fromBase32(secret)
+    
+    // Generate HMAC-SHA1
+    const digest = await hmacSha1(secretBytes, timeBuffer)
 
+    // Extract dynamic binary code
     const offset = digest[digest.length - 1] & 0xf
-    const code = (digest.readUInt32BE(offset) & 0x7fffffff) % 1000000
+    const binaryCode = ((digest[offset] & 0x7f) << 24) |
+                      ((digest[offset + 1] & 0xff) << 16) |
+                      ((digest[offset + 2] & 0xff) << 8) |
+                      (digest[offset + 3] & 0xff)
 
+    const code = binaryCode % 1000000
     return code.toString().padStart(6, '0')
   }
 
@@ -294,7 +302,7 @@ export class MFAManager {
   }
 
   private async verifyBackupCode(userId: string, code: string, hashedCodes: string[]): Promise<MFAVerificationResult> {
-    const hashedInput = crypto.createHash('sha256').update(code).digest('hex')
+    const hashedInput = await sha256(code)
     const codeIndex = hashedCodes.indexOf(hashedInput)
     
     if (codeIndex === -1) {
