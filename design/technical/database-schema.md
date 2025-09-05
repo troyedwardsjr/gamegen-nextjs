@@ -202,6 +202,106 @@ CREATE TABLE game_assets (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Game scripts for Toxoid engine execution
+CREATE TABLE game_scripts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    game_id UUID REFERENCES games(id) ON DELETE CASCADE NOT NULL,
+    creator_id UUID REFERENCES profiles(id) NOT NULL,
+    
+    -- Script metadata
+    name TEXT NOT NULL CHECK (length(name) >= 1 AND length(name) <= 100),
+    script_type TEXT NOT NULL CHECK (script_type IN ('system', 'component', 'observer', 'behavior', 'initialization')),
+    description TEXT CHECK (length(description) <= 500),
+    
+    -- Script content
+    javascript_code TEXT NOT NULL CHECK (length(javascript_code) >= 1),
+    source_hash TEXT NOT NULL, -- SHA-256 hash for change detection
+    
+    -- Toxoid-specific metadata
+    toxoid_metadata JSONB DEFAULT '{
+        "api_calls": [],
+        "components_used": [],
+        "entities_affected": [],
+        "memory_estimate": 0,
+        "performance_score": 5
+    }',
+    
+    -- AI generation metadata
+    generated_by_ai BOOLEAN DEFAULT FALSE,
+    generation_prompt TEXT,
+    generation_model TEXT,
+    rag_context_used JSONB DEFAULT '[]', -- Context retrieved for generation
+    
+    -- Execution metadata
+    is_active BOOLEAN DEFAULT TRUE,
+    execution_order INTEGER DEFAULT 0, -- For system execution ordering
+    dependencies TEXT[] DEFAULT '{}', -- Other script IDs this depends on
+    
+    -- Validation and security
+    validation_status TEXT DEFAULT 'pending' CHECK (validation_status IN ('pending', 'valid', 'invalid', 'warning')),
+    validation_errors JSONB DEFAULT '[]',
+    security_analysis JSONB DEFAULT '{}', -- Security scan results
+    
+    -- Performance tracking
+    average_execution_time DECIMAL(10,3) DEFAULT 0, -- milliseconds
+    memory_usage_peak INTEGER DEFAULT 0, -- bytes
+    error_count INTEGER DEFAULT 0,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Script execution history and logs
+CREATE TABLE script_execution_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    script_id UUID REFERENCES game_scripts(id) ON DELETE CASCADE NOT NULL,
+    game_id UUID REFERENCES games(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+    
+    -- Execution details
+    execution_start TIMESTAMPTZ NOT NULL,
+    execution_duration INTEGER, -- milliseconds
+    execution_phase TEXT CHECK (execution_phase IN ('initialization', 'pre_update', 'update', 'post_update')),
+    
+    -- Results
+    success BOOLEAN NOT NULL,
+    error_message TEXT,
+    console_output TEXT,
+    
+    -- Performance metrics
+    memory_used INTEGER, -- bytes
+    entities_processed INTEGER DEFAULT 0,
+    
+    -- Context
+    execution_context JSONB DEFAULT '{}', -- Game state, entity count, etc.
+    
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Script version history
+CREATE TABLE script_versions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    script_id UUID REFERENCES game_scripts(id) ON DELETE CASCADE NOT NULL,
+    version_number INTEGER NOT NULL,
+    creator_id UUID REFERENCES profiles(id) NOT NULL,
+    
+    -- Version content
+    javascript_code TEXT NOT NULL,
+    source_hash TEXT NOT NULL,
+    change_summary TEXT CHECK (length(change_summary) <= 500),
+    
+    -- Metadata snapshot
+    toxoid_metadata JSONB NOT NULL,
+    validation_status TEXT NOT NULL,
+    
+    -- Performance comparison
+    performance_diff JSONB DEFAULT '{}', -- Compared to previous version
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    UNIQUE(script_id, version_number)
+);
+
 -- Community asset library
 CREATE TABLE community_assets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -505,6 +605,62 @@ CREATE TABLE asset_embeddings (
     
     UNIQUE(asset_id, asset_source)
 );
+
+-- Script code embeddings for similarity and RAG
+CREATE TABLE script_embeddings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    script_id UUID REFERENCES game_scripts(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    
+    -- Code embeddings for different purposes
+    code_embedding vector(1536), -- Full code semantic embedding
+    functionality_embedding vector(1536), -- What the script does
+    pattern_embedding vector(1536), -- Programming patterns used
+    
+    -- Generated from script analysis
+    api_usage_embedding vector(1536), -- Toxoid API usage patterns
+    performance_embedding vector(1536), -- Performance characteristics
+    
+    -- Metadata for embedding generation
+    embedding_model TEXT NOT NULL,
+    embedding_version TEXT NOT NULL,
+    
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Toxoid API pattern knowledge base
+CREATE TABLE toxoid_patterns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Pattern identification
+    pattern_type TEXT NOT NULL CHECK (pattern_type IN ('system', 'component', 'observer', 'query', 'optimization')),
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    
+    -- Code examples
+    example_code TEXT NOT NULL,
+    use_cases TEXT[] DEFAULT '{}',
+    complexity_level TEXT CHECK (complexity_level IN ('beginner', 'intermediate', 'advanced')),
+    
+    -- Performance characteristics
+    memory_impact TEXT CHECK (memory_impact IN ('low', 'medium', 'high')),
+    cpu_impact TEXT CHECK (cpu_impact IN ('low', 'medium', 'high')),
+    best_practices TEXT,
+    
+    -- Embeddings for retrieval
+    pattern_embedding vector(1536),
+    description_embedding vector(1536),
+    
+    -- Usage tracking
+    usage_count INTEGER DEFAULT 0,
+    success_rate DECIMAL(3,2) DEFAULT 0.5, -- How often this pattern helps
+    
+    -- Metadata
+    created_by UUID REFERENCES profiles(id),
+    is_official BOOLEAN DEFAULT FALSE, -- Official GameGen patterns
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
 ## Indexes & Performance Optimization
@@ -530,6 +686,17 @@ CREATE INDEX idx_creator_analytics_creator_date ON creator_analytics(creator_id,
 -- Vector similarity indexes
 CREATE INDEX idx_game_embeddings_title ON game_embeddings USING ivfflat (title_embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX idx_user_embeddings_play ON user_embeddings USING ivfflat (play_preferences vector_cosine_ops) WITH (lists = 100);
+
+-- Script performance indexes
+CREATE INDEX idx_game_scripts_game_active ON game_scripts(game_id, is_active);
+CREATE INDEX idx_game_scripts_type_validation ON game_scripts(script_type, validation_status);
+CREATE INDEX idx_script_execution_logs_script_date ON script_execution_logs(script_id, created_at DESC);
+CREATE INDEX idx_script_versions_script_version ON script_versions(script_id, version_number DESC);
+
+-- Script embeddings indexes
+CREATE INDEX idx_script_embeddings_code ON script_embeddings USING ivfflat (code_embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX idx_script_embeddings_functionality ON script_embeddings USING ivfflat (functionality_embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX idx_toxoid_patterns_embedding ON toxoid_patterns USING ivfflat (pattern_embedding vector_cosine_ops) WITH (lists = 100);
 ```
 
 ## Row Level Security (RLS) Policies
@@ -581,6 +748,47 @@ CREATE POLICY "Anyone can comment on public games" ON game_comments
 -- Analytics: Users can only see their own analytics
 CREATE POLICY "Users can view own analytics" ON creator_analytics
     FOR SELECT USING (auth.uid() = creator_id);
+
+-- Scripts: Access based on game ownership and collaboration
+CREATE POLICY "Users can view scripts of accessible games" ON game_scripts
+    FOR SELECT USING (
+        -- Own scripts
+        auth.uid() = creator_id 
+        OR 
+        -- Scripts of public games
+        game_id IN (
+            SELECT id FROM games 
+            WHERE visibility IN ('public', 'educational')
+        )
+        OR
+        -- Scripts of games in collaboration
+        game_id IN (
+            SELECT game_id FROM collaboration_sessions 
+            WHERE participants ? auth.uid()::text
+            AND ended_at IS NULL
+        )
+    );
+
+CREATE POLICY "Users can modify own scripts" ON game_scripts
+    FOR ALL USING (auth.uid() = creator_id);
+
+-- Script execution logs: Only for accessible scripts
+CREATE POLICY "Users can view execution logs of accessible scripts" ON script_execution_logs
+    FOR SELECT USING (
+        script_id IN (
+            SELECT id FROM game_scripts 
+            WHERE auth.uid() = creator_id
+            OR game_id IN (
+                SELECT id FROM games 
+                WHERE visibility IN ('public', 'educational')
+                OR id IN (
+                    SELECT game_id FROM collaboration_sessions 
+                    WHERE participants ? auth.uid()::text
+                    AND ended_at IS NULL
+                )
+            )
+        )
+    );
 ```
 
 ## Database Functions & Triggers

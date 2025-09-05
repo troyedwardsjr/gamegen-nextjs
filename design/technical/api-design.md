@@ -364,23 +364,170 @@ Generate individual game assets.
 ```
 
 ### POST /ai/code/generate
-Generate game logic code from description.
+Generate Toxoid-compatible JavaScript code from description.
 
 **Request Body:**
 ```typescript
 {
   description: string;
-  code_type: 'behavior' | 'mechanic' | 'ui' | 'system';
+  code_type: 'behavior' | 'mechanic' | 'ui' | 'system' | 'component' | 'observer';
   context: {
     existing_code?: string;
     game_framework: 'toxoid';
-    target_objects?: string[]; // Game objects to affect
+    target_entities?: string[]; // Entity IDs to affect
+    available_components?: string[]; // Component types available
+    game_state?: any; // Current game state for context
   };
   parameters?: {
     complexity_level: 'beginner' | 'intermediate' | 'advanced';
     performance_priority: boolean;
     include_comments: boolean;
+    use_ecs_patterns: boolean; // Default: true
+    memory_conscious: boolean; // For 50MB limit
   };
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: {
+    script_id: string;
+    javascript_code: string;
+    metadata: {
+      ecs_components_used: string[];
+      toxoid_api_calls: string[];
+      estimated_memory_usage: number; // bytes
+      performance_notes: string[];
+    };
+    integration_instructions: string;
+  }
+}
+```
+
+## Script Management Endpoints
+
+### GET /games/:id/scripts
+Get all scripts associated with a game.
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: {
+    scripts: {
+      id: string;
+      name: string;
+      script_type: 'system' | 'component' | 'behavior' | 'observer';
+      code: string;
+      metadata: {
+        dependencies: string[];
+        memory_usage: number;
+        performance_score: number;
+      };
+      created_at: string;
+      updated_at: string;
+    }[];
+  }
+}
+```
+
+### POST /games/:id/scripts
+Add or update a script for a game.
+
+**Request Body:**
+```typescript
+{
+  script_id?: string; // For updates
+  name: string;
+  script_type: 'system' | 'component' | 'behavior' | 'observer';
+  code: string;
+  validation_mode?: 'strict' | 'permissive'; // Default: strict
+}
+```
+
+### POST /games/:id/scripts/validate
+Validate script code before execution.
+
+**Request Body:**
+```typescript
+{
+  code: string;
+  context?: {
+    existing_scripts?: string[]; // IDs of other scripts for dependency checking
+    available_entities?: string[]; // Current game entities
+  };
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  data: {
+    is_valid: boolean;
+    errors: {
+      type: 'syntax' | 'runtime' | 'security' | 'performance';
+      message: string;
+      line?: number;
+      column?: number;
+    }[];
+    warnings: {
+      type: 'performance' | 'memory' | 'best_practice';
+      message: string;
+      severity: 'low' | 'medium' | 'high';
+    }[];
+    analysis: {
+      estimated_memory: number;
+      toxoid_api_usage: string[];
+      potential_issues: string[];
+    };
+  }
+}
+```
+
+### POST /games/:id/scripts/execute
+Execute script in sandboxed environment (development/testing).
+
+**Request Body:**
+```typescript
+{
+  script_id: string;
+  execution_context?: {
+    test_entities?: any[]; // Mock entities for testing
+    mock_components?: any[]; // Mock components
+    debug_mode?: boolean;
+  };
+}
+```
+
+### WebSocket /games/:id/scripts/live
+Real-time script execution and hot-reloading.
+
+**Connection Authentication:**
+```typescript
+{
+  Authorization: 'Bearer <jwt_token>'
+}
+```
+
+**Message Types:**
+```typescript
+// Client → Server
+{
+  type: 'execute_script' | 'update_script' | 'subscribe_logs';
+  script_id?: string;
+  code?: string;
+  data?: any;
+}
+
+// Server → Client  
+{
+  type: 'execution_result' | 'runtime_error' | 'log_message' | 'performance_stats';
+  script_id: string;
+  data: any;
+  timestamp: number;
 }
 ```
 

@@ -29,8 +29,11 @@ The architecture supports the platform's core mission: democratizing game develo
 - **Edge Functions**: Supabase Edge Functions for LLM processing
 
 ### Game Engine Integration
-- **Engine**: Toxoid (Rust WASM) with JavaScript scripting API
-- **Graphics**: WebGL-based pixel-perfect rendering
+- **Engine**: Toxoid (Rust WASM) with QuickJS JavaScript runtime
+- **Scripting Runtime**: QuickJS embedded in WASM (50MB memory, 1MB stack)
+- **ECS System**: Flecs Entity Component System with JavaScript bindings
+- **API Surface**: Comprehensive JavaScript API (Toxoid.API, Toxoid.System, Toxoid.Observer, Toxoid.Query)
+- **Graphics**: WebGL-based pixel-perfect rendering with Spine animation support
 - **Physics**: Built-in 2D physics with collision detection
 - **Audio**: Web Audio API with spatial audio support
 - **Input**: Cross-platform input handling (touch, keyboard, gamepad)
@@ -38,8 +41,9 @@ The architecture supports the platform's core mission: democratizing game develo
 ### AI/LLM Services
 - **Primary LLM**: Claude 4 Sonnet via Anthropic API
 - **Backup LLM**: Configurable provider fallback system
+- **Script Generation**: Server-side Toxoid-compatible JavaScript generation
+- **Code Patterns**: ECS-based game logic with Toxoid API integration
 - **Image Generation**: Integration with Midjourney/DALL-E for pixel art
-- **Code Generation**: Claude Code CLI for game logic generation
 - **RAG System**: Supabase vector embeddings for context retrieval
 
 ### Cross-Platform Deployment
@@ -68,34 +72,49 @@ The architecture supports the platform's core mission: democratizing game develo
 │  │ • AI Assist │ │ • Code Editor │ │ • Template Library      │ │
 │  └─────────────┘ └───────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
-│  Game Engine Layer (Toxoid WASM)                              │
+│  Game Engine Layer (Toxoid WASM + QuickJS)                    │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
-│  │  Renderer   │ │   Physics    │ │      Audio System        │ │
-│  │ • WebGL     │ │ • Collision  │ │ • Web Audio API         │ │
-│  │ • Pixel Art │ │ • Dynamics   │ │ • Spatial Audio         │ │
+│  │ QuickJS     │ │   ECS Core   │ │    Rendering Engine      │ │
+│  │ Runtime     │ │ • Flecs      │ │ • WebGL + Pixel Art     │ │
+│  │ • Script    │ │ • Components │ │ • Sprite Loading        │ │
+│  │   Execution │ │ • Systems    │ │ • Spine Animations      │ │
+│  │ • Memory    │ │ • Queries    │ │                         │ │
+│  │   Sandbox   │ │ • Observers  │ │                         │ │
+│  └─────────────┘ └──────────────┘ └───────────────────────── │
+├─────────────────────────────────────────────────────────────────┤
+│  Server-Side Script Generation                                │
+│  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
+│  │   Script    │ │    Toxoid    │ │   Script Delivery       │ │
+│  │ Generation  │ │   Pattern    │ │ • WebSocket/HTTP        │ │
+│  │ • LLM Calls │ │  Generation  │ │ • Hot Reloading         │ │
+│  │ • Context   │ │ • ECS Logic  │ │ • Error Handling        │ │
+│  │   Injection │ │ • API Usage  │ │ • Validation            │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
 │  API Layer (NextJS API Routes + Edge Functions)               │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
 │  │   Game      │ │     AI       │ │      Export            │ │
 │  │ Management  │ │  Generation  │ │   • Web Deploy         │ │
-│  │ • CRUD Ops  │ │ • LLM Calls  │ │   • Mobile Build       │ │
+│  │ • CRUD Ops  │ │ • Script Gen │ │   • Mobile Build       │ │
 │  │ • Collab    │ │ • Asset Gen  │ │   • Desktop Export     │ │
+│  │ • Scripts   │ │ • LLM Calls  │ │   • Source Code        │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
 │  Backend Services (Supabase)                                  │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
 │  │  Database   │ │    Auth      │ │      Storage            │ │
 │  │ • PostgreSQL│ │ • JWT Tokens │ │ • Game Assets          │ │
-│  │ • RLS       │ │ • Social     │ │ • User Files           │ │
-│  │ • Vector DB │ │ • MFA        │ │ • CDN Delivery         │ │
+│  │ • RLS       │ │ • Social     │ │ • Generated Scripts    │ │
+│  │ • Vector DB │ │ • MFA        │ │ • User Files           │ │
+│  │ • Scripts   │ │              │ │ • CDN Delivery         │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
 │  External Services                                             │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
 │  │   Claude    │ │    Stripe    │ │       CDN                │ │
-│  │ • LLM API   │ │ • Payments   │ │ • Asset Delivery        │ │
-│  │ • Code Gen  │ │ • Billing    │ │ • Global Cache          │ │
+│  │ • Script    │ │ • Payments   │ │ • Asset Delivery        │ │
+│  │   Generation│ │ • Billing    │ │ • Script Delivery       │ │
+│  │ • Code Gen  │ │              │ │ • Global Cache          │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -228,14 +247,26 @@ Storage System (Supabase Storage)
 ### Game Creation Workflow
 
 ```
-User Input → LLM Processing → Asset Generation → Game Assembly → Live Preview
-     ↓              ↓              ↓              ↓              ↓
-   Natural      AI Analysis    Pixel Art      Toxoid         User
-  Language      + Context      Generation     Engine         Testing
-  Description   Retrieval      + Audio        Assembly       + Iteration
-     ↓              ↓              ↓              ↓              ↓
-  Saved to      Vector DB      Supabase       Local          Auto-save
-  Chat History  Embeddings     Storage        Runtime        to Database
+User Input → LLM Processing → Script Generation → Client Execution → Live Preview
+     ↓              ↓              ↓                ↓                ↓
+   Natural      AI Analysis    Toxoid JS         QuickJS         User
+  Language      + Context      Code Gen          Runtime         Testing
+  Description   Retrieval      + ECS Logic       Execution       + Iteration
+     ↓              ↓              ↓                ↓                ↓
+  Saved to      Vector DB      Script            WASM             Auto-save
+  Chat History  Embeddings     Delivery          Sandbox          to Database
+```
+
+### Script Generation & Execution Pipeline
+
+```
+User Prompt → RAG Context → LLM Script Gen → Validation → Client Delivery → QuickJS Exec
+     ↓              ↓             ↓            ↓            ↓               ↓
+  Game Idea     Code Examples  Toxoid API    Syntax       WebSocket/     Game Logic
+  Description   + Patterns     JavaScript    Check        HTTP           Running
+     ↓              ↓             ↓            ↓            ↓               ↓
+  Context       Best Practice  ECS Systems   Security     Hot Reload     Real-time
+  Building      Retrieval      + Components  Validation   Updates        Feedback
 ```
 
 ### Real-time Collaboration Flow

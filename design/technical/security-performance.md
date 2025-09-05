@@ -104,6 +104,163 @@ class SecurityValidator {
 export const securityValidator = new SecurityValidator();
 ```
 
+#### WASM Script Sandboxing & Validation
+```typescript
+// lib/security/scriptValidation.ts
+import { createHash } from 'crypto';
+
+class ToxoidScriptValidator {
+  // Dangerous patterns that should be blocked in user scripts
+  private readonly DANGEROUS_PATTERNS = [
+    /eval\s*\(/i,
+    /Function\s*\(/i,
+    /setTimeout\s*\(/i,
+    /setInterval\s*\(/i,
+    /XMLHttpRequest/i,
+    /fetch\s*\(/i,
+    /WebSocket/i,
+    /document\./i,
+    /window\./i,
+    /global\./i,
+    /process\./i,
+    /require\s*\(/i,
+    /import\s*\(/i,
+    /while\s*\(\s*true\s*\)/i, // Infinite loops
+    /for\s*\(\s*;;\s*\)/i      // Infinite loops
+  ];
+  
+  // Memory-intensive operations to limit
+  private readonly MEMORY_INTENSIVE_PATTERNS = [
+    /new\s+Array\s*\(\s*\d{6,}\s*\)/i, // Large arrays
+    /\.repeat\s*\(\s*\d{4,}\s*\)/i,    // Large string repetitions
+    /new\s+\w+Array\s*\(\s*\d{6,}\s*\)/i // Large typed arrays
+  ];
+  
+  validateScript(code: string, context?: ScriptValidationContext): ValidationResult {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+    const analysis = this.analyzeScript(code);
+    
+    // Security validation
+    this.DANGEROUS_PATTERNS.forEach(pattern => {
+      if (pattern.test(code)) {
+        errors.push({
+          type: 'security',
+          message: `Potentially dangerous pattern detected: ${pattern.source}`,
+          severity: 'critical'
+        });
+      }
+    });
+    
+    // Memory usage validation
+    if (analysis.estimatedMemory > 5 * 1024 * 1024) { // 5MB limit for single script
+      warnings.push({
+        type: 'memory',
+        message: `Script may use significant memory (${Math.round(analysis.estimatedMemory / 1024 / 1024)}MB)`,
+        severity: 'medium'
+      });
+    }
+    
+    // Performance validation
+    this.MEMORY_INTENSIVE_PATTERNS.forEach(pattern => {
+      if (pattern.test(code)) {
+        warnings.push({
+          type: 'performance',
+          message: `Memory-intensive operation detected: ${pattern.source}`,
+          severity: 'medium'
+        });
+      }
+    });
+    
+    // Toxoid API compliance
+    const apiValidation = this.validateToxoidAPI(code);
+    errors.push(...apiValidation.errors);
+    warnings.push(...apiValidation.warnings);
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      analysis,
+      securityScore: this.calculateSecurityScore(errors, warnings)
+    };
+  }
+  
+  private validateToxoidAPI(code: string): { errors: ValidationError[], warnings: ValidationWarning[] } {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+    
+    // Validate proper ECS patterns
+    if (code.includes('entity.') && !code.includes('entity.get(') && !code.includes('entity.add(')) {
+      warnings.push({
+        type: 'best_practice',
+        message: 'Consider using proper ECS methods (entity.get(), entity.add()) instead of direct property access',
+        severity: 'low'
+      });
+    }
+    
+    // Check for missing error handling around entity operations
+    const entityOperationMatches = code.match(/entity\.(get|add|has|remove)\s*\(/g);
+    if (entityOperationMatches && !code.includes('try') && !code.includes('catch')) {
+      warnings.push({
+        type: 'best_practice',
+        message: 'Entity operations should include error handling',
+        severity: 'medium'
+      });
+    }
+    
+    // Validate system registration patterns
+    if (code.includes('Toxoid.System.create') && !code.includes('Toxoid.Query.create')) {
+      warnings.push({
+        type: 'performance',
+        message: 'Systems should typically use queries to filter entities',
+        severity: 'low'
+      });
+    }
+    
+    return { errors, warnings };
+  }
+  
+  private analyzeScript(code: string): ScriptAnalysis {
+    const lines = code.split('\n').length;
+    const estimatedMemory = Math.max(1024, lines * 100); // Rough estimate
+    
+    const toxoidAPIs = [
+      'Toxoid.API.createEntity',
+      'Toxoid.System.create',
+      'Toxoid.Observer.create',
+      'Toxoid.Query.create'
+    ].filter(api => code.includes(api));
+    
+    return {
+      linesOfCode: lines,
+      estimatedMemory,
+      toxoidAPIsUsed: toxoidAPIs,
+      complexityScore: Math.min(10, Math.max(1, Math.floor(lines / 20))),
+      hasLoops: /for\s*\(|while\s*\(/.test(code),
+      hasRecursion: this.detectRecursion(code)
+    };
+  }
+  
+  private detectRecursion(code: string): boolean {
+    // Simple heuristic to detect potential recursion
+    const functionMatches = code.match(/function\s+(\w+)/g);
+    if (!functionMatches) return false;
+    
+    return functionMatches.some(match => {
+      const funcName = match.split(' ')[1];
+      return code.includes(`${funcName}(`) && code.indexOf(`${funcName}(`) > code.indexOf(match);
+    });
+  }
+  
+  generateScriptHash(code: string): string {
+    return createHash('sha256').update(code).digest('hex');
+  }
+}
+
+export const scriptValidator = new ToxoidScriptValidator();
+```
+
 #### Content Security Policy (CSP)
 ```typescript
 // lib/security/csp.ts
@@ -112,7 +269,7 @@ const CSP_DIRECTIVES = {
   'script-src': [
     "'self'",
     "'unsafe-inline'", // Required for Toxoid WASM
-    "'wasm-unsafe-eval'", // Required for WebAssembly
+    "'wasm-unsafe-eval'", // Required for WebAssembly and QuickJS
     'https://js.stripe.com',
     'https://www.google-analytics.com'
   ],
@@ -415,6 +572,239 @@ export const encryption = new EncryptionService();
 ```
 
 ## Performance Architecture
+
+### WASM Performance Optimization
+
+#### QuickJS Runtime Management
+```typescript
+// lib/performance/wasmOptimization.ts
+class ToxoidRuntimeOptimizer {
+  private executionMetrics = new Map<string, PerformanceMetrics>();
+  
+  optimizeScriptExecution(script: ToxoidScript): OptimizedScript {
+    // Pre-execution optimizations
+    const optimizedCode = this.applyCodeOptimizations(script.code);
+    
+    // Memory pre-allocation based on script analysis
+    const memoryRequirements = this.analyzeMemoryRequirements(optimizedCode);
+    
+    // Execution order optimization for systems
+    const executionOrder = this.optimizeExecutionOrder(script.type, script.dependencies);
+    
+    return {
+      ...script,
+      code: optimizedCode,
+      memoryRequirements,
+      executionOrder,
+      optimizations: this.getAppliedOptimizations(script.code, optimizedCode)
+    };
+  }
+  
+  private applyCodeOptimizations(code: string): string {
+    let optimizedCode = code;
+    
+    // 1. Remove unnecessary console.log statements in production
+    if (process.env.NODE_ENV === 'production') {
+      optimizedCode = optimizedCode.replace(/console\.(log|warn|info)\([^)]*\);?/g, '');
+    }
+    
+    // 2. Optimize query creation (cache commonly used queries)
+    optimizedCode = this.optimizeQueryCreation(optimizedCode);
+    
+    // 3. Minimize entity lookups
+    optimizedCode = this.optimizeEntityLookups(optimizedCode);
+    
+    // 4. Add performance markers
+    optimizedCode = this.addPerformanceMarkers(optimizedCode);
+    
+    return optimizedCode;
+  }
+  
+  private optimizeQueryCreation(code: string): string {
+    // Cache query objects instead of creating new ones each frame
+    const queryMatches = code.match(/Toxoid\.Query\.create\([^)]+\)/g);
+    if (!queryMatches) return code;
+    
+    let optimizedCode = code;
+    const queryCache = new Map<string, string>();
+    
+    queryMatches.forEach((queryCall, index) => {
+      const cacheVar = `cachedQuery${index}`;
+      if (!queryCache.has(queryCall)) {
+        queryCache.set(queryCall, cacheVar);
+        
+        // Add query caching at the beginning of the script
+        optimizedCode = `const ${cacheVar} = ${queryCall};\n${optimizedCode}`;
+        
+        // Replace all instances with cached version
+        optimizedCode = optimizedCode.replace(new RegExp(queryCall.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), cacheVar);
+      }
+    });
+    
+    return optimizedCode;
+  }
+  
+  private optimizeEntityLookups(code: string): string {
+    // Batch entity operations where possible
+    return code.replace(
+      /entity\.get\((\w+)\)([^;]*);[\s]*entity\.get\(\1\)/g,
+      'const $1Component = entity.get($1); $1Component$2; $1Component'
+    );
+  }
+  
+  private addPerformanceMarkers(code: string): string {
+    // Add timing markers for performance monitoring
+    if (code.includes('Toxoid.System.create')) {
+      return code.replace(
+        /(Toxoid\.System\.create\s*\(\s*"([^"]+)"\s*,\s*)(\([^{]*\{)/g,
+        '$1$3\n  const startTime = performance.now();'
+      ).replace(
+        /(\}\s*,?\s*Toxoid\.System\.\w+\s*\)\s*;)/g,
+        '  const endTime = performance.now();\n  if (endTime - startTime > 16.67) console.warn(`System $2 took ${endTime - startTime}ms`);\n$1'
+      );
+    }
+    
+    return code;
+  }
+  
+  private analyzeMemoryRequirements(code: string): MemoryRequirements {
+    let estimatedMemory = 1024; // Base memory for script
+    
+    // Estimate based on code patterns
+    const entityCreations = (code.match(/createEntity/g) || []).length;
+    const arrayCreations = (code.match(/new Array|new \w*Array|\[\]/g) || []).length;
+    const stringOperations = (code.match(/\+.*"|concat|split|join/g) || []).length;
+    
+    estimatedMemory += entityCreations * 200; // ~200 bytes per entity
+    estimatedMemory += arrayCreations * 1000; // ~1KB per array
+    estimatedMemory += stringOperations * 100; // ~100 bytes per string op
+    
+    return {
+      estimated: Math.min(estimatedMemory, 5 * 1024 * 1024), // Cap at 5MB
+      peak: Math.min(estimatedMemory * 1.5, 10 * 1024 * 1024), // Cap at 10MB
+      baseline: 1024
+    };
+  }
+  
+  trackExecutionPerformance(scriptId: string, metrics: PerformanceMetrics): void {
+    const existing = this.executionMetrics.get(scriptId);
+    
+    if (existing) {
+      // Update moving averages
+      existing.averageExecutionTime = (existing.averageExecutionTime * 0.8) + (metrics.executionTime * 0.2);
+      existing.peakMemory = Math.max(existing.peakMemory, metrics.memoryUsage);
+      existing.executionCount += 1;
+    } else {
+      this.executionMetrics.set(scriptId, {
+        ...metrics,
+        averageExecutionTime: metrics.executionTime,
+        executionCount: 1
+      });
+    }
+    
+    // Alert on performance degradation
+    if (metrics.executionTime > 50) { // Over 50ms is concerning
+      console.warn(`Script ${scriptId} execution time: ${metrics.executionTime}ms`);
+    }
+  }
+}
+
+export const runtimeOptimizer = new ToxoidRuntimeOptimizer();
+```
+
+#### Script Delivery Optimization
+```typescript
+// lib/performance/scriptDelivery.ts
+class ScriptDeliveryManager {
+  private scriptCache = new Map<string, CachedScript>();
+  private deliveryQueue = new Map<string, ScriptDeliveryJob>();
+  
+  async deliverScript(gameId: string, scriptId: string, urgent = false): Promise<void> {
+    // Check if script is already cached
+    const cached = this.scriptCache.get(scriptId);
+    if (cached && !this.isStale(cached)) {
+      await this.sendToClient(gameId, cached.optimizedScript);
+      return;
+    }
+    
+    // Queue script for processing
+    const job = this.deliveryQueue.get(scriptId);
+    if (job) {
+      // Script is already being processed
+      await job.promise;
+      return;
+    }
+    
+    // Process and deliver script
+    const deliveryPromise = this.processAndDeliverScript(gameId, scriptId, urgent);
+    this.deliveryQueue.set(scriptId, { 
+      scriptId, 
+      promise: deliveryPromise, 
+      startTime: Date.now() 
+    });
+    
+    try {
+      await deliveryPromise;
+    } finally {
+      this.deliveryQueue.delete(scriptId);
+    }
+  }
+  
+  private async processAndDeliverScript(
+    gameId: string, 
+    scriptId: string, 
+    urgent: boolean
+  ): Promise<void> {
+    // Fetch raw script
+    const script = await this.fetchScript(scriptId);
+    
+    // Apply optimizations
+    const optimizedScript = await runtimeOptimizer.optimizeScriptExecution(script);
+    
+    // Validate security
+    const validation = scriptValidator.validateScript(optimizedScript.code);
+    if (!validation.isValid) {
+      throw new Error(`Script validation failed: ${validation.errors[0]?.message}`);
+    }
+    
+    // Cache optimized script
+    this.scriptCache.set(scriptId, {
+      optimizedScript,
+      timestamp: Date.now(),
+      deliveryCount: 1
+    });
+    
+    // Deliver to client
+    await this.sendToClient(gameId, optimizedScript, urgent);
+  }
+  
+  private async sendToClient(
+    gameId: string, 
+    script: OptimizedScript, 
+    urgent = false
+  ): Promise<void> {
+    const payload = {
+      type: 'script_update',
+      script_id: script.id,
+      code: script.code,
+      metadata: script.metadata,
+      urgent
+    };
+    
+    // Use WebSocket for immediate delivery or HTTP for bulk updates
+    if (urgent || this.hasActiveWebSocket(gameId)) {
+      await this.sendViaWebSocket(gameId, payload);
+    } else {
+      await this.sendViaHTTP(gameId, payload);
+    }
+  }
+  
+  private isStale(cached: CachedScript): boolean {
+    const maxAge = 5 * 60 * 1000; // 5 minutes
+    return Date.now() - cached.timestamp > maxAge;
+  }
+}
+```
 
 ### Frontend Performance Optimization
 

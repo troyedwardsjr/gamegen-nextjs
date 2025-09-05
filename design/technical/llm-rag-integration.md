@@ -12,8 +12,9 @@ GameGen's AI-powered game creation relies on sophisticated Large Language Model 
 
 ### Core AI Capabilities
 - **Natural Language Game Creation**: Convert descriptions into playable games
+- **Server-side Script Generation**: Generate Toxoid-compatible JavaScript on server
+- **ECS Pattern Generation**: Create Entity-Component-System logic with Toxoid API
 - **Contextual Asset Generation**: Create sprites, audio, and textures that fit game themes
-- **Code Generation**: Generate game logic and behaviors in Toxoid engine
 - **Smart Suggestions**: Provide creative enhancements and alternatives
 - **Real-time Assistance**: Interactive chat-based game development
 
@@ -30,28 +31,39 @@ GameGen's AI-powered game creation relies on sophisticated Large Language Model 
 │  │ • History   │ │ • Help       │ │ • Quality Settings       │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
-│  AI Processing Pipeline                                        │
+│  Server-Side Script Generation                                │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
-│  │   Prompt    │ │     RAG      │ │    LLM Processing        │ │
-│  │ Engineering │ │  Retrieval   │ │ • Context Injection     │ │
-│  │ • Template  │ │ • Semantic   │ │ • Generation           │ │
-│  │ • Context   │ │   Search     │ │ • Post-processing      │ │
+│  │   Prompt    │ │     RAG      │ │   Toxoid Script Gen      │ │
+│  │ Engineering │ │  Retrieval   │ │ • ECS Patterns          │ │
+│  │ • Template  │ │ • Code       │ │ • API Integration       │ │
+│  │ • Context   │ │   Examples   │ │ • Memory Optimization   │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
 │  Provider Layer (Multi-LLM Support)                           │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
 │  │   Claude    │ │   Fallback   │ │      Specialized         │ │
-│  │ • Primary   │ │   Models     │ │ • Image Gen (DALL-E)    │ │
-│  │ • Code Gen  │ │ • GPT-4      │ │ • Audio (MusicLM)       │ │
-│  │ • Chat      │ │ • Gemini     │ │ • Code (Codex)          │ │
+│  │ • Script    │ │   Models     │ │ • Image Gen (DALL-E)    │ │
+│  │   Generation│ │ • GPT-4      │ │ • Audio (MusicLM)       │ │
+│  │ • Chat      │ │ • Gemini     │ │ • Code Analysis         │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 ├─────────────────────────────────────────────────────────────────┤
 │  Knowledge Base (Vector Database)                             │
 │  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
-│  │   Game      │ │    Asset     │ │      Code Examples       │ │
-│  │ Templates   │ │  Library     │ │ • Patterns             │ │
-│  │ • Patterns  │ │ • Sprites    │ │ • Best Practices       │ │
-│  │ • Mechanics │ │ • Audio      │ │ • Common Solutions     │ │
+│  │   Toxoid    │ │    ECS       │ │    Script Examples       │ │
+│  │  Patterns   │ │  Examples    │ │ • System Logic          │ │
+│  │ • API Usage │ │ • Components │ │ • Observer Patterns     │ │
+│  │ • Best      │ │ • Queries    │ │ • Performance Tips      │ │
+│  │   Practices │ │ • Systems    │ │ • Memory Management     │ │
+│  └─────────────┘ └──────────────┘ └───────────────────────── │
+├─────────────────────────────────────────────────────────────────┤
+│  Client-Side Execution (WASM + QuickJS)                      │
+│  ┌─────────────┐ ┌──────────────┐ ┌─────────────────────────── │
+│  │  Script     │ │   Runtime    │ │    Game Engine          │ │
+│  │ Delivery    │ │  Execution   │ │ • Flecs ECS            │ │
+│  │ • WebSocket │ │ • QuickJS    │ │ • Toxoid API           │ │
+│  │ • HTTP      │ │ • Sandbox    │ │ • Real-time Updates    │ │
+│  │ • Hot       │ │ • Memory     │ │ • Error Handling       │ │
+│  │   Reload    │ │   Limits     │ │                        │ │
 │  └─────────────┘ └──────────────┘ └───────────────────────── │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -272,6 +284,216 @@ class RAGProcessor {
 }
 ```
 
+### Toxoid Script Generation System
+
+```typescript
+interface ToxoidScriptRequest {
+  description: string;
+  script_type: 'system' | 'component' | 'observer' | 'behavior';
+  context: {
+    existing_entities?: string[];
+    available_components?: string[];
+    game_state?: any;
+    performance_requirements?: 'low' | 'medium' | 'high';
+  };
+}
+
+class ToxoidScriptGenerator {
+  async generateScript(request: ToxoidScriptRequest): Promise<string> {
+    const context = await this.retrieveToxoidContext(request);
+    const prompt = this.buildToxoidPrompt(request, context);
+    
+    const provider = await this.providerManager.selectProvider([
+      LLMCapability.CODE_GENERATION
+    ]);
+    
+    const response = await provider.generate({
+      messages: [
+        { role: 'system', content: prompt.system_prompt },
+        { role: 'user', content: prompt.user_message }
+      ],
+      tools: this.getToxoidGenerationTools(),
+      temperature: 0.3, // Lower temperature for code generation
+      max_tokens: 2000
+    });
+    
+    return this.postProcessToxoidScript(response.content);
+  }
+  
+  private buildToxoidPrompt(
+    request: ToxoidScriptRequest,
+    context: RetrievedContext[]
+  ): ContextualPrompt {
+    const systemPrompt = `You are a Toxoid game engine expert specializing in ECS-based JavaScript game development. Generate production-ready scripts that follow Toxoid best practices.
+
+Toxoid Engine Architecture:
+- Entity-Component-System (Flecs ECS)
+- QuickJS JavaScript runtime (50MB memory limit, 1MB stack)
+- Component-based architecture with type safety
+- System-based game logic execution
+- Observer pattern for entity state changes
+
+Available Toxoid APIs:
+${this.formatToxoidAPIs()}
+
+Key Requirements:
+- Use proper ECS patterns (avoid direct entity manipulation)
+- Memory-efficient code (respect 50MB limit)
+- Performance-conscious implementations
+- Proper error handling and validation
+- Clear component relationships
+
+Context Examples:
+${this.formatContext(context)}
+
+Generate valid JavaScript that integrates seamlessly with Toxoid's architecture.`;
+
+    const userMessage = this.buildUserMessage(request);
+    
+    return {
+      system_prompt: systemPrompt,
+      user_message: userMessage,
+      retrieved_context: context,
+      examples: await this.getToxoidExamples(request.script_type),
+      constraints: {
+        memory_limit: 50 * 1024 * 1024, // 50MB
+        performance_priority: true,
+        api_compliance: true
+      }
+    };
+  }
+  
+  private formatToxoidAPIs(): string {
+    return `
+Core APIs:
+- Toxoid.API.createEntity(): Create new entities
+- entity.add(Component, data): Add components to entities
+- entity.get(Component): Retrieve component data
+- entity.has(Component): Check component existence
+
+System Creation:
+- Toxoid.System.create(name, callback, phase?): Register systems
+- Phases: ON_UPDATE, PRE_UPDATE, POST_UPDATE
+
+Observer Pattern:
+- Toxoid.Observer.create(event, callback): Watch entity changes
+- Events: OnAdd, OnSet, OnRemove
+
+Query System:
+- Toxoid.Query.create(...components): Filter entities by components
+- query.each((entity) => { ... }): Iterate over matching entities
+
+Rendering:
+- loadSprite(path): Load sprite assets
+- filledRect(x, y, width, height, color): Draw rectangles
+- Spine animation support for complex animations
+
+Input Handling:
+- KeyboardInput singleton for input state
+- Touch and gamepad input support`;
+  }
+  
+  private buildUserMessage(request: ToxoidScriptRequest): string {
+    const typeInstructions = {
+      system: "Create a system that runs each frame and processes entities with specific components.",
+      component: "Define a component structure with proper data fields and initialization.",
+      observer: "Create an observer that reacts to component changes on entities.",
+      behavior: "Implement game behavior logic that can be applied to entities."
+    };
+    
+    return `Generate a ${request.script_type} for: "${request.description}"
+
+Requirements:
+${typeInstructions[request.script_type]}
+
+Context:
+${request.context.existing_entities ? `Available entities: ${request.context.existing_entities.join(', ')}` : ''}
+${request.context.available_components ? `Available components: ${request.context.available_components.join(', ')}` : ''}
+
+Performance target: ${request.context.performance_requirements || 'medium'}
+
+Please provide:
+1. Complete, runnable JavaScript code
+2. Clear comments explaining the logic
+3. Proper error handling
+4. Memory-efficient implementation`;
+  }
+  
+  private async getToxoidExamples(scriptType: string): Promise<CodeExample[]> {
+    const examples = {
+      system: [
+        {
+          name: "Movement System",
+          code: `
+Toxoid.System.create("MovementSystem", (dt) => {
+  const query = Toxoid.Query.create(Position, Velocity);
+  query.each((entity) => {
+    const pos = entity.get(Position);
+    const vel = entity.get(Velocity);
+    
+    pos.x += vel.x * dt;
+    pos.y += vel.y * dt;
+    
+    entity.set(Position, pos);
+  });
+}, Toxoid.System.ON_UPDATE);`
+        }
+      ],
+      component: [
+        {
+          name: "Health Component",
+          code: `
+const Health = {
+  max: 100,
+  current: 100,
+  regeneration: 0
+};`
+        }
+      ],
+      observer: [
+        {
+          name: "Death Observer",
+          code: `
+Toxoid.Observer.create(Toxoid.Observer.OnSet, Health, (entity) => {
+  const health = entity.get(Health);
+  if (health.current <= 0) {
+    entity.add(Dead);
+    console.log("Entity died:", entity.id);
+  }
+});`
+        }
+      ]
+    };
+    
+    return examples[scriptType] || [];
+  }
+  
+  private postProcessToxoidScript(rawScript: string): string {
+    // Validate script syntax
+    try {
+      new Function(rawScript); // Basic syntax check
+    } catch (error) {
+      throw new Error(`Generated script has syntax errors: ${error.message}`);
+    }
+    
+    // Add safety checks and optimizations
+    let processedScript = rawScript;
+    
+    // Add memory usage tracking if not present
+    if (!processedScript.includes('// Memory:')) {
+      processedScript = `// Memory: Estimated < 1MB\n${processedScript}`;
+    }
+    
+    // Ensure proper error handling
+    if (!processedScript.includes('try') && processedScript.includes('entity.get(')) {
+      console.warn('Script may benefit from error handling around entity operations');
+    }
+    
+    return processedScript;
+  }
+}
+```
+
 ### Context Injection System
 ```typescript
 interface ContextualPrompt {
@@ -287,32 +509,33 @@ class PromptEngineer {
     userRequest: string,
     context: RetrievedContext[]
   ): Promise<ContextualPrompt> {
-    const systemPrompt = `You are GameGen AI, an expert game designer and developer specializing in pixel art games. You help users create engaging, playable games through natural language descriptions.
+    const systemPrompt = `You are GameGen AI, an expert game designer and developer specializing in Toxoid engine and ECS-based pixel art games. You help users create engaging, playable games through natural language descriptions.
 
 Key Capabilities:
-- Convert natural language descriptions into complete game specifications
-- Generate appropriate pixel art assets and audio
-- Create balanced game mechanics and progression
-- Ensure games are fun, accessible, and bug-free
+- Convert natural language descriptions into Toxoid-compatible game logic
+- Generate ECS-based systems, components, and observers
+- Create balanced game mechanics with proper performance considerations
+- Ensure games utilize Toxoid API patterns effectively
 
 Context Knowledge:
 ${this.formatContext(context)}
 
-Always respond with valid JSON following the GameGeneration schema.`;
+Always generate valid Toxoid JavaScript following ECS best practices.`;
 
-    const userMessage = `Create a game based on this description: "${userRequest}"
+    const userMessage = `Create game functionality for: "${userRequest}"
 
 Please provide:
-1. Complete game configuration (mechanics, levels, objectives)
-2. Asset requirements (sprites, backgrounds, audio)
-3. Code structure for Toxoid engine
-4. Balancing considerations
+1. Toxoid script implementation using ECS patterns
+2. Proper component definitions and relationships
+3. System logic with performance considerations
+4. Observer patterns for state management
+5. Memory-efficient code (50MB limit)
 
-Ensure the game is:
-- Playable within 5 minutes for first-time users
-- Progressively challenging
-- Visually cohesive
-- Accessible to all skill levels`;
+Ensure the implementation:
+- Uses Toxoid.API, Toxoid.System, Toxoid.Observer appropriately
+- Follows ECS architecture principles
+- Is performance-optimized for real-time execution
+- Includes proper error handling`;
 
     return {
       system_prompt: systemPrompt,
@@ -322,14 +545,15 @@ Ensure the game is:
       constraints: {
         max_complexity: 'moderate',
         target_audience: 'general',
-        platform_compatibility: ['web', 'mobile']
+        platform_compatibility: ['web', 'mobile'],
+        memory_limit: 50 * 1024 * 1024
       }
     };
   }
   
   private formatContext(context: RetrievedContext[]): string {
     return context.map(c => 
-      `${c.title}: ${c.description}\nTags: ${c.tags.join(', ')}`
+      `${c.title}: ${c.description}\nTags: ${c.tags.join(', ')}\nCode: ${c.code_snippet || 'N/A'}`
     ).join('\n\n');
   }
 }
