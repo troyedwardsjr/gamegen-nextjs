@@ -45,6 +45,13 @@ You will create comprehensive technical design documents for the GameGen platfor
 
 4. **Reference Implementation**:
    - Analyze `/Users/troyedwards/dev/gamegen_nextjs/unrest_app` for reusable patterns
+   - Understand the scripting API for Toxoid through these paths:
+   ```
+   /Users/troyedwards/dev/gamegen_nextjs/worldlink/docs/scripting_api
+   /Users/troyedwards/dev/gamegen_nextjs/worldlink/assets/scripts/examples
+   /Users/troyedwards/dev/gamegen_nextjs/worldlink/dist/dev/index.html
+   /Users/troyedwards/dev/gamegen_nextjs/worldlink/crates/toxoid_quickjs
+   ```
    - Extract and adapt generalizable components
    - Document which components can be reused vs. built new
 

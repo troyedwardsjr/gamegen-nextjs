@@ -1,0 +1,89 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "puppeteer-mcp-server"],
+      "env": {}
+    },
+    "openmemory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "openmemory"
+      ],
+      "env": {
+        "OPENMEMORY_API_KEY": "om-zn7j2akysozvj5ukwikgaxscywj23iuo",
+        "CLIENT_NAME": "claude"
+      }
+    },
+    "rag-docs": {
+      "command": "node",
+      "args": ["/Users/troyedwards/dev/bin/mcp/gamegen/mcp-ragdocs/build/index.js"],
+      "env": {
+        "EMBEDDING_PROVIDER": "ollama",
+        "EMBEDDING_MODEL": "nomic-embed-text",
+        "OPENAI_API_KEY": "/Users/troyedwards/dev/bin/mcp/mcp-ragdocs/build/index.js",
+        "FALLBACK_PROVIDER": "openai",
+        "FALLBACK_MODEL": "nomic-embed-text",
+        "QDRANT_URL": "http://localhost:6333"
+      },
+      "autoApprove": [
+        "search_documentation",
+        "list_sources",
+        "extract_urls",
+        "remove_documentation",
+        "list_queue",
+        "run_queue",
+        "clear_queue",
+        "add_documentation",
+        "add_repository",
+        "list_repositories",
+        "update_repository",
+        "remove_repository",
+        "watch_repository",
+        "get_indexing_status"
+      ]
+    },
+    "claude-context": {
+      "command": "npx",
+      "args": ["@zilliz/claude-context-mcp@latest"],
+      "env": {
+        "EMBEDDING_PROVIDER": "Ollama",
+        "EMBEDDING_MODEL": "nomic-embed-text",
+        "OLLAMA_HOST": "http://127.0.0.1:11434",
+        "MILVUS_ADDRESS": "http://127.0.0.1:19530",
+        "MILVUS_TOKEN": "",
+        "HYBRID_MODE": "false"
+      }
+    },
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway", 
+        "run"
+      ]
+    },
+    "trello": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env-file",
+        "/Users/troyedwards/dev/bin/mcp/mcp-server-trello/.env",
+        "mcp-server-trello-mcp-server-trello:latest"
+      ]
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
+    }
+  }
+}
