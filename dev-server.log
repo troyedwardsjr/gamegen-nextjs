@@ -1,0 +1,52 @@
+
+> next-app-template@0.0.1 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3005 instead.
+   ▲ Next.js 15.3.1 (Turbopack)
+   - Local:        http://localhost:3005
+   - Network:      http://192.168.1.168:3005
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 90ms
+ ✓ Ready in 694ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled in 5ms
+ ○ Compiling / ...
+(node:91158) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/troyedwards/dev/gamegen_nextjs/tailwind.config.js?id=1757160164375 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/troyedwards/dev/gamegen_nextjs/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Compiled / in 1727ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.f4wkoq7asv'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.f4wkoq7asv'
+}
+ ✓ Compiled /_error in 301ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.7w64rh3j5xh'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.7w64rh3j5xh'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.f4wkoq7asv'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.f4wkoq7asv'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.x67cmb4nt7a'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.x67cmb4nt7a'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.obcyrvqlxgl'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.obcyrvqlxgl'
+}
