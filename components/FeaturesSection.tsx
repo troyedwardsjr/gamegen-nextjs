@@ -10,7 +10,7 @@ import {
   SparklesIcon,
   ZapIcon,
   GamepadIcon,
-} from "lucide-react";
+} from "@/components/icons";
 
 const FeaturesSection = memo(() => {
   const shouldReduceMotion = useReducedMotion();

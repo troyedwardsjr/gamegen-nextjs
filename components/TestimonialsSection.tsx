@@ -2,7 +2,7 @@
 
 import React, { memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { StarIcon, UserIcon } from "lucide-react";
+import { StarIcon } from "@/components/icons";
 
 const TestimonialsSection = memo(() => {
   const shouldReduceMotion = useReducedMotion();
@@ -162,7 +162,7 @@ const TestimonialsSection = memo(() => {
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
                     <StarIcon
                       key={i}
-                      className="w-4 h-4 text-yellow-400 fill-current"
+                      className="w-4 h-4 text-yellow-400"
                     />
                   ))}
                 </div>

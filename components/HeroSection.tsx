@@ -2,7 +2,7 @@
 
 import { Button } from '@heroui/button';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Users, Gamepad2, Code } from 'lucide-react';
+import { ArrowRightIcon, SparklesIcon, UsersIcon, GamepadIcon, CodeIcon } from '@/components/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -83,7 +83,7 @@ export default function HeroSection() {
                   ease: "easeInOut",
                 }}
               >
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-purple-300 drop-shadow-lg" />
+                <SparklesIcon className="w-3 h-3 sm:w-4 sm:h-4 text-purple-300 drop-shadow-lg" />
               </motion.div>
               <span className="text-xs sm:text-sm font-semibold text-white/95 drop-shadow-sm">
                 AI-Powered Game Creation Platform
@@ -154,7 +154,7 @@ export default function HeroSection() {
                   animate={{ x: [0, 3, 0] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </motion.div>
               </div>
             </motion.button>
@@ -193,9 +193,9 @@ export default function HeroSection() {
             className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto px-4 sm:px-0"
           >
             {[
-              { icon: Users, value: "5K+", label: "Game Creators", delay: 0.1 },
-              { icon: Gamepad2, value: "15K+", label: "Games Created", delay: 0.2 },
-              { icon: Code, value: "50+", label: "Script Templates", delay: 0.3 },
+              { icon: UsersIcon, value: "5K+", label: "Game Creators", delay: 0.1 },
+              { icon: GamepadIcon, value: "15K+", label: "Games Created", delay: 0.2 },
+              { icon: CodeIcon, value: "50+", label: "Script Templates", delay: 0.3 },
             ].map(({ icon: Icon, value, label, delay }, index) => (
               <motion.div
                 key={label}

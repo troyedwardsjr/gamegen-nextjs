@@ -2,7 +2,7 @@
 
 import React, { memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Sparkles, Zap } from "lucide-react";
+import { ArrowRightIcon, SparklesIcon, ZapIcon } from "@/components/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -158,7 +158,7 @@ const CTASection = memo(({
                   ease: "easeInOut",
                 }}
               >
-                <Sparkles className="w-4 h-4 text-purple-300" />
+                <SparklesIcon className="w-4 h-4 text-purple-300" />
               </motion.div>
               <span className="text-sm font-semibold text-white/95">
                 Limited Time - Free Account Setup
@@ -215,7 +215,7 @@ const CTASection = memo(({
                     animate={shouldReduceMotion ? undefined : { x: [0, 3, 0] }}
                     transition={shouldReduceMotion ? undefined : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRightIcon className="w-5 h-5" />
                   </motion.div>
                 </div>
               </motion.button>
@@ -248,9 +248,9 @@ const CTASection = memo(({
                 className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 max-w-2xl mx-auto"
               >
                 {[
-                  { icon: Zap, value: "5 min", label: "Setup Time" },
-                  { icon: Sparkles, value: "Free", label: "To Start" },
-                  { icon: ArrowRight, value: "24/7", label: "AI Support" },
+                  { icon: ZapIcon, value: "5 min", label: "Setup Time" },
+                  { icon: SparklesIcon, value: "Free", label: "To Start" },
+                  { icon: ArrowRightIcon, value: "24/7", label: "AI Support" },
                 ].map(({ icon: Icon, value, label }, index) => (
                   <motion.div
                     key={label}
