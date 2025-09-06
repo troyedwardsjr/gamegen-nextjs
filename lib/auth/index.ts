@@ -20,9 +20,9 @@ export { createAuthServerClient } from './server'
 export type { AuthClient } from './client'
 export type { AuthServerClient } from './server'
 
-// Authentication context and hooks
-export { AuthProvider, useAuth, withAuth } from './context'
-export type { AuthContextType, AuthResult } from './context'
+// Authentication context and hooks (Note: import these directly for React components)
+// export { AuthProvider, useAuth, withAuth } from './context'
+// export type { AuthContextType, AuthResult } from './context'
 
 // Session management
 export { SessionManager } from './session'
@@ -56,6 +56,9 @@ export {
   getPasswordStrengthProgress,
   generateSecurePassword 
 } from './password'
+
+// Import password validation for internal use
+import { validatePassword } from './password'
 export type { 
   PasswordValidationResult, 
   PasswordRequirements 
@@ -84,9 +87,7 @@ export type { RateLimitConfig, RateLimitResult } from './rate-limit'
 
 // Email verification
 export { 
-  EmailVerificationManager,
-  extractVerificationTokenFromUrl,
-  extractEmailFromUrl 
+  EmailVerificationManager
 } from './email-verification'
 export type { 
   EmailVerificationResult, 
@@ -97,16 +98,16 @@ export type {
 export { SecurityMiddleware, createSecurityMiddleware } from './middleware'
 export type { SecurityMiddlewareOptions, SecurityContext } from './middleware'
 
-// Protected routes
-export { 
-  ProtectedRoute, 
-  withProtection, 
-  useRouteAccess,
-  AdminOnlyRoute,
-  ProTierRoute,
-  EducationalRoute 
-} from './protected-route'
-export type { ProtectedRouteProps } from './protected-route'
+// Protected routes (Note: import these directly for React components)
+// export { 
+//   ProtectedRoute, 
+//   withProtection, 
+//   useRouteAccess,
+//   AdminOnlyRoute,
+//   ProTierRoute,
+//   EducationalRoute 
+// } from './protected-route'
+// export type { ProtectedRouteProps } from './protected-route'
 
 // Constants and configurations
 export const AUTH_CONSTANTS = {
@@ -175,24 +176,24 @@ export const TIER_PERMISSIONS = {
     PERMISSIONS.AI_GENERATE_BASIC,
     PERMISSIONS.COMMUNITY_POST,
     PERMISSIONS.COMMUNITY_COMMENT,
-  ],
+  ] as string[],
   pro: [
     PERMISSIONS.GAME_EXPORT,
     PERMISSIONS.GAME_COLLABORATE,
     PERMISSIONS.ASSET_UPLOAD,
     PERMISSIONS.AI_GENERATE_ADVANCED,
-  ],
+  ] as string[],
   max: [
     PERMISSIONS.ASSET_SELL,
     PERMISSIONS.AI_UNLIMITED,
     PERMISSIONS.ANALYTICS_VIEW,
-  ],
+  ] as string[],
   educational: [
     PERMISSIONS.USER_MANAGE,
     'edu:bulk_create',
     'edu:progress_track',
-  ],
-} as const
+  ] as string[],
+}
 
 // Utility functions
 export const AuthUtils = {
@@ -215,17 +216,17 @@ export const AuthUtils = {
    */
   getPermissionsForTier: (tier: keyof typeof TIER_PERMISSIONS): string[] => {
     const tierPerms = TIER_PERMISSIONS[tier] || []
-    const inheritedPerms = tier !== 'free' ? TIER_PERMISSIONS.free : []
+    const inheritedPerms = tier !== 'free' ? [...TIER_PERMISSIONS.free] : []
     
     if (tier === 'pro' || tier === 'max' || tier === 'educational') {
       inheritedPerms.push(...TIER_PERMISSIONS.pro)
     }
     
     if (tier === 'max') {
-      inheritedPerms.push(...TIER_PERMISSIONS.pro)
+      inheritedPerms.push(...TIER_PERMISSIONS.max)
     }
     
-    return [...new Set([...inheritedPerms, ...tierPerms])]
+    return Array.from(new Set([...inheritedPerms, ...tierPerms]))
   },
 
   /**
@@ -346,10 +347,10 @@ export type {
   SessionOptions
 } from './session-management'
 
-// Export everything for convenience
+// Export everything for convenience (React components commented out for TS compatibility)
 export * from './client'
 export * from './server'
-export * from './context'
+// export * from './context'  // React component - import directly
 export * from './session'
 export * from './mfa'
 export * from './social'
@@ -358,9 +359,9 @@ export * from './security'
 export * from './rate-limit'
 export * from './email-verification'
 export * from './middleware'
-export * from './protected-route'
+// export * from './protected-route'  // React component - import directly
 export * from './auth-utils'
-export * from './auth-hooks'
+// export * from './auth-hooks'  // React hooks - import directly
 export * from './auth-guards'
 export * from './session-management'
 
@@ -369,11 +370,19 @@ export type UserTier = 'free' | 'pro' | 'max' | 'educational'
 export type AuthProvider = 'google' | 'discord' | 'github' | 'apple'
 export type MFAMethod = 'totp' | 'sms' | 'email'
 
+// Import the classes
+import { SessionManager } from './session'
+import { MFAManager } from './mfa'
+import { SocialAuthManager } from './social'
+import { AccountSecurityManager } from './security'
+import { EmailVerificationManager } from './email-verification'
+import { SecurityMiddleware } from './middleware'
+
 // Default export for easy importing
 const GameGenAuth = {
-  // Core components
-  AuthProvider,
-  ProtectedRoute,
+  // Core components (commented out - import React components directly)
+  // AuthProvider,
+  // ProtectedRoute,
   
   // Managers
   SessionManager,

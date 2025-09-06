@@ -10,15 +10,44 @@ import { cookies } from "next/headers";
 // Type alias for better compatibility
 export type UserProfile = Database['public']['Tables']['profiles']['Row']
 
-// Email validation utility
+// Email validation utility - improved to handle edge cases
 export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || email.length === 0) return false;
+  
+  // More comprehensive email regex that handles edge cases
+  const emailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+  
+  // Additional checks for common edge cases
+  if (email.includes('..')) return false; // No consecutive dots
+  if (email.startsWith('.') || email.endsWith('.')) return false; // No leading/trailing dots
+  if (email.length > 254) return false; // RFC 5321 limit
+  
   return emailRegex.test(email);
 };
 
-// Basic password validation utility
+// Basic password validation utility - more strict now
 export const isValidPassword = (password: string): boolean => {
-  return password.length >= 6;
+  if (password.length < 8) return false;
+  
+  // Reject common weak passwords
+  const weakPasswords = [
+    'password', 'password123', '12345678', 'qwerty123', 
+    'abc123456', '123456789', 'password1', 'welcome123'
+  ];
+  
+  if (weakPasswords.includes(password.toLowerCase())) {
+    return false;
+  }
+  
+  // Must have at least 3 of these 4 criteria:
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
+  
+  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
+  
+  return criteriaCount >= 3;
 };
 
 // Enhanced password validation with detailed rules
@@ -30,28 +59,39 @@ export const validatePassword = (password: string) => {
     return { isValid: false, errors: ["Password is required"] };
   }
 
-  if (password.length < 6) {
-    errors.push("Password must be at least 6 characters long");
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
     isValid = false;
   }
 
-  if (!/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
+  // Check for weak passwords
+  const weakPasswords = [
+    'password', 'password123', '12345678', 'qwerty123', 
+    'abc123456', '123456789', 'password1', 'welcome123'
+  ];
+  
+  if (weakPasswords.includes(password.toLowerCase())) {
+    errors.push("Password is too common. Please choose a more secure password");
     isValid = false;
   }
 
-  if (!/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-    isValid = false;
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-    isValid = false;
-  }
-
-  // Special characters are recommended but not required
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
+  
+  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecialChar].filter(Boolean).length;
+  
+  if (criteriaCount < 3) {
+    const missing = [];
+    if (!hasLower) missing.push("lowercase letters");
+    if (!hasUpper) missing.push("uppercase letters");
+    if (!hasNumber) missing.push("numbers");
+    if (!hasSpecialChar) missing.push("special characters");
+    
+    errors.push(`Password must contain at least 3 of these 4 types: lowercase letters, uppercase letters, numbers, special characters. Missing: ${missing.join(', ')}`);
+    isValid = false;
+  }
 
   return {
     isValid,
@@ -65,25 +105,64 @@ export const getPasswordStrength = (password: string) => {
   if (!password) return { score: 0, label: "", color: "default" as const };
 
   let score = 0;
+  const maxScore = 10;
 
-  if (password.length >= 6) score += 1;
+  // Length scoring
+  if (password.length >= 8) score += 2;
+  else if (password.length >= 6) score += 1;
+  
+  if (password.length >= 12) score += 1;
+  if (password.length >= 16) score += 1;
+  
+  // Character type scoring
   if (/[A-Z]/.test(password)) score += 1;
   if (/[a-z]/.test(password)) score += 1;
   if (/\d/.test(password)) score += 1;
   if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) score += 1;
+  
+  // Bonus for variety
+  const hasMultipleNumbers = (password.match(/\d/g) || []).length >= 2;
+  const hasMultipleSpecial = (password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/g) || []).length >= 2;
+  
+  if (hasMultipleNumbers) score += 1;
+  if (hasMultipleSpecial) score += 1;
+  
+  // Penalty for weak patterns
+  const weakPasswords = [
+    'password', 'password123', '12345678', 'qwerty123', 
+    'abc123456', '123456789', 'password1', 'welcome123'
+  ];
+  
+  if (weakPasswords.includes(password.toLowerCase())) {
+    score = Math.max(0, score - 3);
+  }
 
-  const strengthMap = {
-    0: { label: "Very weak", color: "danger" as const },
-    1: { label: "Weak", color: "danger" as const },
-    2: { label: "Fair", color: "warning" as const },
-    3: { label: "Good", color: "warning" as const },
-    4: { label: "Strong", color: "success" as const },
-    5: { label: "Very strong", color: "success" as const },
-  };
+  const percentage = Math.min(100, (score / maxScore) * 100);
+  
+  let label: string;
+  let color: "danger" | "warning" | "success" | "default";
+  
+  if (percentage >= 80) {
+    label = "Very strong";
+    color = "success";
+  } else if (percentage >= 60) {
+    label = "Strong";
+    color = "success";
+  } else if (percentage >= 40) {
+    label = "Good";
+    color = "warning";
+  } else if (percentage >= 20) {
+    label = "Fair";
+    color = "warning";
+  } else {
+    label = "Weak";
+    color = "danger";
+  }
 
   return {
-    score: (score / 5) * 100,
-    ...strengthMap[score as keyof typeof strengthMap],
+    score: percentage,
+    label,
+    color,
   };
 };
 
@@ -243,7 +322,8 @@ export const getAuthErrorMessage = (error: any): string => {
     case "User not found":
       return "No account found with this email address.";
     case "Password should be at least 6 characters":
-      return "Password must be at least 6 characters long.";
+    case "Password should be at least 8 characters":
+      return "Password must be at least 8 characters long.";
     case "Unable to validate email address: invalid format":
       return "Please enter a valid email address.";
     case "Email address is invalid":

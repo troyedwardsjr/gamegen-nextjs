@@ -1,12 +1,36 @@
 /**
  * Account security utilities for GameGen platform
- * Implements account lockout, suspicious activity detection, and security event logging
+ * Simplified implementation that works with existing database schema
+ * Uses in-memory tracking and console logging instead of missing database tables
  */
 
 import { createAuthClient } from './client'
-import { createAuthServerClient } from './server'
-import { getClientIP } from './rate-limit'
+import { createServerSupabaseClient } from './auth-utils'
 import type { NextRequest } from 'next/server'
+
+// In-memory store for security tracking (in production, use Redis)
+const securityState = {
+  failedAttempts: new Map<string, { count: number; lastAttempt: Date; attempts: Date[] }>(),
+  lockedAccounts: new Map<string, { lockedUntil: Date; reason: string }>(),
+  suspiciousActivity: new Map<string, { lastCheck: Date; riskScore: number }>(),
+}
+
+// Helper to get client IP from request
+const getClientIP = (request?: NextRequest): string => {
+  if (!request) return 'unknown'
+  
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  
+  const real = request.headers.get('x-real-ip')
+  if (real) {
+    return real.trim()
+  }
+  
+  return request.ip || 'unknown'
+}
 
 export interface SecurityEventType {
   LOGIN_SUCCESS: 'auth.login.success'
@@ -54,10 +78,8 @@ const EXTENDED_LOCKOUT_DURATION = 60 * 60 * 1000 // 1 hour
 const PROGRESSIVE_LOCKOUT_THRESHOLD = 3
 
 export class AccountSecurityManager {
-  private supabase = typeof window !== 'undefined' ? createAuthClient() : createAuthServerClient()
-
   /**
-   * Log a security event
+   * Log a security event (simplified - logs to console and user_sessions table)
    */
   async logSecurityEvent(
     type: keyof SecurityEventType,
@@ -66,7 +88,7 @@ export class AccountSecurityManager {
     userId?: string
   ): Promise<void> {
     try {
-      const ip_address = request ? getClientIP(request) : 'unknown'
+      const ip_address = getClientIP(request)
       const user_agent = request?.headers.get('user-agent') || 'unknown'
       
       const event: Omit<SecurityEvent, 'timestamp'> = {
@@ -78,17 +100,40 @@ export class AccountSecurityManager {
         severity: this.calculateEventSeverity(type, metadata),
       }
 
-      await this.supabase
-        .from('security_events')
-        .insert({
-          event_type: type,
-          user_id: event.user_id,
-          ip_address: event.ip_address,
-          user_agent: event.user_agent,
-          metadata: event.metadata,
-          severity: event.severity,
-          created_at: new Date().toISOString(),
-        })
+      // Log to console for now (in production, send to logging service)
+      console.log(`[SECURITY] ${type}:`, {
+        user_id: event.user_id,
+        ip_address: event.ip_address,
+        severity: event.severity,
+        metadata: event.metadata
+      })
+
+      // Try to log to user_sessions table if we have a user
+      if (userId) {
+        try {
+          const supabase = await createServerSupabaseClient()
+          await supabase
+            .from('user_sessions')
+            .insert({
+              user_id: userId,
+              ip_address: event.ip_address,
+              user_agent: event.user_agent,
+              platform: 'web',
+              activities: [
+                {
+                  type: 'security_event',
+                  event_type: type,
+                  severity: event.severity,
+                  timestamp: new Date().toISOString(),
+                  metadata: event.metadata
+                }
+              ],
+              created_at: new Date().toISOString()
+            })
+        } catch (dbError) {
+          console.warn('Could not log to user_sessions:', dbError)
+        }
+      }
 
       // Handle high-severity events immediately
       if (event.severity === 'high' || event.severity === 'critical') {
@@ -100,50 +145,43 @@ export class AccountSecurityManager {
   }
 
   /**
-   * Record a failed login attempt
+   * Record a failed login attempt (uses in-memory tracking)
    */
   async recordFailedLogin(
     email: string,
     request?: NextRequest,
     reason = 'invalid_credentials'
   ): Promise<{ shouldLock: boolean; attemptsRemaining: number }> {
-    const ip_address = request ? getClientIP(request) : 'unknown'
+    const ip_address = getClientIP(request)
+    const key = `${email}:${ip_address}`
     
     try {
-      // Get or create failed attempts record
-      const { data: existingAttempts, error: selectError } = await this.supabase
-        .from('failed_login_attempts')
-        .select('*')
-        .eq('email', email)
-        .eq('ip_address', ip_address)
-        .gte('created_at', new Date(Date.now() - LOCKOUT_DURATION).toISOString())
-        .order('created_at', { ascending: false })
-
-      if (selectError && selectError.code !== 'PGRST116') {
-        console.error('Error fetching failed attempts:', selectError)
+      const now = new Date()
+      let attempts = securityState.failedAttempts.get(key) || { 
+        count: 0, 
+        lastAttempt: now, 
+        attempts: [] 
       }
-
-      const currentAttempts = (existingAttempts?.length || 0) + 1
       
-      // Record this attempt
-      await this.supabase
-        .from('failed_login_attempts')
-        .insert({
-          email,
-          ip_address,
-          user_agent: request?.headers.get('user-agent') || 'unknown',
-          reason,
-          created_at: new Date().toISOString(),
-        })
+      // Clean up old attempts (older than lockout duration)
+      const cutoff = new Date(now.getTime() - LOCKOUT_DURATION)
+      attempts.attempts = attempts.attempts.filter(attempt => attempt > cutoff)
+      
+      // Add current attempt
+      attempts.count = attempts.attempts.length + 1
+      attempts.lastAttempt = now
+      attempts.attempts.push(now)
+      
+      securityState.failedAttempts.set(key, attempts)
 
       await this.logSecurityEvent(
         'LOGIN_FAILED',
-        { email, reason, attempt_count: currentAttempts },
+        { email, reason, attempt_count: attempts.count },
         request
       )
 
-      const attemptsRemaining = Math.max(0, MAX_FAILED_ATTEMPTS - currentAttempts)
-      const shouldLock = currentAttempts >= MAX_FAILED_ATTEMPTS
+      const attemptsRemaining = Math.max(0, MAX_FAILED_ATTEMPTS - attempts.count)
+      const shouldLock = attempts.count >= MAX_FAILED_ATTEMPTS
 
       if (shouldLock) {
         await this.lockAccount(email, 'too_many_failed_attempts', request)
@@ -160,17 +198,16 @@ export class AccountSecurityManager {
    * Record a successful login
    */
   async recordSuccessfulLogin(userId: string, request?: NextRequest): Promise<void> {
-    const ip_address = request ? getClientIP(request) : 'unknown'
+    const ip_address = getClientIP(request)
     
     try {
       // Clear failed attempts for this user/IP
-      const { data: { user } } = await this.supabase.auth.getUser()
+      const supabase = await createServerSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
       if (user?.email) {
-        await this.supabase
-          .from('failed_login_attempts')
-          .delete()
-          .eq('email', user.email)
-          .eq('ip_address', ip_address)
+        const key = `${user.email}:${ip_address}`
+        securityState.failedAttempts.delete(key)
       }
 
       // Log successful login
@@ -181,12 +218,11 @@ export class AccountSecurityManager {
         userId
       )
 
-      // Update last login information
-      await this.supabase
+      // Update last login information in profiles table
+      await supabase
         .from('profiles')
         .update({
-          last_login_at: new Date().toISOString(),
-          last_login_ip: ip_address,
+          last_active_at: new Date().toISOString(),
         })
         .eq('id', userId)
     } catch (error) {
@@ -195,7 +231,7 @@ export class AccountSecurityManager {
   }
 
   /**
-   * Lock an account
+   * Lock an account (uses in-memory tracking)
    */
   async lockAccount(
     identifier: string, // email or user ID
@@ -203,58 +239,24 @@ export class AccountSecurityManager {
     request?: NextRequest
   ): Promise<boolean> {
     try {
-      // Determine if identifier is email or user ID
-      const isEmail = identifier.includes('@')
-      let userId: string | undefined
-      
-      if (isEmail) {
-        // Look up user ID by email (this requires a server-side function)
-        const { data } = await this.supabase.rpc('get_user_id_by_email', {
-          email_address: identifier
-        })
-        userId = data
-      } else {
-        userId = identifier
-      }
-
-      if (!userId) {
-        console.warn('Could not find user ID for account lock')
-        return false
-      }
-
-      // Check for progressive lockout (longer duration for repeat offenders)
-      const recentLockouts = await this.getRecentLockouts(userId)
-      const lockoutDuration = recentLockouts >= PROGRESSIVE_LOCKOUT_THRESHOLD 
-        ? EXTENDED_LOCKOUT_DURATION 
-        : LOCKOUT_DURATION
-
+      const lockoutDuration = LOCKOUT_DURATION
       const lockedUntil = new Date(Date.now() + lockoutDuration)
 
-      // Insert lockout record
-      const { error } = await this.supabase
-        .from('account_lockouts')
-        .insert({
-          user_id: userId,
-          locked_until: lockedUntil.toISOString(),
-          lock_reason: reason,
-          created_at: new Date().toISOString(),
-        })
-
-      if (error) {
-        console.error('Error creating account lockout:', error)
-        return false
-      }
+      // Store in memory
+      securityState.lockedAccounts.set(identifier, {
+        lockedUntil,
+        reason
+      })
 
       await this.logSecurityEvent(
         'ACCOUNT_LOCKED',
         { 
-          userId, 
+          identifier, 
           reason, 
           locked_until: lockedUntil.toISOString(),
           duration_minutes: lockoutDuration / 60000 
         },
-        request,
-        userId
+        request
       )
 
       return true
@@ -267,30 +269,25 @@ export class AccountSecurityManager {
   /**
    * Check if an account is locked
    */
-  async isAccountLocked(userId: string): Promise<{ locked: boolean; lockedUntil?: Date; reason?: string }> {
+  async isAccountLocked(identifier: string): Promise<{ locked: boolean; lockedUntil?: Date; reason?: string }> {
     try {
-      const { data, error } = await this.supabase
-        .from('account_lockouts')
-        .select('locked_until, lock_reason')
-        .eq('user_id', userId)
-        .gte('locked_until', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking account lockout:', error)
+      const lockInfo = securityState.lockedAccounts.get(identifier)
+      
+      if (!lockInfo) {
         return { locked: false }
       }
 
-      if (!data) {
+      // Check if lockout has expired
+      const now = new Date()
+      if (now >= lockInfo.lockedUntil) {
+        securityState.lockedAccounts.delete(identifier)
         return { locked: false }
       }
 
       return {
         locked: true,
-        lockedUntil: new Date(data.locked_until),
-        reason: data.lock_reason,
+        lockedUntil: lockInfo.lockedUntil,
+        reason: lockInfo.reason,
       }
     } catch (error) {
       console.error('Error checking account lock status:', error)
@@ -301,22 +298,13 @@ export class AccountSecurityManager {
   /**
    * Unlock an account manually (admin function)
    */
-  async unlockAccount(userId: string, adminId: string): Promise<boolean> {
+  async unlockAccount(identifier: string, adminId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('account_lockouts')
-        .update({ locked_until: new Date().toISOString() })
-        .eq('user_id', userId)
-        .gte('locked_until', new Date().toISOString())
-
-      if (error) {
-        console.error('Error unlocking account:', error)
-        return false
-      }
+      securityState.lockedAccounts.delete(identifier)
 
       await this.logSecurityEvent(
         'ACCOUNT_UNLOCKED',
-        { userId, admin_id: adminId, manual_unlock: true },
+        { identifier, admin_id: adminId, manual_unlock: true },
         undefined,
         adminId
       )
@@ -329,65 +317,30 @@ export class AccountSecurityManager {
   }
 
   /**
-   * Analyze suspicious activity for a user
+   * Analyze suspicious activity (simplified version)
    */
   async analyzeSuspiciousActivity(
     userId: string,
     request?: NextRequest
   ): Promise<SuspiciousActivityIndicator> {
     try {
-      const ip_address = request ? getClientIP(request) : 'unknown'
+      const ip_address = getClientIP(request)
       const user_agent = request?.headers.get('user-agent') || 'unknown'
       
-      // Check for multiple failed logins
-      const { data: failedLogins } = await this.supabase
-        .from('security_events')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('event_type', 'LOGIN_FAILED')
-        .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
-
-      const multipleFailedLogins = (failedLogins?.length || 0) >= 3
-
-      // Check for unusual location (IP address)
-      const { data: recentLogins } = await this.supabase
-        .from('security_events')
-        .select('ip_address')
-        .eq('user_id', userId)
-        .eq('event_type', 'LOGIN_SUCCESS')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(10)
-
-      const knownIPs = new Set(recentLogins?.map(login => login.ip_address) || [])
-      const unusualLocation = !knownIPs.has(ip_address) && knownIPs.size > 0
-
-      // Check for unusual device (simplified user agent check)
-      const { data: recentDevices } = await this.supabase
-        .from('security_events')
-        .select('user_agent')
-        .eq('user_id', userId)
-        .eq('event_type', 'LOGIN_SUCCESS')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(10)
-
-      const knownDevices = new Set(recentDevices?.map(device => device.user_agent) || [])
-      const unusualDevice = !knownDevices.has(user_agent) && knownDevices.size > 0
-
-      // Check for rapid requests (basic implementation)
-      const { data: recentEvents } = await this.supabase
-        .from('security_events')
-        .select('created_at')
-        .eq('user_id', userId)
-        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
-
-      const rapidRequests = (recentEvents?.length || 0) > 20 // More than 20 events in 5 minutes
+      // Simplified analysis using in-memory data
+      const key = `${userId}:${ip_address}`
+      const failedAttempts = securityState.failedAttempts.get(key)
+      
+      const multipleFailedLogins = (failedAttempts?.count || 0) >= 3
+      
+      // For now, mark unusual location/device as false (would need historical data)
+      const unusualLocation = false
+      const unusualDevice = false
+      const rapidRequests = false
 
       // Calculate risk score
       let riskScore = 0
       if (multipleFailedLogins) riskScore += 30
-      if (unusualLocation) riskScore += 25
-      if (unusualDevice) riskScore += 20
-      if (rapidRequests) riskScore += 25
 
       const indicator: SuspiciousActivityIndicator = {
         multipleFailedLogins,
@@ -398,7 +351,7 @@ export class AccountSecurityManager {
       }
 
       // Log suspicious activity if risk score is high
-      if (riskScore >= 60) {
+      if (riskScore >= 30) {
         await this.logSecurityEvent(
           'SUSPICIOUS_ACTIVITY',
           { 
@@ -426,45 +379,16 @@ export class AccountSecurityManager {
   }
 
   /**
-   * Get security events for a user
+   * Get security events for a user (simplified - returns empty array)
    */
   async getUserSecurityEvents(
     userId: string,
     limit = 50,
     eventType?: keyof SecurityEventType
   ): Promise<SecurityEvent[]> {
-    try {
-      let query = this.supabase
-        .from('security_events')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit)
-
-      if (eventType) {
-        query = query.eq('event_type', eventType)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching security events:', error)
-        return []
-      }
-
-      return data?.map(event => ({
-        type: event.event_type,
-        user_id: event.user_id,
-        ip_address: event.ip_address,
-        user_agent: event.user_agent,
-        metadata: event.metadata,
-        severity: event.severity,
-        timestamp: new Date(event.created_at),
-      })) || []
-    } catch (error) {
-      console.error('Error fetching security events:', error)
-      return []
-    }
+    // This would return events from a logging service in production
+    console.log(`[SECURITY] Requested security events for user ${userId}, type: ${eventType}`)
+    return []
   }
 
   private calculateEventSeverity(
@@ -499,7 +423,7 @@ export class AccountSecurityManager {
     request?: NextRequest
   ): Promise<void> {
     // In a production environment, this would integrate with alerting systems
-    console.warn('High severity security event:', event)
+    console.warn('[SECURITY] High severity security event:', event)
     
     // For critical events, consider additional automated responses
     if (event.severity === 'critical' && event.user_id) {
@@ -507,66 +431,36 @@ export class AccountSecurityManager {
         // Automatically lock account for data breach attempts
         await this.lockAccount(event.user_id, 'data_breach_attempt', request)
       }
-      
-      if (event.type === 'SUSPICIOUS_ACTIVITY' && event.metadata.risk_score > 90) {
-        // Require MFA verification for extremely suspicious activity
-        await this.requireMFAVerification(event.user_id)
-      }
-    }
-  }
-
-  private async getRecentLockouts(userId: string): Promise<number> {
-    try {
-      const { data, error } = await this.supabase
-        .from('account_lockouts')
-        .select('id')
-        .eq('user_id', userId)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-
-      return data?.length || 0
-    } catch (error) {
-      console.error('Error fetching recent lockouts:', error)
-      return 0
-    }
-  }
-
-  private async requireMFAVerification(userId: string): Promise<void> {
-    try {
-      await this.supabase
-        .from('mfa_configurations')
-        .update({ requires_reverification: true })
-        .eq('user_id', userId)
-    } catch (error) {
-      console.error('Error requiring MFA reverification:', error)
     }
   }
 
   /**
-   * Clean up old security events and failed attempts
+   * Clean up old security data (simplified)
    */
   async cleanupOldSecurityData(): Promise<void> {
     try {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      const now = new Date()
       
-      // Clean up old security events (keep high/critical events longer)
-      await this.supabase
-        .from('security_events')
-        .delete()
-        .lt('created_at', thirtyDaysAgo)
-        .in('severity', ['low', 'medium'])
-
-      // Clean up old failed login attempts
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      await this.supabase
-        .from('failed_login_attempts')
-        .delete()
-        .lt('created_at', oneDayAgo)
-
       // Clean up expired lockouts
-      await this.supabase
-        .from('account_lockouts')
-        .delete()
-        .lt('locked_until', new Date().toISOString())
+      for (const [key, lockInfo] of securityState.lockedAccounts.entries()) {
+        if (now >= lockInfo.lockedUntil) {
+          securityState.lockedAccounts.delete(key)
+        }
+      }
+
+      // Clean up old failed attempts
+      const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 hours
+      for (const [key, attempts] of securityState.failedAttempts.entries()) {
+        attempts.attempts = attempts.attempts.filter(attempt => attempt > cutoff)
+        if (attempts.attempts.length === 0) {
+          securityState.failedAttempts.delete(key)
+        } else {
+          attempts.count = attempts.attempts.length
+          securityState.failedAttempts.set(key, attempts)
+        }
+      }
+
+      console.log('[SECURITY] Cleaned up old security data')
     } catch (error) {
       console.error('Error cleaning up old security data:', error)
     }

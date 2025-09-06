@@ -312,10 +312,10 @@ export class SessionManager {
 
   private async enrichSession(session: Session): Promise<ExtendedSession> {
     try {
-      // Get user profile to determine tier and permissions
+      // Get user profile to determine tier (permissions column doesn't exist in current schema)
       const { data: profile, error } = await this.supabase
         .from('profiles')
-        .select('subscription_tier, permissions')
+        .select('subscription_tier')
         .eq('id', session.user.id)
         .single()
 
@@ -328,10 +328,14 @@ export class SessionManager {
         }
       }
 
+      // Generate permissions based on subscription tier
+      const tier = profile.subscription_tier as ExtendedSession['tier']
+      const permissions = this.getPermissionsForTier(tier)
+
       return {
         ...session,
-        tier: profile.subscription_tier as ExtendedSession['tier'],
-        permissions: profile.permissions || [],
+        tier,
+        permissions,
         deviceInfo: {
           userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server-side',
           fingerprint: this.getDeviceFingerprint(),
@@ -346,6 +350,49 @@ export class SessionManager {
         permissions: [],
       }
     }
+  }
+
+  private getPermissionsForTier(tier: 'free' | 'pro' | 'max' | 'educational'): string[] {
+    // Define permissions based on subscription tier
+    const tierPermissions = {
+      free: [
+        'game:create_basic',
+        'game:publish_public',
+        'asset:use_basic'
+      ],
+      educational: [
+        'game:create_basic',
+        'game:publish_public',
+        'game:publish_educational',
+        'asset:use_basic',
+        'collaboration:basic'
+      ],
+      pro: [
+        'game:create_basic',
+        'game:create_advanced',
+        'game:publish_public',
+        'game:export',
+        'asset:use_basic',
+        'asset:use_premium',
+        'collaboration:basic',
+        'analytics:basic'
+      ],
+      max: [
+        'game:create_basic',
+        'game:create_advanced',
+        'game:publish_public',
+        'game:export',
+        'game:white_label',
+        'asset:use_basic',
+        'asset:use_premium',
+        'asset:create_commercial',
+        'collaboration:advanced',
+        'analytics:advanced',
+        'api:access'
+      ]
+    }
+
+    return tierPermissions[tier] || tierPermissions.free
   }
 
   private async setSessionPersistence(type: 'local' | 'session'): Promise<void> {
@@ -400,14 +447,29 @@ export class SessionManager {
     metadata: Record<string, any>
   ): Promise<void> {
     try {
-      await this.supabase
-        .from('security_events')
-        .insert({
-          event_type: type,
-          user_id: metadata.userId || null,
-          metadata,
-          created_at: new Date().toISOString(),
-        })
+      // Log security event to console (in production, send to logging service)
+      console.log(`[SECURITY] ${type}:`, metadata)
+      
+      // Try to log to user_sessions table if we have a user ID
+      if (metadata.userId) {
+        await this.supabase
+          .from('user_sessions')
+          .insert({
+            user_id: metadata.userId,
+            ip_address: metadata.ip_address || 'unknown',
+            user_agent: metadata.user_agent || 'unknown',
+            platform: 'web',
+            activities: [
+              {
+                type: 'security_event',
+                event_type: type,
+                timestamp: new Date().toISOString(),
+                metadata
+              }
+            ],
+            created_at: new Date().toISOString()
+          })
+      }
     } catch (error) {
       console.error('Error logging security event:', error)
     }
