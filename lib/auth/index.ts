@@ -291,6 +291,61 @@ export const AuthUtils = {
   },
 }
 
+// Authentication utilities from unrest_app migration
+export {
+  isValidEmail,
+  isValidPassword,
+  validatePassword as validatePasswordStrength,
+  getPasswordStrength,
+  manageFocus,
+  createServerSupabaseClient,
+  getSession,
+  getUser,
+  getProfile,
+  getAuthErrorMessage
+} from './auth-utils'
+export type { UserProfile } from './auth-utils'
+
+// Authentication hooks from unrest_app migration
+export {
+  useAuthError,
+  useRedirectIfAuthenticated,
+  useRequireAuth,
+  useProtectedRoute,
+  useFormLoading,
+  useAuthRedirect,
+  useAuthState,
+  usePermissions,
+  useAuthFlow,
+  useSession
+} from './auth-hooks'
+
+// Authentication guards from unrest_app migration
+export {
+  authGuard,
+  apiAuthGuard,
+  createAuthMiddleware as createAuthGuardMiddleware,
+  hasPermission,
+  hasRole,
+  hasMinimumTier,
+  middleware as authMiddleware
+} from './auth-guards'
+export type {
+  RouteGuardOptions,
+  AuthGuardResult
+} from './auth-guards'
+
+// Session management from unrest_app migration
+export {
+  ClientSessionManager,
+  ServerSessionManager,
+  sessionStorage
+} from './session-management'
+export type {
+  SessionData,
+  SessionOptions
+} from './session-management'
+
 // Export everything for convenience
 export * from './client'
 export * from './server'
@@ -304,6 +359,10 @@ export * from './rate-limit'
 export * from './email-verification'
 export * from './middleware'
 export * from './protected-route'
+export * from './auth-utils'
+export * from './auth-hooks'
+export * from './auth-guards'
+export * from './session-management'
 
 // Type definitions for external use
 export type UserTier = 'free' | 'pro' | 'max' | 'educational'
