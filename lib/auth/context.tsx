@@ -58,7 +58,7 @@ export interface AuthResult {
   requiresMFA?: boolean
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
+export const AuthContext = createContext<AuthContextType | null>(null)
 
 interface AuthProviderProps {
   children: React.ReactNode

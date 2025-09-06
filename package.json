@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --fix",
+    "dev-mode:on": "node scripts/toggle-dev-mode.js on",
+    "dev-mode:off": "node scripts/toggle-dev-mode.js off", 
+    "dev-mode": "node scripts/toggle-dev-mode.js",
+    "dev:bypass": "npm run dev-mode:on && npm run dev",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
@@ -18,6 +22,7 @@
     "test:e2e:pricing": "playwright test pricing-subscription-flow.spec.ts",
     "test:e2e:errors": "playwright test error-handling-edge-cases.spec.ts",
     "test:e2e:performance": "playwright test performance-accessibility.spec.ts",
+    "test:e2e:dev": "npm run dev-mode:on && playwright test",
     "playwright:install": "playwright install",
     "playwright:install-deps": "playwright install-deps"
   },

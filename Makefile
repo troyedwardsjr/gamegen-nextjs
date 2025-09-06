@@ -1,3 +1,23 @@
+# Development Commands
+dev-mode-on: ## Enable development mode (bypass authentication for local testing)
+	node scripts/toggle-dev-mode.js on
+
+dev-mode-off: ## Disable development mode (require normal authentication)  
+	node scripts/toggle-dev-mode.js off
+
+dev-mode-status: ## Show current development mode status
+	node scripts/toggle-dev-mode.js
+
+dev-with-auth-bypass: ## Start development server with authentication bypass enabled
+	node scripts/toggle-dev-mode.js on && npm run dev
+
+# Legacy commands for unrest_app template (kept for compatibility)
+unrest-dev-mode-on: ## Enable development mode in unrest_app template
+	cd unrest_app/nextjs_app && npm run dev-mode:on
+
+unrest-dev-mode-off: ## Disable development mode in unrest_app template
+	cd unrest_app/nextjs_app && npm run dev-mode:off
+
 # Claude integration
 claude: ## Launch Claude with proper permissions
 	claude --dangerously-skip-permissions --verbose

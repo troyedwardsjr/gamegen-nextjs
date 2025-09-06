@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './lib/supabase/middleware'
+import { isDevModeEnabled, logDevModeBypass } from './lib/dev-mode'
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -47,6 +48,19 @@ export async function middleware(request: NextRequest) {
   // Get the updated request with the session
   const supabase = response.locals?.supabase
   const user = response.locals?.user
+
+  // Check if dev mode is enabled and bypass authentication if so
+  if (isDevModeEnabled()) {
+    logDevModeBypass(pathname);
+    
+    // If accessing auth routes in dev mode, redirect to dashboard
+    if (pathname.startsWith('/auth') && !pathname.includes('callback')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    
+    // For all other routes in dev mode, allow access without authentication
+    return NextResponse.next()
+  }
 
   // Check if the route requires authentication
   const isProtectedRoute = protectedRoutes.some(route => 

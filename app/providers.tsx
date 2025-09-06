@@ -6,7 +6,7 @@ import * as React from "react";
 import { HeroUIProvider } from "@heroui/system";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { AuthProvider } from "@/lib/auth/context";
+import { ConditionalAuthProvider } from "@/lib/auth/conditional-provider";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -27,9 +27,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   return (
     <HeroUIProvider navigate={router.push}>
       <NextThemesProvider {...themeProps}>
-        <AuthProvider>
+        <ConditionalAuthProvider>
           {children}
-        </AuthProvider>
+        </ConditionalAuthProvider>
       </NextThemesProvider>
     </HeroUIProvider>
   );
