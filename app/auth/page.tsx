@@ -101,7 +101,7 @@ export default function AuthPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" data-testid={isLogin ? "login-form" : "register-form"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -117,6 +117,7 @@ export default function AuthPage() {
                     input: "bg-transparent text-white placeholder:text-gray-400",
                     inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
                   }}
+                  data-testid="email-input"
                   required
                 />
               </div>
@@ -135,11 +136,13 @@ export default function AuthPage() {
                     input: "bg-transparent text-white placeholder:text-gray-400",
                     inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
                   }}
+                  data-testid="password-input"
                   endContent={
                     <button
                       type="button"
                       onClick={() => setIsVisible(!isVisible)}
                       className="text-gray-400 hover:text-white transition-colors"
+                      data-testid="password-toggle"
                     >
                       {isVisible ? (
                         <EyeOffIcon className="w-5 h-5" />
@@ -167,6 +170,7 @@ export default function AuthPage() {
                       input: "bg-transparent text-white placeholder:text-gray-400",
                       inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
                     }}
+                    data-testid="confirm-password-input"
                     required
                   />
                 </div>
@@ -174,7 +178,7 @@ export default function AuthPage() {
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm text-center backdrop-blur-xl">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm text-center backdrop-blur-xl" data-testid={isLogin ? "login-error" : "registration-error"} role="alert">
                 {error}
               </div>
             )}
@@ -184,6 +188,7 @@ export default function AuthPage() {
               isLoading={isLoading}
               disabled={!email || !password || (!isLogin && !confirmPassword)}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50"
+              data-testid={isLogin ? "login-button" : "register-button"}
             >
               {isLoading 
                 ? (isLogin ? 'Signing In...' : 'Creating Account...') 
@@ -203,6 +208,7 @@ export default function AuthPage() {
                     setError("");
                   }}
                   className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                  data-testid={isLogin ? "switch-to-register" : "switch-to-login"}
                 >
                   {isLogin ? "Sign up" : "Sign in"}
                 </button>
