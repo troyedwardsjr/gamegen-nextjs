@@ -5,6 +5,8 @@ import { updateSession } from './lib/supabase/middleware'
 const protectedRoutes = [
   '/dashboard',
   '/create',
+  '/creator',
+  '/game-creator',
   '/profile',
   '/settings',
   '/analytics',
