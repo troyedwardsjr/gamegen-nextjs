@@ -72,6 +72,16 @@ export {
   type GameNotificationProps,
 } from './GlassmorphicAlert';
 
+export {
+  GlassmorphicSpinner,
+  type GlassmorphicSpinnerProps,
+} from './GlassmorphicSpinner';
+
+export {
+  GlassmorphicLoadingOverlay,
+  type GlassmorphicLoadingOverlayProps,
+} from './GlassmorphicLoadingOverlay';
+
 // Theme System
 export {
   themes,
