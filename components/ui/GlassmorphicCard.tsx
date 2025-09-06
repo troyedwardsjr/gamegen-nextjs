@@ -130,7 +130,7 @@ export function GlassmorphicCard({
   );
 
   const motionProps: HTMLMotionProps<"div"> = animated ? {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
+    initial: { opacity: 1, y: 0, scale: 1 },
     animate: { opacity: 1, y: 0, scale: 1 },
     transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
     whileHover: hover ? { y: -2 } : undefined,

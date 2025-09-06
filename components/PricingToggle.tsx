@@ -12,12 +12,16 @@ interface PricingToggleProps {
 }
 
 export function PricingToggle({ isYearly, onToggle, className }: PricingToggleProps) {
-  const handleToggle = (value: boolean) => {
-    onToggle(value);
-  };
+  const handleToggle = React.useCallback((value: boolean) => {
+    try {
+      onToggle(value);
+    } catch (error) {
+      console.error('Toggle error:', error);
+    }
+  }, [onToggle]);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={className}
@@ -43,7 +47,11 @@ export function PricingToggle({ isYearly, onToggle, className }: PricingTogglePr
               ? 'bg-gradient-to-r from-primary to-purple-500' 
               : 'bg-gray-300'
           }`}
-          onClick={() => handleToggle(!isYearly)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleToggle(!isYearly);
+          }}
         >
           <span
             className={`inline-block h-5 w-5 mt-0.5 ml-0.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${

@@ -96,7 +96,7 @@ export function SubscriptionStatus({
   const isMaxPlan = currentPlanIndex === plans.length - 1;
 
   const containerVariants = {
-    initial: { opacity: 0 },
+    initial: { opacity: 1 },
     animate: { 
       opacity: 1,
       transition: {
@@ -106,13 +106,13 @@ export function SubscriptionStatus({
   };
 
   const itemVariants = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 1, y: 0 },
     animate: { opacity: 1, y: 0 }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={className}

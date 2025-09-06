@@ -33,7 +33,7 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
     : 0;
 
   return (
-    <div className={`animate-in slide-in-from-bottom duration-700 w-full max-w-md mx-auto ${className}`} style={{ animationDelay: `${index * 100}ms` }}>
+    <div className={`animate-slide-in-from-bottom w-full max-w-md mx-auto ${className}`} style={{ animationDelay: `${index * 100}ms` }}>
       <GlassmorphicCard
         variant={tier.popular ? "gradient" : "default"}
         blur="lg"
@@ -82,7 +82,7 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
             
             {/* Savings Badge */}
             {isYearly && savings > 0 && (
-              <div className="animate-in zoom-in duration-500" style={{ animationDelay: `${500 + index * 100}ms` }}>
+              <div className="animate-zoom-in" style={{ animationDelay: `${500 + index * 100}ms` }}>
                 <Badge 
                   color="success" 
                   variant="flat"
@@ -103,11 +103,11 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
           </div>
 
           {/* Features List */}
-          <div className="space-y-3 animate-in fade-in duration-700" style={{ animationDelay: `${300 + index * 100}ms` }}>
+          <div className="space-y-3 animate-fade-in" style={{ animationDelay: `${300 + index * 100}ms` }}>
             {tier.features.map((feature, featureIndex) => (
               <div
                 key={featureIndex}
-                className="flex items-start space-x-3 animate-in slide-in-from-left duration-500"
+                className="flex items-start space-x-3 animate-slide-in-from-left"
                 style={{ animationDelay: `${400 + index * 100 + featureIndex * 50}ms` }}
               >
                 <div className="flex-shrink-0 mt-0.5">
