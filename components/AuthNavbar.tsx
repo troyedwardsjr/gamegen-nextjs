@@ -379,40 +379,40 @@ export function AuthNavbar({ isMenuOpen, onMenuOpenChange }: AuthNavbarProps) {
                       startContent={<HomeIcon className="w-4 h-4" />}
                       textValue="Dashboard"
                       className="text-sm"
+                      as={Link}
+                      href="/dashboard"
                     >
-                      <Link href="/dashboard" className="w-full block">
-                        Dashboard
-                      </Link>
+                      Dashboard
                     </DropdownItem>
                     <DropdownItem
                       key="creator"
                       startContent={<GameIcon className="w-4 h-4" />}
                       textValue="Creator Studio"
                       className="text-sm"
+                      as={Link}
+                      href="/creator"
                     >
-                      <Link href="/creator" className="w-full block">
-                        Creator Studio
-                      </Link>
+                      Creator Studio
                     </DropdownItem>
                     <DropdownItem
                       key="profile"
                       startContent={<UserIcon className="w-4 h-4" />}
                       textValue="Profile"
                       className="text-sm"
+                      as={Link}
+                      href="/profile"
                     >
-                      <Link href="/profile" className="w-full block">
-                        Profile
-                      </Link>
+                      Profile
                     </DropdownItem>
                     <DropdownItem
                       key="settings"
                       startContent={<CogIcon className="w-4 h-4" />}
                       textValue="Settings"
                       className="text-sm"
+                      as={Link}
+                      href="/settings"
                     >
-                      <Link href="/settings" className="w-full block">
-                        Settings
-                      </Link>
+                      Settings
                     </DropdownItem>
                     <DropdownItem
                       key="logout"
