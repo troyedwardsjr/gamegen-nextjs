@@ -11,6 +11,11 @@
 export * from './database';
 
 // =========================
+// Social Features Types
+// =========================
+export * from './social';
+
+// =========================
 // Authentication Types
 // =========================
 export * from './auth';
