@@ -21,6 +21,13 @@ import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/Glassmorph
 export default function CommunityPageMinimal() {
   const [activeTab, setActiveTab] = useState("discover");
 
+  // Simple seeded random function for consistent demo data
+  const getConsistentValue = (seed: number, max: number) => {
+    // Simple hash-like function that produces consistent values
+    const hash = ((seed * 9301 + 49297) % 233280) / 233280;
+    return Math.floor(hash * max);
+  };
+
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { 
@@ -96,9 +103,9 @@ export default function CommunityPageMinimal() {
                       <div className="flex items-center justify-between text-sm text-foreground/70 mb-3">
                         <div className="flex items-center gap-2">
                           <Play size={14} />
-                          <span>{Math.floor(Math.random() * 1000)}</span>
+                          <span>{getConsistentValue(i * 13, 1000)}</span>
                           <Heart size={14} />
-                          <span>{Math.floor(Math.random() * 100)}</span>
+                          <span>{getConsistentValue(i * 17, 100)}</span>
                         </div>
                         <Chip size="sm" variant="flat" startContent={<Crown size={12} />}>
                           Featured
@@ -226,7 +233,7 @@ export default function CommunityPageMinimal() {
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Creator {rank}</div>
-                          <div className="text-sm text-foreground/60">{Math.floor(Math.random() * 10)} games</div>
+                          <div className="text-sm text-foreground/60">{getConsistentValue(rank * 19, 10)} games</div>
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{(1000 - rank * 100).toLocaleString()}</div>
@@ -253,7 +260,7 @@ export default function CommunityPageMinimal() {
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Player {rank}</div>
-                          <div className="text-sm text-foreground/60">{Math.floor(Math.random() * 50)} hours</div>
+                          <div className="text-sm text-foreground/60">{getConsistentValue(rank * 23, 50)} hours</div>
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{(500 - rank * 50).toLocaleString()}</div>
