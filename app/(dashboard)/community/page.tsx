@@ -278,7 +278,7 @@ export default function CommunityPageMinimal() {
       variants={pageVariants}
       initial="initial"
       animate="animate"
-      className="container mx-auto px-4 py-8 max-w-7xl"
+      className="px-0 py-8"
     >
       {/* Header */}
       <motion.div variants={sectionVariants} className="text-center mb-8">

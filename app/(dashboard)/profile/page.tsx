@@ -18,7 +18,7 @@ export default function ProfilePage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto px-4 py-8 max-w-7xl"
+      className="px-0 py-8"
     >
       <UserProfile
         userId={user?.id}

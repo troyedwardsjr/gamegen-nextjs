@@ -243,8 +243,8 @@ export default function ExplorePage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="min-h-full bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16">
+      <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
