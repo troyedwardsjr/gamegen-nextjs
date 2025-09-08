@@ -23,73 +23,77 @@ import {
   InsufficientCreditsError,
 } from "@/lib/llm/types";
 
-// Initialize system components
+// Configuration that can be safely initialized at module level
 const configManager = LLMConfigManager.fromEnvironment();
-const providerManager = new ProviderManager({
-  default_provider: "claude",
-  fallback_chain: ["claude"],
-  load_balancing: { type: "round_robin" },
-  health_check_interval: 30000,
-  failover_enabled: true,
-  max_concurrent_requests: 10,
-});
 
-// Initialize billing and logging
-const billingTracker = new BillingTracker({
-  enabled: true,
-  credit_system_enabled: true,
-  auto_deduct_credits: true,
-  minimum_balance: 1.0,
-  low_balance_threshold: 5.0,
-  billing_cycle: "monthly",
-  cost_per_token: {
-    claude: { input: 3.0, output: 15.0 }, // Per million tokens
-  },
-  user_tier_discounts: {
-    free: 0,
-    pro: 0.1,
-    enterprise: 0.2,
-  },
-  free_tier_limits: {
-    monthly_tokens: 100000,
-    monthly_requests: 1000,
-  },
-});
-
-const logger = new LLMLogger({
-  enabled: true,
-  log_requests: true,
-  log_responses: true,
-  log_errors: true,
-  log_performance: true,
-  sensitive_data_masking: true,
-  retention_days: 30,
-  max_payload_size: 10000,
-  async_logging: true,
-  buffer_size: 100,
-  flush_interval: 60000,
-});
-
-// Register Claude provider
-const claudeConfig = configManager.getProviderConfig("claude");
-
-if (claudeConfig && process.env.ANTHROPIC_API_KEY) {
-  const claudeProvider = new ClaudeProvider({
-    api_key: process.env.ANTHROPIC_API_KEY!,
-    endpoint: "https://api.anthropic.com",
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 4000,
-    temperature: 0.7,
-    rate_limit: {
-      requests_per_minute: 100,
-      tokens_per_minute: 100000,
-    },
-    health_check_interval: 60000,
-    timeout: 30000,
-    retry_attempts: 3,
+// Function to initialize components that require request context
+function initializeComponents() {
+  const providerManager = new ProviderManager({
+    default_provider: "claude",
+    fallback_chain: ["claude"],
+    load_balancing: { type: "round_robin" },
+    health_check_interval: 30000,
+    failover_enabled: true,
+    max_concurrent_requests: 10,
   });
 
-  providerManager.registerProvider(claudeProvider);
+  const billingTracker = new BillingTracker({
+    enabled: true,
+    credit_system_enabled: true,
+    auto_deduct_credits: true,
+    minimum_balance: 1.0,
+    low_balance_threshold: 5.0,
+    billing_cycle: "monthly",
+    cost_per_token: {
+      claude: { input: 3.0, output: 15.0 }, // Per million tokens
+    },
+    user_tier_discounts: {
+      free: 0,
+      pro: 0.1,
+      enterprise: 0.2,
+    },
+    free_tier_limits: {
+      monthly_tokens: 100000,
+      monthly_requests: 1000,
+    },
+  });
+
+  const logger = new LLMLogger({
+    enabled: true,
+    log_requests: true,
+    log_responses: true,
+    log_errors: true,
+    log_performance: true,
+    sensitive_data_masking: true,
+    retention_days: 30,
+    max_payload_size: 10000,
+    async_logging: true,
+    buffer_size: 100,
+    flush_interval: 60000,
+  });
+
+  // Register Claude provider
+  const claudeConfig = configManager.getProviderConfig("claude");
+  if (claudeConfig && process.env.ANTHROPIC_API_KEY) {
+    const claudeProvider = new ClaudeProvider({
+      api_key: process.env.ANTHROPIC_API_KEY!,
+      endpoint: "https://api.anthropic.com",
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 4000,
+      temperature: 0.7,
+      rate_limit: {
+        requests_per_minute: 100,
+        tokens_per_minute: 100000,
+      },
+      health_check_interval: 60000,
+      timeout: 30000,
+      retry_attempts: 3,
+    });
+
+    providerManager.registerProvider(claudeProvider);
+  }
+
+  return { providerManager, billingTracker, logger };
 }
 
 /**
@@ -101,6 +105,9 @@ export async function POST(request: NextRequest): Promise<Response> {
   let userId: string | undefined;
   let generationRequest: GenerationRequest | undefined;
   let reservationId: string | undefined;
+
+  // Initialize components within request context
+  const { providerManager, billingTracker, logger } = initializeComponents();
 
   try {
     // Authentication
@@ -188,9 +195,9 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     // Handle streaming vs non-streaming
     if (generationRequest.stream) {
-      return handleStreamingRequest(generationRequest, userId, reservationId);
+      return handleStreamingRequest(generationRequest, userId, reservationId, { providerManager, billingTracker, logger });
     } else {
-      return handleRegularRequest(generationRequest, userId, reservationId);
+      return handleRegularRequest(generationRequest, userId, reservationId, { providerManager, billingTracker, logger });
     }
   } catch (error) {
     // Log error
@@ -259,7 +266,10 @@ async function handleRegularRequest(
   request: GenerationRequest,
   userId: string,
   reservationId: string,
+  components: { providerManager: any; billingTracker: any; logger: any },
 ): Promise<Response> {
+  const { providerManager, billingTracker, logger } = components;
+  
   try {
     // Generate response
     const response = await providerManager.generate(request);
@@ -302,7 +312,9 @@ async function handleStreamingRequest(
   request: GenerationRequest,
   userId: string,
   reservationId: string,
+  components: { providerManager: any; billingTracker: any; logger: any },
 ): Promise<Response> {
+  const { providerManager, billingTracker, logger } = components;
   const encoder = new TextEncoder();
   let totalTokens = 0;
   let responseContent = "";
@@ -312,7 +324,7 @@ async function handleStreamingRequest(
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        await providerManager.generateStream(request, (chunk) => {
+        await providerManager.generateStream(request, (chunk: any) => {
           // Track streaming data
           if (chunk.type === "content_block_delta" && chunk.delta?.text) {
             responseContent += chunk.delta.text;
@@ -517,6 +529,9 @@ function generateId(): string {
  */
 export async function GET(): Promise<Response> {
   try {
+    // Initialize components within request context
+    const { providerManager } = initializeComponents();
+    
     const providerStatus = await providerManager.getAllProviderStatus();
     const configSummary = configManager.getConfigSummary();
 
