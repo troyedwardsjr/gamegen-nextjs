@@ -4,7 +4,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-let _supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+let _supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null =
+  null;
 let _initializationError: Error | null = null;
 
 // Lazy initialization function with error handling
@@ -21,23 +22,31 @@ const getSupabaseClient = () => {
 
     if (!supabaseUrl || !supabaseAnonKey) {
       const error = new Error("Missing Supabase environment variables");
+
       _initializationError = error;
-      console.error('🚨 GameGen Supabase client initialization failed:', error.message);
+      console.error(
+        "🚨 GameGen Supabase client initialization failed:",
+        error.message,
+      );
       throw error;
     }
 
-    _supabaseClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
+    _supabaseClient = createSupabaseClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
       },
-    });
+    );
 
     return _supabaseClient;
   } catch (error) {
     _initializationError = error as Error;
-    console.error('🚨 GameGen Supabase client creation failed:', error);
+    console.error("🚨 GameGen Supabase client creation failed:", error);
     throw error;
   }
 };
@@ -47,6 +56,7 @@ export function isSupabaseAvailable(): boolean {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
     return !!(supabaseUrl && supabaseAnonKey);
   } catch {
     return false;
@@ -58,36 +68,58 @@ export function getSupabaseSafely() {
   try {
     return getSupabaseClient();
   } catch (error) {
-    console.warn('🚧 GameGen Supabase not available, returning null:', error);
+    console.warn("🚧 GameGen Supabase not available, returning null:", error);
+
     return null;
   }
 }
 
 // Export the lazy-initialized client with safer error handling
-export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient<Database>>, {
-  get(target, prop) {
-    try {
-      const client = getSupabaseClient();
-      const value = client[prop as keyof typeof client];
-      return typeof value === 'function' ? value.bind(client) : value;
-    } catch (error) {
-      console.error('🚨 GameGen Supabase proxy access failed:', error);
-      // Return mock auth methods to prevent app crashes
-      if (prop === 'auth') {
-        return {
-          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-          signInWithPassword: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not available') }),
-          signUp: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not available') }),
-          signOut: () => Promise.resolve({ error: null }),
-          signInWithOAuth: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not available') }),
-          resetPasswordForEmail: () => Promise.resolve({ error: new Error('Supabase not available') }),
-        };
+export const supabase = new Proxy(
+  {} as ReturnType<typeof createSupabaseClient<Database>>,
+  {
+    get(target, prop) {
+      try {
+        const client = getSupabaseClient();
+        const value = client[prop as keyof typeof client];
+
+        return typeof value === "function" ? value.bind(client) : value;
+      } catch (error) {
+        console.error("🚨 GameGen Supabase proxy access failed:", error);
+        // Return mock auth methods to prevent app crashes
+        if (prop === "auth") {
+          return {
+            getSession: () =>
+              Promise.resolve({ data: { session: null }, error: null }),
+            onAuthStateChange: () => ({
+              data: { subscription: { unsubscribe: () => {} } },
+            }),
+            signInWithPassword: () =>
+              Promise.resolve({
+                data: { user: null },
+                error: new Error("Supabase not available"),
+              }),
+            signUp: () =>
+              Promise.resolve({
+                data: { user: null },
+                error: new Error("Supabase not available"),
+              }),
+            signOut: () => Promise.resolve({ error: null }),
+            signInWithOAuth: () =>
+              Promise.resolve({
+                data: { user: null },
+                error: new Error("Supabase not available"),
+              }),
+            resetPasswordForEmail: () =>
+              Promise.resolve({ error: new Error("Supabase not available") }),
+          };
+        }
+
+        return null;
       }
-      return null;
-    }
-  }
-});
+    },
+  },
+);
 
 // Export a function that creates a new client instance
 export const createClientInstance = () => {
@@ -144,6 +176,7 @@ export const getSession = async () => {
     return session;
   } catch (error) {
     console.error("Error getting session:", error);
+
     return null;
   }
 };
@@ -160,6 +193,7 @@ export const getUser = async () => {
     return user;
   } catch (error) {
     console.error("Error getting user:", error);
+
     return null;
   }
 };

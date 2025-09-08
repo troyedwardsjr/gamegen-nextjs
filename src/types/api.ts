@@ -1,23 +1,22 @@
 /**
  * GameGen API Types
- * 
+ *
  * TypeScript type definitions for API requests, responses, and error handling
  * in the GameGen pixel art game creation platform.
  */
 
-import { 
-  UserProfile, 
-  Game, 
-  Asset, 
-  GameTemplate, 
-  AIGeneration, 
-  Subscription 
-} from './database';
+import {
+  UserProfile,
+  Game,
+  Asset,
+  GameTemplate,
+  AIGeneration,
+} from "./database";
 
 /**
  * HTTP status codes commonly used in GameGen API
  */
-export type HTTPStatusCode = 
+export type HTTPStatusCode =
   | 200 // OK
   | 201 // Created
   | 204 // No Content
@@ -69,21 +68,21 @@ export interface PaginationInfo {
  * API error types specific to GameGen
  */
 export type ApiErrorType =
-  | 'validation_error'
-  | 'authentication_error'
-  | 'authorization_error'
-  | 'not_found_error'
-  | 'conflict_error'
-  | 'rate_limit_error'
-  | 'quota_exceeded_error'
-  | 'file_upload_error'
-  | 'processing_error'
-  | 'external_service_error'
-  | 'database_error'
-  | 'network_error'
-  | 'timeout_error'
-  | 'maintenance_error'
-  | 'unknown_error';
+  | "validation_error"
+  | "authentication_error"
+  | "authorization_error"
+  | "not_found_error"
+  | "conflict_error"
+  | "rate_limit_error"
+  | "quota_exceeded_error"
+  | "file_upload_error"
+  | "processing_error"
+  | "external_service_error"
+  | "database_error"
+  | "network_error"
+  | "timeout_error"
+  | "maintenance_error"
+  | "unknown_error";
 
 /**
  * API error structure
@@ -119,7 +118,7 @@ export interface FileUploadRequest extends BaseApiRequest {
   folder?: string;
   tags?: string[];
   metadata?: Record<string, any>;
-  
+
   // Processing options
   auto_optimize?: boolean;
   generate_variants?: boolean;
@@ -137,7 +136,7 @@ export interface FileUploadResponse extends ApiResponse {
     size: number;
     content_type: string;
     metadata?: Record<string, any>;
-    processing_status?: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_status?: "pending" | "processing" | "completed" | "failed";
   };
 }
 
@@ -148,7 +147,7 @@ export interface SearchRequest extends BaseApiRequest {
   query?: string;
   filters?: Record<string, any>;
   sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sort_order?: "asc" | "desc";
   page?: number;
   limit?: number;
   facets?: string[];
@@ -159,11 +158,14 @@ export interface SearchRequest extends BaseApiRequest {
  * Search response with facets
  */
 export interface SearchResponse<T = any> extends PaginatedApiResponse<T> {
-  facets?: Record<string, Array<{
-    value: string;
-    count: number;
-    selected: boolean;
-  }>>;
+  facets?: Record<
+    string,
+    Array<{
+      value: string;
+      count: number;
+      selected: boolean;
+    }>
+  >;
   query_info?: {
     query: string;
     took_ms: number;
@@ -177,7 +179,7 @@ export interface SearchResponse<T = any> extends PaginatedApiResponse<T> {
  */
 export interface BulkOperationRequest<T = any> extends BaseApiRequest {
   operations: Array<{
-    operation: 'create' | 'update' | 'delete';
+    operation: "create" | "update" | "delete";
     data: T;
     id?: string;
   }>;
@@ -212,7 +214,7 @@ export interface BulkOperationResponse extends ApiResponse {
 export interface CreateGameRequest extends BaseApiRequest {
   title: string;
   description?: string;
-  game_type: Game['game_type'];
+  game_type: Game["game_type"];
   template_id?: string;
   is_public?: boolean;
   tags?: string[];
@@ -225,15 +227,15 @@ export interface UpdateGameRequest extends BaseApiRequest {
   script_files?: any;
   thumbnail_url?: string;
   cover_image_url?: string;
-  status?: Game['status'];
+  status?: Game["status"];
   is_public?: boolean;
   tags?: string[];
 }
 
 export interface GameSearchRequest extends SearchRequest {
   filters?: {
-    game_type?: Game['game_type'][];
-    status?: Game['status'][];
+    game_type?: Game["game_type"][];
+    status?: Game["status"][];
     tags?: string[];
     is_public?: boolean;
     created_after?: string;
@@ -262,11 +264,11 @@ export interface PublishGameRequest extends BaseApiRequest {
 export interface CreateAssetRequest extends BaseApiRequest {
   name: string;
   description?: string;
-  asset_type: Asset['asset_type'];
+  asset_type: Asset["asset_type"];
   category?: string;
   file: File | Blob;
   tags?: string[];
-  license_type?: Asset['license_type'];
+  license_type?: Asset["license_type"];
   is_public?: boolean;
 }
 
@@ -275,16 +277,16 @@ export interface UpdateAssetRequest extends BaseApiRequest {
   description?: string;
   category?: string;
   tags?: string[];
-  license_type?: Asset['license_type'];
+  license_type?: Asset["license_type"];
   is_public?: boolean;
 }
 
 export interface AssetSearchRequest extends SearchRequest {
   filters?: {
-    asset_type?: Asset['asset_type'][];
+    asset_type?: Asset["asset_type"][];
     category?: string[];
     tags?: string[];
-    license_type?: Asset['license_type'][];
+    license_type?: Asset["license_type"][];
     is_public?: boolean;
     ai_generated?: boolean;
     min_download_count?: number;
@@ -298,26 +300,26 @@ export interface AssetSearchRequest extends SearchRequest {
 // =========================
 
 export interface AIGenerationRequest extends BaseApiRequest {
-  generation_type: AIGeneration['generation_type'];
+  generation_type: AIGeneration["generation_type"];
   prompt: string;
   game_id?: string;
-  
+
   // Generation parameters
   style_params?: {
-    art_style?: 'pixel_art' | 'low_poly' | 'cartoon' | 'realistic';
+    art_style?: "pixel_art" | "low_poly" | "cartoon" | "realistic";
     color_palette?: string[];
     resolution?: string;
     pixel_density?: number;
   };
-  
+
   // Code generation parameters
   code_params?: {
-    language?: 'javascript' | 'typescript';
-    framework?: 'toxoid' | 'vanilla';
-    complexity?: 'simple' | 'moderate' | 'complex';
+    language?: "javascript" | "typescript";
+    framework?: "toxoid" | "vanilla";
+    complexity?: "simple" | "moderate" | "complex";
     include_comments?: boolean;
   };
-  
+
   // Audio generation parameters
   audio_params?: {
     duration_seconds?: number;
@@ -326,19 +328,19 @@ export interface AIGenerationRequest extends BaseApiRequest {
     genre?: string;
     mood?: string;
   };
-  
+
   // Advanced options
   reference_images?: string[];
   negative_prompts?: string[];
   seed?: number;
   variations_count?: number;
-  priority?: 'low' | 'normal' | 'high';
+  priority?: "low" | "normal" | "high";
 }
 
 export interface AIGenerationResponse extends ApiResponse {
   data?: {
     generation_id: string;
-    status: AIGeneration['status'];
+    status: AIGeneration["status"];
     estimated_completion_time?: string;
     credits_used: number;
     queue_position?: number;
@@ -364,8 +366,8 @@ export interface AIGenerationStatusResponse extends ApiResponse {
 export interface CreateTemplateRequest extends BaseApiRequest {
   name: string;
   description?: string;
-  game_type: GameTemplate['game_type'];
-  difficulty_level: GameTemplate['difficulty_level'];
+  game_type: GameTemplate["game_type"];
+  difficulty_level: GameTemplate["difficulty_level"];
   template_config: any;
   preview_assets?: any;
   thumbnail_url?: string;
@@ -375,8 +377,8 @@ export interface CreateTemplateRequest extends BaseApiRequest {
 
 export interface TemplateSearchRequest extends SearchRequest {
   filters?: {
-    game_type?: GameTemplate['game_type'][];
-    difficulty_level?: GameTemplate['difficulty_level'][];
+    game_type?: GameTemplate["game_type"][];
+    difficulty_level?: GameTemplate["difficulty_level"][];
     is_official?: boolean;
     tags?: string[];
     min_usage_count?: number;
@@ -396,13 +398,13 @@ export interface UpdateUserProfileRequest extends BaseApiRequest {
   timezone?: string;
   language_preference?: string;
   theme_preference?: string;
-  use_case?: UserProfile['use_case'];
+  use_case?: UserProfile["use_case"];
 }
 
 export interface UserSearchRequest extends SearchRequest {
   filters?: {
-    use_case?: UserProfile['use_case'][];
-    subscription_tier?: UserProfile['subscription_tier'][];
+    use_case?: UserProfile["use_case"][];
+    subscription_tier?: UserProfile["subscription_tier"][];
     has_published_games?: boolean;
     has_public_assets?: boolean;
     min_reputation?: number;
@@ -419,7 +421,7 @@ export interface AnalyticsRequest extends BaseApiRequest {
   metric: string;
   start_date: string;
   end_date: string;
-  granularity?: 'hour' | 'day' | 'week' | 'month';
+  granularity?: "hour" | "day" | "week" | "month";
   filters?: Record<string, any>;
   group_by?: string[];
 }
@@ -437,7 +439,7 @@ export interface AnalyticsResponse extends ApiResponse {
     comparison?: {
       previous_period: number;
       change_percentage: number;
-      change_direction: 'up' | 'down' | 'flat';
+      change_direction: "up" | "down" | "flat";
     };
   };
 }
@@ -448,21 +450,21 @@ export interface AnalyticsResponse extends ApiResponse {
 
 export interface GameExportRequest extends BaseApiRequest {
   game_id: string;
-  export_format: 'web' | 'desktop' | 'mobile' | 'source';
+  export_format: "web" | "desktop" | "mobile" | "source";
   export_options?: {
     minify_code?: boolean;
     include_assets?: boolean;
     include_source?: boolean;
     custom_branding?: boolean;
     target_platform?: string;
-    optimization_level?: 'none' | 'basic' | 'aggressive';
+    optimization_level?: "none" | "basic" | "aggressive";
   };
 }
 
 export interface GameExportResponse extends ApiResponse {
   data?: {
     export_id: string;
-    status: 'queued' | 'processing' | 'completed' | 'failed';
+    status: "queued" | "processing" | "completed" | "failed";
     estimated_completion_time?: string;
     download_url?: string;
     expires_at?: string;
@@ -524,8 +526,8 @@ export interface RequestOptions {
   retries?: number;
   abort_signal?: AbortSignal;
   headers?: Record<string, string>;
-  cache?: 'no-cache' | 'force-cache' | 'default';
-  credentials?: 'same-origin' | 'include' | 'omit';
+  cache?: "no-cache" | "force-cache" | "default";
+  credentials?: "same-origin" | "include" | "omit";
 }
 
 /**
@@ -540,15 +542,21 @@ export interface RateLimitInfo {
 
 // Type guards
 export const isApiError = (error: any): error is ApiError => {
-  return error && typeof error === 'object' && 'type' in error && 'code' in error;
+  return (
+    error && typeof error === "object" && "type" in error && "code" in error
+  );
 };
 
-export const isValidationError = (error: ApiError): error is ApiError & { field_errors: Record<string, string[]> } => {
-  return error.type === 'validation_error' && 'field_errors' in error;
+export const isValidationError = (
+  error: ApiError,
+): error is ApiError & { field_errors: Record<string, string[]> } => {
+  return error.type === "validation_error" && "field_errors" in error;
 };
 
-export const isRateLimitError = (error: ApiError): error is ApiError & { retry_after: number } => {
-  return error.type === 'rate_limit_error' && 'retry_after' in error;
+export const isRateLimitError = (
+  error: ApiError,
+): error is ApiError & { retry_after: number } => {
+  return error.type === "rate_limit_error" && "retry_after" in error;
 };
 
 // Utility functions
@@ -556,7 +564,7 @@ export const createApiError = (
   type: ApiErrorType,
   code: string,
   message: string,
-  details?: Record<string, any>
+  details?: Record<string, any>,
 ): ApiError => ({
   type,
   code,
@@ -568,7 +576,7 @@ export const createApiError = (
 export const formatApiResponse = <T>(
   data: T,
   success = true,
-  message?: string
+  message?: string,
 ): ApiResponse<T> => ({
   success,
   data,
@@ -579,7 +587,8 @@ export const formatApiResponse = <T>(
 
 export const extractErrorMessage = (error: ApiError | Error): string => {
   if (isApiError(error)) {
-    return error.message || error.code || 'An API error occurred';
+    return error.message || error.code || "An API error occurred";
   }
-  return error.message || 'An unexpected error occurred';
+
+  return error.message || "An unexpected error occurred";
 };

@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Select, SelectItem } from "@heroui/select";
 import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
 import { Filter, X, Calendar, Eye, Tag } from "lucide-react";
+
 import { ActivityType, ActivityVisibility } from "@/src/types/social";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 
 interface ActivityFiltersProps {
   onFiltersChange: (filters: {
@@ -59,19 +62,20 @@ export function ActivityFilters({
   initialFilters = {},
   className,
 }: ActivityFiltersProps) {
-  const [selectedActivityTypes, setSelectedActivityTypes] = useState<Set<string>>(
-    new Set(initialFilters.activityTypes || [])
-  );
+  const [selectedActivityTypes, setSelectedActivityTypes] = useState<
+    Set<string>
+  >(new Set(initialFilters.activityTypes || []));
   const [selectedVisibility, setSelectedVisibility] = useState<Set<string>>(
-    new Set(initialFilters.visibility || [])
+    new Set(initialFilters.visibility || []),
   );
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(
-    initialFilters.dateRange || null
+    initialFilters.dateRange || null,
   );
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleActivityTypeToggle = (type: ActivityType) => {
     const newTypes = new Set(selectedActivityTypes);
+
     if (newTypes.has(type)) {
       newTypes.delete(type);
     } else {
@@ -82,6 +86,7 @@ export function ActivityFilters({
 
   const handleVisibilityToggle = (visibility: ActivityVisibility) => {
     const newVisibility = new Set(selectedVisibility);
+
     if (newVisibility.has(visibility)) {
       newVisibility.delete(visibility);
     } else {
@@ -94,13 +99,16 @@ export function ActivityFilters({
     if (days === 0) {
       // Today
       const today = new Date();
+
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
+
       tomorrow.setDate(tomorrow.getDate() + 1);
       setDateRange({ from: today, to: tomorrow });
     } else {
       const to = new Date();
       const from = new Date();
+
       from.setDate(from.getDate() - days);
       setDateRange({ from, to });
     }
@@ -125,7 +133,8 @@ export function ActivityFilters({
     handleApplyFilters();
   }, [selectedActivityTypes, selectedVisibility, dateRange]);
 
-  const hasActiveFilters = selectedActivityTypes.size > 0 || selectedVisibility.size > 0 || dateRange;
+  const hasActiveFilters =
+    selectedActivityTypes.size > 0 || selectedVisibility.size > 0 || dateRange;
 
   return (
     <GlassmorphicCard {...GameGenCardPresets.chatPanel} className={className}>
@@ -133,16 +142,24 @@ export function ActivityFilters({
         {/* Filter Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter size={16} className="text-secondary-500" />
-            <span className="font-medium text-foreground">Activity Filters</span>
+            <Filter className="text-secondary-500" size={16} />
+            <span className="font-medium text-foreground">
+              Activity Filters
+            </span>
             {hasActiveFilters && (
-              <Chip size="sm" color="secondary" variant="flat">
-                {[selectedActivityTypes.size, selectedVisibility.size, dateRange ? 1 : 0]
-                  .filter(Boolean).length} active
+              <Chip color="secondary" size="sm" variant="flat">
+                {
+                  [
+                    selectedActivityTypes.size,
+                    selectedVisibility.size,
+                    dateRange ? 1 : 0,
+                  ].filter(Boolean).length
+                }{" "}
+                active
               </Chip>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -151,13 +168,13 @@ export function ActivityFilters({
             >
               {showAdvanced ? "Simple" : "Advanced"}
             </Button>
-            
+
             {hasActiveFilters && (
               <Button
-                size="sm"
-                variant="flat"
                 color="danger"
+                size="sm"
                 startContent={<X size={14} />}
+                variant="flat"
                 onPress={handleClearFilters}
               >
                 Clear
@@ -169,20 +186,30 @@ export function ActivityFilters({
         {/* Activity Types Filter */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Tag size={14} className="text-foreground/60" />
-            <span className="text-sm font-medium text-foreground/80">Activity Types</span>
+            <Tag className="text-foreground/60" size={14} />
+            <span className="text-sm font-medium text-foreground/80">
+              Activity Types
+            </span>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {ACTIVITY_TYPE_OPTIONS.map((option) => (
               <Chip
                 key={option.key}
-                variant={selectedActivityTypes.has(option.key) ? "solid" : "flat"}
-                color={selectedActivityTypes.has(option.key) ? "secondary" : "default"}
-                size="sm"
                 className="cursor-pointer"
-                onClick={() => handleActivityTypeToggle(option.key as ActivityType)}
+                color={
+                  selectedActivityTypes.has(option.key)
+                    ? "secondary"
+                    : "default"
+                }
+                size="sm"
                 startContent={<span className="text-xs">{option.icon}</span>}
+                variant={
+                  selectedActivityTypes.has(option.key) ? "solid" : "flat"
+                }
+                onClick={() =>
+                  handleActivityTypeToggle(option.key as ActivityType)
+                }
               >
                 {option.label}
               </Chip>
@@ -193,27 +220,30 @@ export function ActivityFilters({
         {/* Quick Date Ranges */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Calendar size={14} className="text-foreground/60" />
-            <span className="text-sm font-medium text-foreground/80">Time Range</span>
+            <Calendar className="text-foreground/60" size={14} />
+            <span className="text-sm font-medium text-foreground/80">
+              Time Range
+            </span>
           </div>
-          
+
           <div className="flex flex-wrap gap-2 mb-3">
             {QUICK_DATE_RANGES.map((range) => (
               <Button
                 key={range.key}
+                color="secondary"
                 size="sm"
                 variant="flat"
-                color="secondary"
                 onPress={() => handleQuickDateRange(range.days)}
               >
                 {range.label}
               </Button>
             ))}
           </div>
-          
+
           {dateRange && (
             <div className="text-xs text-foreground/60 bg-secondary-500/10 rounded p-2">
-              From {dateRange.from.toLocaleDateString()} to {dateRange.to.toLocaleDateString()}
+              From {dateRange.from.toLocaleDateString()} to{" "}
+              {dateRange.to.toLocaleDateString()}
             </div>
           )}
         </div>
@@ -222,24 +252,36 @@ export function ActivityFilters({
         {showAdvanced && (
           <>
             <Divider />
-            
+
             {/* Visibility Filter */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Eye size={14} className="text-foreground/60" />
-                <span className="text-sm font-medium text-foreground/80">Visibility</span>
+                <Eye className="text-foreground/60" size={14} />
+                <span className="text-sm font-medium text-foreground/80">
+                  Visibility
+                </span>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {VISIBILITY_OPTIONS.map((option) => (
                   <Chip
                     key={option.key}
-                    variant={selectedVisibility.has(option.key) ? "solid" : "flat"}
-                    color={selectedVisibility.has(option.key) ? "secondary" : "default"}
-                    size="sm"
                     className="cursor-pointer"
-                    onClick={() => handleVisibilityToggle(option.key as ActivityVisibility)}
-                    startContent={<span className="text-xs">{option.icon}</span>}
+                    color={
+                      selectedVisibility.has(option.key)
+                        ? "secondary"
+                        : "default"
+                    }
+                    size="sm"
+                    startContent={
+                      <span className="text-xs">{option.icon}</span>
+                    }
+                    variant={
+                      selectedVisibility.has(option.key) ? "solid" : "flat"
+                    }
+                    onClick={() =>
+                      handleVisibilityToggle(option.key as ActivityVisibility)
+                    }
                   >
                     {option.label}
                   </Chip>
@@ -249,34 +291,38 @@ export function ActivityFilters({
 
             {/* Custom Date Range */}
             <div>
-              <span className="text-sm font-medium text-foreground/80 mb-3 block">Custom Date Range</span>
+              <span className="text-sm font-medium text-foreground/80 mb-3 block">
+                Custom Date Range
+              </span>
               <div className="grid grid-cols-2 gap-2">
                 <Input
-                  type="date"
                   label="From"
                   size="sm"
-                  value={dateRange?.from?.toISOString().split('T')[0] || ''}
+                  type="date"
+                  value={dateRange?.from?.toISOString().split("T")[0] || ""}
                   onValueChange={(value) => {
                     if (value) {
                       const date = new Date(value);
-                      setDateRange(prev => ({
+
+                      setDateRange((prev) => ({
                         from: date,
-                        to: prev?.to || new Date()
+                        to: prev?.to || new Date(),
                       }));
                     }
                   }}
                 />
                 <Input
-                  type="date"
                   label="To"
                   size="sm"
-                  value={dateRange?.to?.toISOString().split('T')[0] || ''}
+                  type="date"
+                  value={dateRange?.to?.toISOString().split("T")[0] || ""}
                   onValueChange={(value) => {
                     if (value) {
                       const date = new Date(value);
-                      setDateRange(prev => ({
+
+                      setDateRange((prev) => ({
                         from: prev?.from || new Date(),
-                        to: date
+                        to: date,
                       }));
                     }
                   }}
@@ -290,7 +336,8 @@ export function ActivityFilters({
         {hasActiveFilters && (
           <div className="pt-2 border-t border-divider">
             <div className="text-xs text-foreground/60">
-              Active Filters: {selectedActivityTypes.size} activity types, {selectedVisibility.size} visibility levels
+              Active Filters: {selectedActivityTypes.size} activity types,{" "}
+              {selectedVisibility.size} visibility levels
               {dateRange && ", custom date range"}
             </div>
           </div>
@@ -303,19 +350,36 @@ export function ActivityFilters({
 // Preset filter configurations
 export const ActivityFilterPresets = {
   myActivity: {
-    activityTypes: ["game_created", "game_published", "achievement_unlocked"] as ActivityType[],
+    activityTypes: [
+      "game_created",
+      "game_published",
+      "achievement_unlocked",
+    ] as ActivityType[],
     visibility: ["public", "followers"] as ActivityVisibility[],
   },
   socialActivity: {
-    activityTypes: ["game_liked", "game_commented", "user_followed"] as ActivityType[],
+    activityTypes: [
+      "game_liked",
+      "game_commented",
+      "user_followed",
+    ] as ActivityType[],
     visibility: ["public"] as ActivityVisibility[],
   },
   achievements: {
-    activityTypes: ["achievement_unlocked", "milestone_reached", "challenge_completed"] as ActivityType[],
+    activityTypes: [
+      "achievement_unlocked",
+      "milestone_reached",
+      "challenge_completed",
+    ] as ActivityType[],
     visibility: ["public", "followers"] as ActivityVisibility[],
   },
   gameActivity: {
-    activityTypes: ["game_created", "game_published", "game_featured", "game_liked"] as ActivityType[],
+    activityTypes: [
+      "game_created",
+      "game_published",
+      "game_featured",
+      "game_liked",
+    ] as ActivityType[],
     visibility: ["public"] as ActivityVisibility[],
   },
 } as const;

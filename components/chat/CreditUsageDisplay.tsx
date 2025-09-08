@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { clsx } from 'clsx';
-import { GlassmorphicCard } from '@/components/ui/GlassmorphicCard';
-import { GlassmorphicButton } from '@/components/ui/GlassmorphicButton';
-import { GlassmorphicBadge } from '@/components/ui/GlassmorphicBadge';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/lib/auth/context';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { clsx } from "clsx";
+
+import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
+import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
+import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth/context";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreditUsage {
   totalCredits: number;
@@ -40,19 +41,19 @@ interface CreditUsageDisplayProps {
 }
 
 const FEATURE_COLORS = {
-  chat_completion: 'from-blue-500 to-cyan-500',
-  art_generation: 'from-pink-500 to-purple-500',
-  code_help: 'from-green-500 to-emerald-500',
-  voice_synthesis: 'from-orange-500 to-red-500',
-  other: 'from-gray-500 to-slate-500',
+  chat_completion: "from-blue-500 to-cyan-500",
+  art_generation: "from-pink-500 to-purple-500",
+  code_help: "from-green-500 to-emerald-500",
+  voice_synthesis: "from-orange-500 to-red-500",
+  other: "from-gray-500 to-slate-500",
 } as const;
 
 const FEATURE_ICONS = {
-  chat_completion: '💬',
-  art_generation: '🎨',
-  code_help: '💻',
-  voice_synthesis: '🎵',
-  other: '⚡',
+  chat_completion: "💬",
+  art_generation: "🎨",
+  code_help: "💻",
+  voice_synthesis: "🎵",
+  other: "⚡",
 } as const;
 
 export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
@@ -81,58 +82,67 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
       // Get user's billing info
       const { data: billing, error: billingError } = await supabase
-        .from('user_billing')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("user_billing")
+        .select("*")
+        .eq("user_id", user.id)
         .single();
 
-      if (billingError && billingError.code !== 'PGRST116') {
+      if (billingError && billingError.code !== "PGRST116") {
         throw billingError;
       }
 
       // Get usage tracking data
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const thisMonth = new Date().toISOString().slice(0, 7);
 
       // Daily usage
       const { data: dailyUsage, error: dailyError } = await supabase
-        .from('usage_tracking')
-        .select('tokens_used, cost_cents, feature_type')
-        .eq('user_id', user.id)
-        .gte('created_at', `${today}T00:00:00Z`)
-        .lt('created_at', `${today}T23:59:59Z`);
+        .from("usage_tracking")
+        .select("tokens_used, cost_cents, feature_type")
+        .eq("user_id", user.id)
+        .gte("created_at", `${today}T00:00:00Z`)
+        .lt("created_at", `${today}T23:59:59Z`);
 
       if (dailyError) throw dailyError;
 
       // Monthly usage
       const { data: monthlyUsage, error: monthlyError } = await supabase
-        .from('usage_tracking')
-        .select('tokens_used, cost_cents, feature_type')
-        .eq('user_id', user.id)
-        .gte('created_at', `${thisMonth}-01T00:00:00Z`);
+        .from("usage_tracking")
+        .select("tokens_used, cost_cents, feature_type")
+        .eq("user_id", user.id)
+        .gte("created_at", `${thisMonth}-01T00:00:00Z`);
 
       if (monthlyError) throw monthlyError;
 
       // Recent usage for breakdown
       const { data: recentUsage, error: recentError } = await supabase
-        .from('usage_tracking')
-        .select('created_at, tokens_used, cost_cents, feature_type, metadata')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .from("usage_tracking")
+        .select("created_at, tokens_used, cost_cents, feature_type, metadata")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(20);
 
       if (recentError) throw recentError;
 
       // Calculate totals
-      const dailyCostCents = dailyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) || 0;
-      const monthlyCostCents = monthlyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) || 0;
+      const dailyCostCents =
+        dailyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) || 0;
+      const monthlyCostCents =
+        monthlyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) ||
+        0;
 
       // Feature breakdown
-      const costBreakdown = monthlyUsage?.reduce((acc, item) => {
-        const feature = item.feature_type || 'other';
-        acc[feature] = (acc[feature] || 0) + (item.cost_cents || 0);
-        return acc;
-      }, {} as Record<string, number>) || {};
+      const costBreakdown =
+        monthlyUsage?.reduce(
+          (acc, item) => {
+            const feature = item.feature_type || "other";
+
+            acc[feature] = (acc[feature] || 0) + (item.cost_cents || 0);
+
+            return acc;
+          },
+          {} as Record<string, number>,
+        ) || {};
 
       // Convert to credits (assuming 1 cent = 1 credit for simplicity)
       const usedCredits = monthlyCostCents;
@@ -152,22 +162,24 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           artGeneration: costBreakdown.art_generation || 0,
           codeHelp: costBreakdown.code_help || 0,
           other: Object.keys(costBreakdown).reduce((sum, key) => {
-            return !['chat_completion', 'art_generation', 'code_help'].includes(key) 
-              ? sum + costBreakdown[key] 
+            return !["chat_completion", "art_generation", "code_help"].includes(
+              key,
+            )
+              ? sum + costBreakdown[key]
               : sum;
           }, 0),
         },
-        recentUsage: recentUsage?.map(item => ({
-          date: item.created_at,
-          amount: item.tokens_used || 0,
-          feature: item.feature_type || 'other',
-          cost_cents: item.cost_cents || 0,
-        })) || [],
+        recentUsage:
+          recentUsage?.map((item) => ({
+            date: item.created_at,
+            amount: item.tokens_used || 0,
+            feature: item.feature_type || "other",
+            cost_cents: item.cost_cents || 0,
+          })) || [],
       });
-
     } catch (error) {
-      console.error('Failed to fetch credit usage:', error);
-      setError('Failed to load credit information');
+      console.error("Failed to fetch credit usage:", error);
+      setError("Failed to load credit information");
       toast({
         title: "Failed to load credits",
         description: "Unable to fetch your credit usage information",
@@ -186,18 +198,18 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
       // Set up real-time subscription for usage updates
       const channel = supabase
-        .channel('credit_usage')
+        .channel("credit_usage")
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'usage_tracking',
+            event: "INSERT",
+            schema: "public",
+            table: "usage_tracking",
             filter: `user_id=eq.${user.id}`,
           },
           () => {
             fetchCreditUsage();
-          }
+          },
         )
         .subscribe();
 
@@ -214,19 +226,21 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
   // Calculate usage percentage and status
   const usagePercentage = useMemo(() => {
     if (!creditUsage) return 0;
+
     return (creditUsage.usedCredits / creditUsage.totalCredits) * 100;
   }, [creditUsage]);
 
   const usageStatus = useMemo(() => {
-    if (usagePercentage >= 90) return 'critical';
-    if (usagePercentage >= 75) return 'warning';
-    return 'normal';
+    if (usagePercentage >= 90) return "critical";
+    if (usagePercentage >= 75) return "warning";
+
+    return "normal";
   }, [usagePercentage]);
 
   const statusColors = {
-    normal: 'from-green-500 to-emerald-500',
-    warning: 'from-yellow-500 to-orange-500',
-    critical: 'from-red-500 to-pink-500',
+    normal: "from-green-500 to-emerald-500",
+    warning: "from-yellow-500 to-orange-500",
+    critical: "from-red-500 to-pink-500",
   };
 
   if (!user || isLoading) {
@@ -245,14 +259,14 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
         <span className="text-sm">Credit info unavailable</span>
       </div>
     ) : (
-      <GlassmorphicCard variant="glass-danger" className="p-4">
+      <GlassmorphicCard className="p-4" variant="glass-danger">
         <div className="text-center text-red-400">
           <p className="font-medium">Failed to load credit information</p>
           <GlassmorphicButton
+            className="mt-2"
             size="sm"
             variant="glass-ghost"
             onClick={fetchCreditUsage}
-            className="mt-2"
           >
             Retry
           </GlassmorphicButton>
@@ -268,8 +282,14 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
         <div className="flex items-center space-x-1">
           <span className="text-sm text-white/60">Credits:</span>
           <GlassmorphicBadge
-            variant={usageStatus === 'critical' ? 'danger' : usageStatus === 'warning' ? 'warning' : 'gaming'}
             size="sm"
+            variant={
+              usageStatus === "critical"
+                ? "danger"
+                : usageStatus === "warning"
+                  ? "warning"
+                  : "gaming"
+            }
           >
             {creditUsage.remainingCredits.toLocaleString()}
           </GlassmorphicBadge>
@@ -279,9 +299,9 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
         <div className="flex items-center space-x-1">
           <div className="w-16 h-2 bg-black/30 rounded-full overflow-hidden">
             <motion.div
+              animate={{ width: `${Math.min(100, usagePercentage)}%` }}
               className={`h-full bg-gradient-to-r ${statusColors[usageStatus]}`}
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, usagePercentage)}%` }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             />
           </div>
@@ -292,16 +312,20 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
         {/* Refresh button */}
         <GlassmorphicButton
+          className="text-white/60 hover:text-white"
+          disabled={refreshing}
           size="xs"
+          title="Refresh credit usage"
           variant="glass-ghost"
           onClick={fetchCreditUsage}
-          disabled={refreshing}
-          className="text-white/60 hover:text-white"
-          title="Refresh credit usage"
         >
           <motion.div
             animate={refreshing ? { rotate: 360 } : {}}
-            transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+            transition={{
+              duration: 1,
+              repeat: refreshing ? Infinity : 0,
+              ease: "linear",
+            }}
           >
             🔄
           </motion.div>
@@ -312,7 +336,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
   return (
     <div className={clsx("space-y-4", className)}>
-      <GlassmorphicCard variant="glass-subtle" className="p-4">
+      <GlassmorphicCard className="p-4" variant="glass-subtle">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
@@ -325,17 +349,21 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
               variant="glass-ghost"
               onClick={() => setShowBreakdown(!showBreakdown)}
             >
-              {showBreakdown ? 'Hide Details' : 'Show Details'}
+              {showBreakdown ? "Hide Details" : "Show Details"}
             </GlassmorphicButton>
             <GlassmorphicButton
+              disabled={refreshing}
               size="sm"
               variant="glass-ghost"
               onClick={fetchCreditUsage}
-              disabled={refreshing}
             >
               <motion.div
                 animate={refreshing ? { rotate: 360 } : {}}
-                transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+                transition={{
+                  duration: 1,
+                  repeat: refreshing ? Infinity : 0,
+                  ease: "linear",
+                }}
               >
                 🔄
               </motion.div>
@@ -353,13 +381,15 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           </div>
           <div className="text-center">
             <div className="text-xl text-white/80">
-              {creditUsage.usedCredits.toLocaleString()} / {creditUsage.totalCredits.toLocaleString()}
+              {creditUsage.usedCredits.toLocaleString()} /{" "}
+              {creditUsage.totalCredits.toLocaleString()}
             </div>
             <div className="text-sm text-white/60">Monthly Usage</div>
           </div>
           <div className="text-center">
             <div className="text-xl text-white/80">
-              {creditUsage.dailyUsed.toLocaleString()} / {creditUsage.dailyLimit.toLocaleString()}
+              {creditUsage.dailyUsed.toLocaleString()} /{" "}
+              {creditUsage.dailyLimit.toLocaleString()}
             </div>
             <div className="text-sm text-white/60">Daily Usage</div>
           </div>
@@ -373,9 +403,9 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           </div>
           <div className="h-3 bg-black/30 rounded-full overflow-hidden">
             <motion.div
+              animate={{ width: `${Math.min(100, usagePercentage)}%` }}
               className={`h-full bg-gradient-to-r ${statusColors[usageStatus]}`}
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, usagePercentage)}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
             />
           </div>
@@ -383,13 +413,17 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
         {/* Status message */}
         <div className="mt-3 text-center">
-          {usageStatus === 'critical' && (
-            <p className="text-red-400 text-sm">⚠️ Credit limit almost reached</p>
+          {usageStatus === "critical" && (
+            <p className="text-red-400 text-sm">
+              ⚠️ Credit limit almost reached
+            </p>
           )}
-          {usageStatus === 'warning' && (
-            <p className="text-orange-400 text-sm">🟡 High credit usage this month</p>
+          {usageStatus === "warning" && (
+            <p className="text-orange-400 text-sm">
+              🟡 High credit usage this month
+            </p>
           )}
-          {usageStatus === 'normal' && (
+          {usageStatus === "normal" && (
             <p className="text-green-400 text-sm">✅ Credit usage is healthy</p>
           )}
         </div>
@@ -399,12 +433,12 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       <AnimatePresence>
         {showBreakdown && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <GlassmorphicCard variant="glass-subtle" className="p-4">
+            <GlassmorphicCard className="p-4" variant="glass-subtle">
               <h4 className="text-md font-medium text-white mb-3 flex items-center space-x-2">
                 <span>📊</span>
                 <span>Usage Breakdown</span>
@@ -412,64 +446,82 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
               {/* Feature breakdown */}
               <div className="space-y-3">
-                {Object.entries(creditUsage.costBreakdown).map(([feature, cost]) => {
-                  const percentage = creditUsage.usedCredits > 0 ? (cost / creditUsage.usedCredits) * 100 : 0;
-                  const featureKey = feature === 'chat' ? 'chat_completion' : 
-                                   feature === 'artGeneration' ? 'art_generation' :
-                                   feature === 'codeHelp' ? 'code_help' : 'other';
-                  
-                  return (
-                    <div key={feature} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <span>{FEATURE_ICONS[featureKey]}</span>
-                          <span className="text-sm text-white/80 capitalize">
-                            {feature.replace(/([A-Z])/g, ' $1').trim()}
-                          </span>
+                {Object.entries(creditUsage.costBreakdown).map(
+                  ([feature, cost]) => {
+                    const percentage =
+                      creditUsage.usedCredits > 0
+                        ? (cost / creditUsage.usedCredits) * 100
+                        : 0;
+                    const featureKey =
+                      feature === "chat"
+                        ? "chat_completion"
+                        : feature === "artGeneration"
+                          ? "art_generation"
+                          : feature === "codeHelp"
+                            ? "code_help"
+                            : "other";
+
+                    return (
+                      <div key={feature} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-2">
+                            <span>{FEATURE_ICONS[featureKey]}</span>
+                            <span className="text-sm text-white/80 capitalize">
+                              {feature.replace(/([A-Z])/g, " $1").trim()}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-white/60">
+                              {cost.toLocaleString()} credits
+                            </span>
+                            <span className="text-xs text-white/40">
+                              ({percentage.toFixed(1)}%)
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-white/60">
-                            {cost.toLocaleString()} credits
-                          </span>
-                          <span className="text-xs text-white/40">
-                            ({percentage.toFixed(1)}%)
-                          </span>
+                        <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
+                          <motion.div
+                            animate={{ width: `${percentage}%` }}
+                            className={`h-full bg-gradient-to-r ${FEATURE_COLORS[featureKey]}`}
+                            initial={{ width: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                          />
                         </div>
                       </div>
-                      <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
-                        <motion.div
-                          className={`h-full bg-gradient-to-r ${FEATURE_COLORS[featureKey]}`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.5, delay: 0.1 }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  },
+                )}
               </div>
 
               {/* Recent usage */}
               {creditUsage.recentUsage.length > 0 && (
                 <div className="mt-6">
-                  <h5 className="text-sm font-medium text-white/80 mb-2">Recent Usage</h5>
+                  <h5 className="text-sm font-medium text-white/80 mb-2">
+                    Recent Usage
+                  </h5>
                   <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {creditUsage.recentUsage.slice(0, 10).map((usage, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center text-xs py-1 px-2 rounded bg-black/20"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <span>{FEATURE_ICONS[usage.feature as keyof typeof FEATURE_ICONS] || '⚡'}</span>
-                          <span className="text-white/60">
-                            {new Date(usage.date).toLocaleDateString()}
+                    {creditUsage.recentUsage
+                      .slice(0, 10)
+                      .map((usage, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center text-xs py-1 px-2 rounded bg-black/20"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span>
+                              {FEATURE_ICONS[
+                                usage.feature as keyof typeof FEATURE_ICONS
+                              ] || "⚡"}
+                            </span>
+                            <span className="text-white/60">
+                              {new Date(usage.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <span className="text-white/80">
+                            {usage.cost_cents} credits
                           </span>
                         </div>
-                        <span className="text-white/80">
-                          {usage.cost_cents} credits
-                        </span>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               )}

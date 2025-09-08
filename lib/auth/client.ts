@@ -1,5 +1,6 @@
-import { createBrowserClient } from '@supabase/ssr'
-import type { Database } from '../supabase/database.types'
+import type { Database } from "../supabase/database.types";
+
+import { createBrowserClient } from "@supabase/ssr";
 
 export const createAuthClient = () =>
   createBrowserClient<Database>(
@@ -11,7 +12,7 @@ export const createAuthClient = () =>
         persistSession: true,
         detectSessionInUrl: true,
       },
-    }
-  )
+    },
+  );
 
-export type AuthClient = ReturnType<typeof createAuthClient>
+export type AuthClient = ReturnType<typeof createAuthClient>;

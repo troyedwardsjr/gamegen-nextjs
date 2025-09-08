@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@heroui/button";
+import React, { useState } from "react";
 import { Tabs, Tab } from "@heroui/tabs";
 import { motion } from "framer-motion";
-import { Users, Trophy, Target, Calendar, TrendingUp, Star } from "lucide-react";
+import { Users, Trophy, Target, TrendingUp, Star } from "lucide-react";
+
 import { CommunityDiscover } from "@/components/social/community/CommunityDiscover";
-import { TrendingGames } from "@/components/social/community/TrendingGames";
-import { FeaturedCreators } from "@/components/social/community/FeaturedCreators";
 import { ChallengeCard } from "@/components/social/challenges/ChallengeCard";
 import { AchievementProgress } from "@/components/social/achievements/AchievementProgress";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { useAuth } from "@/lib/auth/context";
 
 export default function CommunityPage() {
@@ -19,26 +20,27 @@ export default function CommunityPage() {
 
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { 
-      opacity: 1, 
+    animate: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const sectionVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 }
+    animate: { opacity: 1, y: 0 },
   };
 
   // Mock challenge data
   const featuredChallenge = {
     id: "featured-challenge",
     title: "Winter Game Jam 2024",
-    description: "Create a cozy winter-themed game using pixel art. Show us your creativity!",
+    description:
+      "Create a cozy winter-themed game using pixel art. Show us your creativity!",
     type: "creation" as const,
     status: "active" as const,
     difficulty: "intermediate" as const,
@@ -67,11 +69,11 @@ export default function CommunityPage() {
 
       case "challenges":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Community Challenges</h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                Participate in exciting challenges, compete with other creators, 
+                Participate in exciting challenges, compete with other creators,
                 and showcase your skills to win amazing prizes!
               </p>
             </div>
@@ -86,8 +88,12 @@ export default function CommunityPage() {
                 challenge={featuredChallenge}
                 currentUserId={user?.id}
                 variant="featured"
-                onJoin={(challenge) => console.log("Joined challenge:", challenge.id)}
-                onView={(challenge) => console.log("View challenge:", challenge.id)}
+                onJoin={(challenge) =>
+                  console.log("Joined challenge:", challenge.id)
+                }
+                onView={(challenge) =>
+                  console.log("View challenge:", challenge.id)
+                }
               />
             </div>
 
@@ -97,8 +103,13 @@ export default function CommunityPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {/* These would be loaded from the database */}
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 bg-foreground/5 rounded-lg border-2 border-dashed border-foreground/20 flex items-center justify-center">
-                    <p className="text-foreground/40">More challenges coming soon!</p>
+                  <div
+                    key={i}
+                    className="h-64 bg-foreground/5 rounded-lg border-2 border-dashed border-foreground/20 flex items-center justify-center"
+                  >
+                    <p className="text-foreground/40">
+                      More challenges coming soon!
+                    </p>
                   </div>
                 ))}
               </div>
@@ -110,30 +121,34 @@ export default function CommunityPage() {
         return (
           <motion.div variants={sectionVariants}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Community Achievements</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                Community Achievements
+              </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                Track your progress, unlock achievements, and see how you compare 
-                with other community members.
+                Track your progress, unlock achievements, and see how you
+                compare with other community members.
               </p>
             </div>
-            
-            <AchievementProgress 
-              userId={user?.id}
-              variant="dashboard"
+
+            <AchievementProgress
               showFilters={true}
               showStats={true}
+              userId={user?.id}
+              variant="dashboard"
             />
           </motion.div>
         );
 
       case "leaderboards":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Community Leaderboards</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                Community Leaderboards
+              </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                See who's leading the way in different categories and compete 
-                to reach the top!
+                See who&apos;s leading the way in different categories and compete to
+                reach the top!
               </p>
             </div>
 
@@ -147,17 +162,26 @@ export default function CommunityPage() {
                   </h3>
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((rank) => (
-                      <div key={rank} className="flex items-center gap-3 p-2 rounded-lg bg-background/30">
+                      <div
+                        key={rank}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-background/30"
+                      >
                         <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center font-bold">
                           #{rank}
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Creator {rank}</div>
-                          <div className="text-sm text-foreground/60">{Math.floor(Math.random() * 1000)} games</div>
+                          <div className="text-sm text-foreground/60">
+                            {Math.floor(Math.random() * 1000)} games
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{(1000 - rank * 100).toLocaleString()}</div>
-                          <div className="text-xs text-foreground/60">points</div>
+                          <div className="font-bold">
+                            {(1000 - rank * 100).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-foreground/60">
+                            points
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -174,17 +198,26 @@ export default function CommunityPage() {
                   </h3>
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((rank) => (
-                      <div key={rank} className="flex items-center gap-3 p-2 rounded-lg bg-background/30">
+                      <div
+                        key={rank}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-background/30"
+                      >
                         <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center font-bold">
                           #{rank}
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Player {rank}</div>
-                          <div className="text-sm text-foreground/60">{Math.floor(Math.random() * 100)} hours</div>
+                          <div className="text-sm text-foreground/60">
+                            {Math.floor(Math.random() * 100)} hours
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{(500 - rank * 50).toLocaleString()}</div>
-                          <div className="text-xs text-foreground/60">activities</div>
+                          <div className="font-bold">
+                            {(500 - rank * 50).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-foreground/60">
+                            activities
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -202,19 +235,19 @@ export default function CommunityPage() {
 
   return (
     <motion.div
-      variants={pageVariants}
-      initial="initial"
       animate="animate"
       className="container mx-auto px-4 py-8 max-w-7xl"
+      initial="initial"
+      variants={pageVariants}
     >
       {/* Header */}
-      <motion.div variants={sectionVariants} className="text-center mb-8">
+      <motion.div className="text-center mb-8" variants={sectionVariants}>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
           GameGen Community
         </h1>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
-          Connect with fellow creators, discover amazing games, participate in challenges, 
-          and be part of our thriving game development community.
+          Connect with fellow creators, discover amazing games, participate in
+          challenges, and be part of our thriving game development community.
         </p>
       </motion.div>
 
@@ -223,15 +256,16 @@ export default function CommunityPage() {
         <GlassmorphicCard {...GameGenCardPresets.gameCard}>
           <div className="p-6">
             <Tabs
-              selectedKey={activeTab}
-              onSelectionChange={(key) => setActiveTab(key as string)}
-              variant="underlined"
               classNames={{
-                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                tabList:
+                  "gap-6 w-full relative rounded-none p-0 border-b border-divider",
                 cursor: "w-full bg-primary",
                 tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary"
+                tabContent: "group-data-[selected=true]:text-primary",
               }}
+              selectedKey={activeTab}
+              variant="underlined"
+              onSelectionChange={(key) => setActiveTab(key as string)}
             >
               <Tab
                 key="discover"
@@ -271,9 +305,7 @@ export default function CommunityPage() {
               />
             </Tabs>
 
-            <div className="mt-8">
-              {renderTabContent()}
-            </div>
+            <div className="mt-8">{renderTabContent()}</div>
           </div>
         </GlassmorphicCard>
       </motion.div>

@@ -1,7 +1,7 @@
 /**
  * GameGen Database Types
- * 
- * Comprehensive TypeScript type definitions for the GameGen pixel art 
+ *
+ * Comprehensive TypeScript type definitions for the GameGen pixel art
  * game creation platform database schema using Supabase.
  */
 
@@ -24,7 +24,12 @@ export interface Database {
           last_name: string | null;
           display_name: string | null;
           avatar_url: string | null;
-          use_case: "indie_dev" | "student" | "hobbyist" | "studio" | "enterprise";
+          use_case:
+            | "indie_dev"
+            | "student"
+            | "hobbyist"
+            | "studio"
+            | "enterprise";
           subscription_tier: "free" | "pro" | "max" | "enterprise" | null;
           subscription_status: string | null;
           subscription_period_start: string | null;
@@ -59,7 +64,12 @@ export interface Database {
           last_name?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
-          use_case?: "indie_dev" | "student" | "hobbyist" | "studio" | "enterprise";
+          use_case?:
+            | "indie_dev"
+            | "student"
+            | "hobbyist"
+            | "studio"
+            | "enterprise";
           subscription_tier?: "free" | "pro" | "max" | "enterprise" | null;
           subscription_status?: string | null;
           subscription_period_start?: string | null;
@@ -93,7 +103,12 @@ export interface Database {
           last_name?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
-          use_case?: "indie_dev" | "student" | "hobbyist" | "studio" | "enterprise";
+          use_case?:
+            | "indie_dev"
+            | "student"
+            | "hobbyist"
+            | "studio"
+            | "enterprise";
           subscription_tier?: "free" | "pro" | "max" | "enterprise" | null;
           subscription_status?: string | null;
           subscription_period_start?: string | null;
@@ -137,7 +152,13 @@ export interface Database {
           title: string;
           description: string | null;
           slug: string;
-          game_type: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           genre: string | null;
           target_audience: string | null;
           game_config: Json | null; // Toxoid engine configuration
@@ -147,7 +168,14 @@ export interface Database {
           cover_image_url: string | null;
           demo_url: string | null; // Playable demo URL
           export_settings: Json | null;
-          status: "draft" | "in_development" | "completed" | "published" | "archived" | "deleted" | null;
+          status:
+            | "draft"
+            | "in_development"
+            | "completed"
+            | "published"
+            | "archived"
+            | "deleted"
+            | null;
           is_public: boolean | null;
           is_template: boolean | null;
           play_count: number | null;
@@ -170,7 +198,13 @@ export interface Database {
           title: string;
           description?: string | null;
           slug: string;
-          game_type: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           genre?: string | null;
           target_audience?: string | null;
           game_config?: Json | null;
@@ -180,7 +214,14 @@ export interface Database {
           cover_image_url?: string | null;
           demo_url?: string | null;
           export_settings?: Json | null;
-          status?: "draft" | "in_development" | "completed" | "published" | "archived" | "deleted" | null;
+          status?:
+            | "draft"
+            | "in_development"
+            | "completed"
+            | "published"
+            | "archived"
+            | "deleted"
+            | null;
           is_public?: boolean | null;
           is_template?: boolean | null;
           play_count?: number | null;
@@ -203,7 +244,13 @@ export interface Database {
           title?: string;
           description?: string | null;
           slug?: string;
-          game_type?: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type?:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           genre?: string | null;
           target_audience?: string | null;
           game_config?: Json | null;
@@ -213,7 +260,14 @@ export interface Database {
           cover_image_url?: string | null;
           demo_url?: string | null;
           export_settings?: Json | null;
-          status?: "draft" | "in_development" | "completed" | "published" | "archived" | "deleted" | null;
+          status?:
+            | "draft"
+            | "in_development"
+            | "completed"
+            | "published"
+            | "archived"
+            | "deleted"
+            | null;
           is_public?: boolean | null;
           is_template?: boolean | null;
           play_count?: number | null;
@@ -246,7 +300,14 @@ export interface Database {
           user_id: string;
           name: string;
           description: string | null;
-          asset_type: "sprite" | "tileset" | "background" | "sound" | "music" | "font" | "script";
+          asset_type:
+            | "sprite"
+            | "tileset"
+            | "background"
+            | "sound"
+            | "music"
+            | "font"
+            | "script";
           category: string | null; // character, environment, ui, etc.
           file_url: string;
           file_path: string;
@@ -260,7 +321,13 @@ export interface Database {
           is_featured: boolean | null;
           download_count: number | null;
           like_count: number | null;
-          license_type: "cc0" | "cc_by" | "cc_by_sa" | "proprietary" | "custom" | null;
+          license_type:
+            | "cc0"
+            | "cc_by"
+            | "cc_by_sa"
+            | "proprietary"
+            | "custom"
+            | null;
           license_details: string | null;
           ai_generated: boolean | null;
           generation_prompt: string | null;
@@ -273,7 +340,14 @@ export interface Database {
           user_id: string;
           name: string;
           description?: string | null;
-          asset_type: "sprite" | "tileset" | "background" | "sound" | "music" | "font" | "script";
+          asset_type:
+            | "sprite"
+            | "tileset"
+            | "background"
+            | "sound"
+            | "music"
+            | "font"
+            | "script";
           category?: string | null;
           file_url: string;
           file_path: string;
@@ -287,7 +361,13 @@ export interface Database {
           is_featured?: boolean | null;
           download_count?: number | null;
           like_count?: number | null;
-          license_type?: "cc0" | "cc_by" | "cc_by_sa" | "proprietary" | "custom" | null;
+          license_type?:
+            | "cc0"
+            | "cc_by"
+            | "cc_by_sa"
+            | "proprietary"
+            | "custom"
+            | null;
           license_details?: string | null;
           ai_generated?: boolean | null;
           generation_prompt?: string | null;
@@ -300,7 +380,14 @@ export interface Database {
           user_id?: string;
           name?: string;
           description?: string | null;
-          asset_type?: "sprite" | "tileset" | "background" | "sound" | "music" | "font" | "script";
+          asset_type?:
+            | "sprite"
+            | "tileset"
+            | "background"
+            | "sound"
+            | "music"
+            | "font"
+            | "script";
           category?: string | null;
           file_url?: string;
           file_path?: string;
@@ -314,7 +401,13 @@ export interface Database {
           is_featured?: boolean | null;
           download_count?: number | null;
           like_count?: number | null;
-          license_type?: "cc0" | "cc_by" | "cc_by_sa" | "proprietary" | "custom" | null;
+          license_type?:
+            | "cc0"
+            | "cc_by"
+            | "cc_by_sa"
+            | "proprietary"
+            | "custom"
+            | null;
           license_details?: string | null;
           ai_generated?: boolean | null;
           generation_prompt?: string | null;
@@ -338,7 +431,13 @@ export interface Database {
           user_id: string | null;
           name: string;
           description: string | null;
-          game_type: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           difficulty_level: "beginner" | "intermediate" | "advanced";
           template_config: Json; // Complete game configuration
           preview_assets: Json | null; // Asset previews for template showcase
@@ -356,7 +455,13 @@ export interface Database {
           user_id?: string | null;
           name: string;
           description?: string | null;
-          game_type: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           difficulty_level?: "beginner" | "intermediate" | "advanced";
           template_config: Json;
           preview_assets?: Json | null;
@@ -374,7 +479,13 @@ export interface Database {
           user_id?: string | null;
           name?: string;
           description?: string | null;
-          game_type?: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
+          game_type?:
+            | "bullet_hell"
+            | "rpg"
+            | "action_adventure"
+            | "team_deathmatch"
+            | "puzzle"
+            | "platformer";
           difficulty_level?: "beginner" | "intermediate" | "advanced";
           template_config?: Json;
           preview_assets?: Json | null;
@@ -402,13 +513,24 @@ export interface Database {
           id: string;
           user_id: string;
           game_id: string | null;
-          generation_type: "asset" | "code" | "game_logic" | "level_design" | "story" | "sound";
+          generation_type:
+            | "asset"
+            | "code"
+            | "game_logic"
+            | "level_design"
+            | "story"
+            | "sound";
           prompt: string;
           ai_model: string; // claude-4-sonnet, etc.
           generation_config: Json | null;
           output_data: Json | null; // Generated content
           output_files: Json | null; // Generated file URLs
-          status: "queued" | "processing" | "completed" | "failed" | "cancelled";
+          status:
+            | "queued"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           error_message: string | null;
           credits_used: number | null;
           processing_time_ms: number | null;
@@ -420,13 +542,24 @@ export interface Database {
           id?: string;
           user_id: string;
           game_id?: string | null;
-          generation_type: "asset" | "code" | "game_logic" | "level_design" | "story" | "sound";
+          generation_type:
+            | "asset"
+            | "code"
+            | "game_logic"
+            | "level_design"
+            | "story"
+            | "sound";
           prompt: string;
           ai_model: string;
           generation_config?: Json | null;
           output_data?: Json | null;
           output_files?: Json | null;
-          status?: "queued" | "processing" | "completed" | "failed" | "cancelled";
+          status?:
+            | "queued"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           error_message?: string | null;
           credits_used?: number | null;
           processing_time_ms?: number | null;
@@ -438,13 +571,24 @@ export interface Database {
           id?: string;
           user_id?: string;
           game_id?: string | null;
-          generation_type?: "asset" | "code" | "game_logic" | "level_design" | "story" | "sound";
+          generation_type?:
+            | "asset"
+            | "code"
+            | "game_logic"
+            | "level_design"
+            | "story"
+            | "sound";
           prompt?: string;
           ai_model?: string;
           generation_config?: Json | null;
           output_data?: Json | null;
           output_files?: Json | null;
-          status?: "queued" | "processing" | "completed" | "failed" | "cancelled";
+          status?:
+            | "queued"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           error_message?: string | null;
           credits_used?: number | null;
           processing_time_ms?: number | null;
@@ -475,7 +619,14 @@ export interface Database {
           user_id: string;
           stripe_subscription_id: string | null;
           stripe_customer_id: string | null;
-          status: "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "trialing" | "unpaid";
+          status:
+            | "active"
+            | "canceled"
+            | "incomplete"
+            | "incomplete_expired"
+            | "past_due"
+            | "trialing"
+            | "unpaid";
           plan_id: string;
           current_period_start: string | null;
           current_period_end: string | null;
@@ -493,7 +644,14 @@ export interface Database {
           user_id: string;
           stripe_subscription_id?: string | null;
           stripe_customer_id?: string | null;
-          status: "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "trialing" | "unpaid";
+          status:
+            | "active"
+            | "canceled"
+            | "incomplete"
+            | "incomplete_expired"
+            | "past_due"
+            | "trialing"
+            | "unpaid";
           plan_id: string;
           current_period_start?: string | null;
           current_period_end?: string | null;
@@ -511,7 +669,14 @@ export interface Database {
           user_id?: string;
           stripe_subscription_id?: string | null;
           stripe_customer_id?: string | null;
-          status?: "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "trialing" | "unpaid";
+          status?:
+            | "active"
+            | "canceled"
+            | "incomplete"
+            | "incomplete_expired"
+            | "past_due"
+            | "trialing"
+            | "unpaid";
           plan_id?: string;
           current_period_start?: string | null;
           current_period_end?: string | null;
@@ -542,15 +707,57 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      user_use_case: "indie_dev" | "student" | "hobbyist" | "studio" | "enterprise";
+      user_use_case:
+        | "indie_dev"
+        | "student"
+        | "hobbyist"
+        | "studio"
+        | "enterprise";
       subscription_tier: "free" | "pro" | "max" | "enterprise";
-      game_type: "bullet_hell" | "rpg" | "action_adventure" | "team_deathmatch" | "puzzle" | "platformer";
-      game_status: "draft" | "in_development" | "completed" | "published" | "archived" | "deleted";
-      asset_type: "sprite" | "tileset" | "background" | "sound" | "music" | "font" | "script";
+      game_type:
+        | "bullet_hell"
+        | "rpg"
+        | "action_adventure"
+        | "team_deathmatch"
+        | "puzzle"
+        | "platformer";
+      game_status:
+        | "draft"
+        | "in_development"
+        | "completed"
+        | "published"
+        | "archived"
+        | "deleted";
+      asset_type:
+        | "sprite"
+        | "tileset"
+        | "background"
+        | "sound"
+        | "music"
+        | "font"
+        | "script";
       license_type: "cc0" | "cc_by" | "cc_by_sa" | "proprietary" | "custom";
-      generation_type: "asset" | "code" | "game_logic" | "level_design" | "story" | "sound";
-      generation_status: "queued" | "processing" | "completed" | "failed" | "cancelled";
-      subscription_status: "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "trialing" | "unpaid";
+      generation_type:
+        | "asset"
+        | "code"
+        | "game_logic"
+        | "level_design"
+        | "story"
+        | "sound";
+      generation_status:
+        | "queued"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "cancelled";
+      subscription_status:
+        | "active"
+        | "canceled"
+        | "incomplete"
+        | "incomplete_expired"
+        | "past_due"
+        | "trialing"
+        | "unpaid";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -639,22 +846,32 @@ export type Enums<
 export type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 export type Game = Database["public"]["Tables"]["games"]["Row"];
 export type Asset = Database["public"]["Tables"]["assets"]["Row"];
-export type GameTemplate = Database["public"]["Tables"]["game_templates"]["Row"];
-export type AIGeneration = Database["public"]["Tables"]["ai_generations"]["Row"];
+export type GameTemplate =
+  Database["public"]["Tables"]["game_templates"]["Row"];
+export type AIGeneration =
+  Database["public"]["Tables"]["ai_generations"]["Row"];
 export type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 // Insert types for creating new records
-export type UserProfileInsert = Database["public"]["Tables"]["user_profiles"]["Insert"];
+export type UserProfileInsert =
+  Database["public"]["Tables"]["user_profiles"]["Insert"];
 export type GameInsert = Database["public"]["Tables"]["games"]["Insert"];
 export type AssetInsert = Database["public"]["Tables"]["assets"]["Insert"];
-export type GameTemplateInsert = Database["public"]["Tables"]["game_templates"]["Insert"];
-export type AIGenerationInsert = Database["public"]["Tables"]["ai_generations"]["Insert"];
-export type SubscriptionInsert = Database["public"]["Tables"]["subscriptions"]["Insert"];
+export type GameTemplateInsert =
+  Database["public"]["Tables"]["game_templates"]["Insert"];
+export type AIGenerationInsert =
+  Database["public"]["Tables"]["ai_generations"]["Insert"];
+export type SubscriptionInsert =
+  Database["public"]["Tables"]["subscriptions"]["Insert"];
 
 // Update types for modifying existing records
-export type UserProfileUpdate = Database["public"]["Tables"]["user_profiles"]["Update"];
+export type UserProfileUpdate =
+  Database["public"]["Tables"]["user_profiles"]["Update"];
 export type GameUpdate = Database["public"]["Tables"]["games"]["Update"];
 export type AssetUpdate = Database["public"]["Tables"]["assets"]["Update"];
-export type GameTemplateUpdate = Database["public"]["Tables"]["game_templates"]["Update"];
-export type AIGenerationUpdate = Database["public"]["Tables"]["ai_generations"]["Update"];
-export type SubscriptionUpdate = Database["public"]["Tables"]["subscriptions"]["Update"];
+export type GameTemplateUpdate =
+  Database["public"]["Tables"]["game_templates"]["Update"];
+export type AIGenerationUpdate =
+  Database["public"]["Tables"]["ai_generations"]["Update"];
+export type SubscriptionUpdate =
+  Database["public"]["Tables"]["subscriptions"]["Update"];

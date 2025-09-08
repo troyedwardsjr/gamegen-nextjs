@@ -62,7 +62,7 @@ export function ResizablePanel({
       setWidth(newWidth);
       onResize?.(newWidth);
     },
-    [isResizing, direction, minWidth, maxWidth, onResize]
+    [isResizing, direction, minWidth, maxWidth, onResize],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -96,7 +96,7 @@ export function ResizablePanel({
       setWidth(newWidth);
       onResize?.(newWidth);
     },
-    [isResizing, direction, minWidth, maxWidth, onResize]
+    [isResizing, direction, minWidth, maxWidth, onResize],
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -119,7 +119,13 @@ export function ResizablePanel({
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isResizing, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [
+    isResizing,
+    handleMouseMove,
+    handleMouseUp,
+    handleTouchMove,
+    handleTouchEnd,
+  ]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -139,6 +145,7 @@ export function ResizablePanel({
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [collapsed, onCollapse]);
 
@@ -152,22 +159,22 @@ export function ResizablePanel({
   return (
     <motion.div
       ref={panelRef}
+      animate={{
+        width: currentWidth,
+        opacity: collapsed ? 0 : 1,
+      }}
       className={clsx(
         "relative flex-shrink-0 overflow-hidden",
         "transition-all duration-300 ease-out",
-        className
+        className,
       )}
-      style={{ width: currentWidth }}
-      initial={false}
-      animate={{ 
-        width: currentWidth,
-        opacity: collapsed ? 0 : 1 
-      }}
-      transition={{ 
-        duration: 0.3, 
-        ease: [0.4, 0, 0.2, 1] 
-      }}
       data-panel-id={id}
+      initial={false}
+      style={{ width: currentWidth }}
+      transition={{
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1],
+      }}
     >
       {/* Panel Content */}
       <div className={clsx("h-full", collapsed && "pointer-events-none")}>
@@ -183,7 +190,7 @@ export function ResizablePanel({
             "hover:bg-purple-400/20 active:bg-purple-400/40",
             "transition-colors duration-200",
             resizerPosition,
-            isDragging && "bg-purple-400/40"
+            isDragging && "bg-purple-400/40",
           )}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
@@ -196,7 +203,7 @@ export function ResizablePanel({
               "border border-white/20 dark:border-black/20",
               "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
               direction === "left" ? "-left-6" : "-right-6",
-              isDragging && "opacity-100"
+              isDragging && "opacity-100",
             )}
           >
             <div className="flex items-center justify-center h-full">
@@ -208,7 +215,7 @@ export function ResizablePanel({
           <div
             className={clsx(
               "absolute top-0 bottom-0 w-8",
-              direction === "left" ? "-left-4" : "-right-4"
+              direction === "left" ? "-left-4" : "-right-4",
             )}
           />
         </div>
@@ -217,7 +224,7 @@ export function ResizablePanel({
       {/* Collapse Toggle Button */}
       {onCollapse && (
         <button
-          onClick={toggleCollapsed}
+          aria-label={collapsed ? `Expand ${id}` : `Collapse ${id}`}
           className={clsx(
             "absolute top-4 w-6 h-6 rounded-full",
             "bg-white/10 dark:bg-black/10 backdrop-blur-sm",
@@ -229,10 +236,10 @@ export function ResizablePanel({
             "focus:outline-none focus:ring-2 focus:ring-purple-500/50",
             "z-10",
             direction === "left" ? "left-2" : "right-2",
-            collapsed && "opacity-50"
+            collapsed && "opacity-50",
           )}
           title={collapsed ? `Expand ${id}` : `Collapse ${id}`}
-          aria-label={collapsed ? `Expand ${id}` : `Collapse ${id}`}
+          onClick={toggleCollapsed}
         >
           <motion.div
             animate={{ rotate: collapsed ? 180 : 0 }}
@@ -241,17 +248,17 @@ export function ResizablePanel({
             {direction === "left" ? (
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path
-                  fillRule="evenodd"
-                  d="M12.293 5.293a1 1 0 011.414 1.414L9.414 11l4.293 4.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5z"
                   clipRule="evenodd"
+                  d="M12.293 5.293a1 1 0 011.414 1.414L9.414 11l4.293 4.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5z"
+                  fillRule="evenodd"
                 />
               </svg>
             ) : (
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                   clipRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  fillRule="evenodd"
                 />
               </svg>
             )}

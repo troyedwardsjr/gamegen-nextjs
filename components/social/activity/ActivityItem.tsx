@@ -6,23 +6,24 @@ import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Link } from "@heroui/link";
 import { motion } from "framer-motion";
-import { 
-  GamepadIcon, 
-  Heart, 
-  MessageCircle, 
-  UserPlus, 
-  Trophy, 
-  Star, 
+import {
+  GamepadIcon,
+  Heart,
+  MessageCircle,
+  UserPlus,
+  Trophy,
+  Star,
   Folder,
   Upload,
   Target,
   Crown,
   Users,
   ExternalLink,
-  Calendar
+  Calendar,
 } from "lucide-react";
-import { ActivityFeedItem, ActivityType } from "@/src/types/social";
 import { formatDistanceToNow } from "date-fns";
+
+import { ActivityFeedItem, ActivityType } from "@/src/types/social";
 
 interface ActivityItemProps {
   activity: ActivityFeedItem;
@@ -57,6 +58,7 @@ export function ActivityItem({
       milestone_reached: Star,
       collaboration_joined: Users,
     };
+
     return iconMap[type] || GamepadIcon;
   };
 
@@ -76,6 +78,7 @@ export function ActivityItem({
       milestone_reached: "text-pink-500",
       collaboration_joined: "text-teal-500",
     };
+
     return colorMap[type] || "text-purple-500";
   };
 
@@ -156,26 +159,32 @@ export function ActivityItem({
       return (
         <div className="p-3">
           <div className="flex items-start gap-3">
-            <div className={`p-1.5 rounded-lg bg-white/5 dark:bg-black/5 flex-shrink-0`}>
-              <Icon size={16} className={iconColor} />
+            <div
+              className={`p-1.5 rounded-lg bg-white/5 dark:bg-black/5 flex-shrink-0`}
+            >
+              <Icon className={iconColor} size={16} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground">
                 <span className="font-medium">{message.action}</span>
                 {message.targetUrl ? (
                   <Link
-                    href={message.targetUrl}
                     className="text-secondary-500 hover:text-secondary-600 ml-1"
+                    href={message.targetUrl}
                     size="sm"
                   >
                     {message.target}
                   </Link>
                 ) : (
-                  <span className="text-foreground/70 ml-1">{message.target}</span>
+                  <span className="text-foreground/70 ml-1">
+                    {message.target}
+                  </span>
                 )}
               </p>
               <p className="text-xs text-foreground/50 mt-1">
-                {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(activity.created_at), {
+                  addSuffix: true,
+                })}
               </p>
             </div>
           </div>
@@ -188,50 +197,63 @@ export function ActivityItem({
         <div className="flex items-start gap-4">
           {/* User Avatar */}
           <Avatar
-            src={activity.avatar_url || undefined}
+            as={Link}
+            className="flex-shrink-0"
+            href={`/profile/${activity.user_id}`}
             name={activity.display_name || activity.username}
             size={variant === "detailed" ? "lg" : "md"}
-            className="flex-shrink-0"
-            as={Link}
-            href={`/profile/${activity.user_id}`}
+            src={activity.avatar_url || undefined}
           />
 
           {/* Activity Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-3 mb-2">
               <div className={`p-2 rounded-lg bg-white/5 dark:bg-black/5`}>
-                <Icon size={20} className={iconColor} />
+                <Icon className={iconColor} size={20} />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <p className="text-foreground">
                   <Link
-                    href={`/profile/${activity.user_id}`}
                     className="font-semibold hover:text-secondary-500"
+                    href={`/profile/${activity.user_id}`}
                   >
-                    {isOwnActivity ? "You" : activity.display_name || activity.username}
+                    {isOwnActivity
+                      ? "You"
+                      : activity.display_name || activity.username}
                   </Link>
-                  <span className="text-foreground/80 ml-1">{message.action}</span>
+                  <span className="text-foreground/80 ml-1">
+                    {message.action}
+                  </span>
                   {message.targetUrl ? (
                     <Link
-                      href={message.targetUrl}
                       className="text-secondary-500 hover:text-secondary-600 ml-1 font-medium"
+                      href={message.targetUrl}
                     >
                       {message.target}
                     </Link>
                   ) : (
-                    <span className="text-foreground/70 ml-1 font-medium">{message.target}</span>
+                    <span className="text-foreground/70 ml-1 font-medium">
+                      {message.target}
+                    </span>
                   )}
                 </p>
-                
+
                 <div className="flex items-center gap-2 mt-1">
                   <time className="text-sm text-foreground/50 flex items-center gap-1">
                     <Calendar size={12} />
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(activity.created_at), {
+                      addSuffix: true,
+                    })}
                   </time>
-                  
+
                   {activity.activity_type === "achievement_unlocked" && (
-                    <Chip size="sm" variant="flat" color="warning" startContent={<Trophy size={12} />}>
+                    <Chip
+                      color="warning"
+                      size="sm"
+                      startContent={<Trophy size={12} />}
+                      variant="flat"
+                    >
                       +{(activity.activity_data as any)?.points_earned || 0} pts
                     </Chip>
                   )}
@@ -244,23 +266,34 @@ export function ActivityItem({
               <div className="mt-3 p-3 rounded-lg bg-white/5 dark:bg-black/5">
                 {activity.activity_type === "game_created" && (
                   <div>
-                    <p className="text-sm text-foreground/70 mb-2">Game Details:</p>
+                    <p className="text-sm text-foreground/70 mb-2">
+                      Game Details:
+                    </p>
                     <p className="text-sm">
-                      <strong>Type:</strong> {(activity.activity_data as any)?.game_type}
+                      <strong>Type:</strong>{" "}
+                      {(activity.activity_data as any)?.game_type}
                     </p>
                     {(activity.activity_data as any)?.is_first_game && (
-                      <Chip size="sm" color="success" variant="flat" className="mt-2">
+                      <Chip
+                        className="mt-2"
+                        color="success"
+                        size="sm"
+                        variant="flat"
+                      >
                         First Game! 🎉
                       </Chip>
                     )}
                   </div>
                 )}
-                
+
                 {activity.activity_type === "achievement_unlocked" && (
                   <div>
-                    <p className="text-sm text-foreground/70 mb-2">Achievement:</p>
+                    <p className="text-sm text-foreground/70 mb-2">
+                      Achievement:
+                    </p>
                     <p className="text-sm">
-                      <strong>Points Earned:</strong> {(activity.activity_data as any)?.points_earned || 0}
+                      <strong>Points Earned:</strong>{" "}
+                      {(activity.activity_data as any)?.points_earned || 0}
                     </p>
                   </div>
                 )}
@@ -271,31 +304,31 @@ export function ActivityItem({
             {showInteractions && !isOwnActivity && (
               <div className="flex items-center gap-2 mt-3">
                 <Button
-                  size="sm"
-                  variant="flat"
                   color="secondary"
+                  size="sm"
                   startContent={<Heart size={14} />}
+                  variant="flat"
                 >
                   Like
                 </Button>
-                
+
                 <Button
-                  size="sm"
-                  variant="flat"
                   color="secondary"
+                  size="sm"
                   startContent={<MessageCircle size={14} />}
+                  variant="flat"
                 >
                   Comment
                 </Button>
-                
+
                 {message.targetUrl && (
                   <Button
                     as={Link}
+                    color="secondary"
                     href={message.targetUrl}
                     size="sm"
-                    variant="flat"
-                    color="secondary"
                     startContent={<ExternalLink size={14} />}
+                    variant="flat"
                   >
                     View
                   </Button>
@@ -311,8 +344,12 @@ export function ActivityItem({
   return (
     <motion.div
       className={className}
-      whileHover={variant !== "compact" ? { backgroundColor: "rgba(255, 255, 255, 0.02)" } : undefined}
       transition={{ duration: 0.2 }}
+      whileHover={
+        variant !== "compact"
+          ? { backgroundColor: "rgba(255, 255, 255, 0.02)" }
+          : undefined
+      }
     >
       {renderActivityContent()}
     </motion.div>
@@ -320,10 +357,10 @@ export function ActivityItem({
 }
 
 // Activity item skeleton loader
-export function ActivityItemSkeleton({ 
-  variant = "default", 
-  className 
-}: { 
+export function ActivityItemSkeleton({
+  variant = "default",
+  className,
+}: {
   variant?: "default" | "compact" | "detailed";
   className?: string;
 }) {
@@ -346,7 +383,9 @@ export function ActivityItemSkeleton({
   return (
     <div className={`p-6 ${className}`}>
       <div className="flex items-start gap-4">
-        <div className={`${avatarSize} rounded-full bg-white/10 dark:bg-black/10 animate-pulse flex-shrink-0`} />
+        <div
+          className={`${avatarSize} rounded-full bg-white/10 dark:bg-black/10 animate-pulse flex-shrink-0`}
+        />
         <div className="flex-1 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-lg bg-white/10 dark:bg-black/10 animate-pulse" />

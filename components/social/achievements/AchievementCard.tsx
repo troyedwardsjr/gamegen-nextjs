@@ -6,24 +6,37 @@ import { Chip } from "@heroui/chip";
 import { Tooltip } from "@heroui/tooltip";
 import { Button } from "@heroui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Trophy, 
-  Star, 
-  Crown, 
-  Target, 
+import {
+  Trophy,
+  Star,
+  Crown,
+  Target,
   Award,
   Calendar,
-  Lock,
-  Unlock,
   Info,
   Share2,
-  Check
+  Check,
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+
 import { AchievementBadge } from "./AchievementBadge";
 
-export type AchievementType = "gameplay" | "creation" | "social" | "milestone" | "special";
-export type AchievementRarity = "common" | "rare" | "epic" | "legendary" | "mythic";
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
+
+export type AchievementType =
+  | "gameplay"
+  | "creation"
+  | "social"
+  | "milestone"
+  | "special";
+export type AchievementRarity =
+  | "common"
+  | "rare"
+  | "epic"
+  | "legendary"
+  | "mythic";
 export type AchievementStatus = "locked" | "in_progress" | "completed";
 
 interface Achievement {
@@ -79,7 +92,7 @@ const RARITY_CONFIG = {
   },
   rare: {
     color: "#3B82F6",
-    bgColor: "from-blue-500/20 to-blue-600/20", 
+    bgColor: "from-blue-500/20 to-blue-600/20",
     borderColor: "border-blue-500/30",
     label: "Rare",
     points: 25,
@@ -87,7 +100,7 @@ const RARITY_CONFIG = {
   epic: {
     color: "#8B5CF6",
     bgColor: "from-purple-500/20 to-purple-600/20",
-    borderColor: "border-purple-500/30", 
+    borderColor: "border-purple-500/30",
     label: "Epic",
     points: 50,
   },
@@ -95,7 +108,7 @@ const RARITY_CONFIG = {
     color: "#F59E0B",
     bgColor: "from-amber-500/20 to-orange-600/20",
     borderColor: "border-amber-500/30",
-    label: "Legendary", 
+    label: "Legendary",
     points: 100,
   },
   mythic: {
@@ -118,19 +131,21 @@ export function AchievementCard({
 }: AchievementCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const rarityConfig = RARITY_CONFIG[achievement.rarity];
-  const IconComponent = ACHIEVEMENT_ICONS[achievement.icon as keyof typeof ACHIEVEMENT_ICONS] || Trophy;
+  const IconComponent =
+    ACHIEVEMENT_ICONS[achievement.icon as keyof typeof ACHIEVEMENT_ICONS] ||
+    Trophy;
   const isCompleted = achievement.status === "completed";
   const isLocked = achievement.status === "locked";
-  const progressPercentage = achievement.progress 
-    ? (achievement.progress.current / achievement.progress.target) * 100 
+  const progressPercentage = achievement.progress
+    ? (achievement.progress.current / achievement.progress.target) * 100
     : 0;
 
   const cardVariants = {
-    hover: { 
+    hover: {
       scale: variant === "compact" ? 1.02 : 1.03,
-      transition: { duration: 0.2 }
+      transition: { duration: 0.2 },
     },
-    tap: { scale: 0.98 }
+    tap: { scale: 0.98 },
   };
 
   const handleClick = () => {
@@ -144,31 +159,33 @@ export function AchievementCard({
 
   const renderMinimalView = () => (
     <motion.div
+      className={`cursor-pointer ${className}`}
+      variants={cardVariants}
       whileHover="hover"
       whileTap="tap"
-      variants={cardVariants}
-      className={`cursor-pointer ${className}`}
       onClick={handleClick}
     >
       <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
         <AchievementBadge
           achievement={achievement}
-          size="sm"
           showRarity={false}
+          size="sm"
         />
-        
+
         <div className="flex-1 min-w-0">
-          <h4 className={`font-medium text-sm truncate ${isLocked ? 'text-foreground/50' : ''}`}>
+          <h4
+            className={`font-medium text-sm truncate ${isLocked ? "text-foreground/50" : ""}`}
+          >
             {achievement.secret && isLocked ? "???" : achievement.title}
           </h4>
-          
+
           {achievement.progress && showProgress && (
             <div className="mt-1">
               <Progress
-                value={progressPercentage}
-                size="sm"
-                color={isCompleted ? "success" : "primary"}
                 className="max-w-[120px]"
+                color={isCompleted ? "success" : "primary"}
+                size="sm"
+                value={progressPercentage}
               />
             </div>
           )}
@@ -176,8 +193,8 @@ export function AchievementCard({
 
         {isCompleted && (
           <motion.div
-            initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
+            initial={{ scale: 0, rotate: -180 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Check className="w-4 h-4 text-success" />
@@ -189,10 +206,10 @@ export function AchievementCard({
 
   const renderCompactView = () => (
     <motion.div
+      className={`cursor-pointer ${className}`}
+      variants={cardVariants}
       whileHover="hover"
       whileTap="tap"
-      variants={cardVariants}
-      className={`cursor-pointer ${className}`}
       onClick={handleClick}
     >
       <GlassmorphicCard {...GameGenCardPresets.chatPanel}>
@@ -200,31 +217,38 @@ export function AchievementCard({
           <div className="flex items-center gap-3">
             <AchievementBadge
               achievement={achievement}
-              size="md"
               showRarity={true}
+              size="md"
             />
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h4 className={`font-semibold text-sm truncate ${isLocked ? 'text-foreground/50' : ''}`}>
-                  {achievement.secret && isLocked ? "Secret Achievement" : achievement.title}
+                <h4
+                  className={`font-semibold text-sm truncate ${isLocked ? "text-foreground/50" : ""}`}
+                >
+                  {achievement.secret && isLocked
+                    ? "Secret Achievement"
+                    : achievement.title}
                 </h4>
-                
+
                 <Chip
+                  className="text-xs"
+                  color={
+                    rarityConfig.color === "#6B7280" ? "default" : "primary"
+                  }
                   size="sm"
                   variant="flat"
-                  color={rarityConfig.color === "#6B7280" ? "default" : "primary"}
-                  className="text-xs"
                 >
                   {achievement.points} pts
                 </Chip>
               </div>
-              
-              <p className={`text-xs text-foreground/70 line-clamp-1 ${isLocked ? 'text-foreground/40' : ''}`}>
-                {achievement.secret && isLocked 
-                  ? "Complete the prerequisites to reveal this achievement" 
-                  : achievement.description
-                }
+
+              <p
+                className={`text-xs text-foreground/70 line-clamp-1 ${isLocked ? "text-foreground/40" : ""}`}
+              >
+                {achievement.secret && isLocked
+                  ? "Complete the prerequisites to reveal this achievement"
+                  : achievement.description}
               </p>
 
               {achievement.progress && showProgress && (
@@ -232,15 +256,17 @@ export function AchievementCard({
                   <div className="flex items-center justify-between text-xs text-foreground/60 mb-1">
                     <span>Progress</span>
                     <span>
-                      {achievement.progress.current} / {achievement.progress.target}
-                      {achievement.progress.unit && ` ${achievement.progress.unit}`}
+                      {achievement.progress.current} /{" "}
+                      {achievement.progress.target}
+                      {achievement.progress.unit &&
+                        ` ${achievement.progress.unit}`}
                     </span>
                   </div>
                   <Progress
-                    value={progressPercentage}
-                    size="sm"
-                    color={isCompleted ? "success" : "primary"}
                     className="w-full"
+                    color={isCompleted ? "success" : "primary"}
+                    size="sm"
+                    value={progressPercentage}
                   />
                 </div>
               )}
@@ -248,8 +274,8 @@ export function AchievementCard({
 
             {isCompleted && (
               <motion.div
-                initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
+                initial={{ scale: 0, rotate: -180 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <Check className="w-5 h-5 text-success" />
@@ -263,17 +289,21 @@ export function AchievementCard({
 
   const renderShowcaseView = () => (
     <motion.div
+      className={`cursor-pointer ${className}`}
+      variants={cardVariants}
       whileHover="hover"
       whileTap="tap"
-      variants={cardVariants}
-      className={`cursor-pointer ${className}`}
       onClick={handleClick}
     >
       <div className="relative overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-br ${rarityConfig.bgColor} opacity-50`} />
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent`} />
-        
-        <GlassmorphicCard 
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${rarityConfig.bgColor} opacity-50`}
+        />
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent`}
+        />
+
+        <GlassmorphicCard
           {...GameGenCardPresets.gameCard}
           className={`relative ${rarityConfig.borderColor} border-2`}
         >
@@ -281,10 +311,10 @@ export function AchievementCard({
             {/* Rarity Badge */}
             <div className="absolute top-3 right-3">
               <Chip
-                size="sm"
-                variant="solid"
-                style={{ backgroundColor: rarityConfig.color }}
                 className="text-white font-semibold"
+                size="sm"
+                style={{ backgroundColor: rarityConfig.color }}
+                variant="solid"
               >
                 {rarityConfig.label}
               </Chip>
@@ -294,22 +324,27 @@ export function AchievementCard({
             <div className="mb-4">
               <AchievementBadge
                 achievement={achievement}
-                size="xl"
-                showRarity={false}
                 animated={isCompleted}
+                showRarity={false}
+                size="xl"
               />
             </div>
 
             {/* Title and Description */}
-            <h3 className={`text-lg font-bold mb-2 ${isLocked ? 'text-foreground/50' : ''}`}>
-              {achievement.secret && isLocked ? "Secret Achievement" : achievement.title}
+            <h3
+              className={`text-lg font-bold mb-2 ${isLocked ? "text-foreground/50" : ""}`}
+            >
+              {achievement.secret && isLocked
+                ? "Secret Achievement"
+                : achievement.title}
             </h3>
-            
-            <p className={`text-sm text-foreground/70 mb-4 ${isLocked ? 'text-foreground/40' : ''}`}>
-              {achievement.secret && isLocked 
-                ? "Complete the prerequisites to reveal this achievement" 
-                : achievement.description
-              }
+
+            <p
+              className={`text-sm text-foreground/70 mb-4 ${isLocked ? "text-foreground/40" : ""}`}
+            >
+              {achievement.secret && isLocked
+                ? "Complete the prerequisites to reveal this achievement"
+                : achievement.description}
             </p>
 
             {/* Progress */}
@@ -318,15 +353,17 @@ export function AchievementCard({
                 <div className="flex items-center justify-between text-sm text-foreground/70 mb-2">
                   <span>Progress</span>
                   <span>
-                    {achievement.progress.current} / {achievement.progress.target}
-                    {achievement.progress.unit && ` ${achievement.progress.unit}`}
+                    {achievement.progress.current} /{" "}
+                    {achievement.progress.target}
+                    {achievement.progress.unit &&
+                      ` ${achievement.progress.unit}`}
                   </span>
                 </div>
                 <Progress
-                  value={progressPercentage}
-                  size="md"
-                  color={isCompleted ? "success" : "primary"}
                   className="w-full"
+                  color={isCompleted ? "success" : "primary"}
+                  size="md"
+                  value={progressPercentage}
                 />
               </div>
             )}
@@ -334,21 +371,22 @@ export function AchievementCard({
             {/* Points and Status */}
             <div className="flex items-center justify-center gap-4 mb-4">
               <Chip
+                color="warning"
                 startContent={<Trophy size={14} />}
                 variant="flat"
-                color="warning"
               >
                 {achievement.points} Points
               </Chip>
-              
+
               {achievement.unlocked_at && (
                 <Chip
+                  className="text-xs"
+                  color="default"
                   startContent={<Calendar size={14} />}
                   variant="flat"
-                  color="default"
-                  className="text-xs"
                 >
-                  Unlocked {new Date(achievement.unlocked_at).toLocaleDateString()}
+                  Unlocked{" "}
+                  {new Date(achievement.unlocked_at).toLocaleDateString()}
                 </Chip>
               )}
             </div>
@@ -359,18 +397,18 @@ export function AchievementCard({
                 {isCompleted && (
                   <Button
                     size="sm"
-                    variant="flat"
                     startContent={<Share2 size={14} />}
+                    variant="flat"
                     onPress={handleShare}
                   >
                     Share
                   </Button>
                 )}
-                
+
                 <Button
                   size="sm"
-                  variant="flat"
                   startContent={<Info size={14} />}
+                  variant="flat"
                   onPress={() => setShowDetails(!showDetails)}
                 >
                   Details
@@ -382,30 +420,36 @@ export function AchievementCard({
             <AnimatePresence>
               {showDetails && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
                   className="mt-4 pt-4 border-t border-white/10"
+                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0, height: 0 }}
                 >
                   <div className="text-left space-y-2 text-sm text-foreground/70">
                     <div>
-                      <span className="font-medium">Type:</span> {achievement.type}
+                      <span className="font-medium">Type:</span>{" "}
+                      {achievement.type}
                     </div>
                     <div>
-                      <span className="font-medium">Category:</span> {achievement.category || "General"}
+                      <span className="font-medium">Category:</span>{" "}
+                      {achievement.category || "General"}
                     </div>
-                    {achievement.prerequisites && achievement.prerequisites.length > 0 && (
-                      <div>
-                        <span className="font-medium">Prerequisites:</span>
-                        <div className="mt-1 space-y-1">
-                          {achievement.prerequisites.map((prereq, index) => (
-                            <div key={index} className="text-xs bg-background/50 rounded px-2 py-1">
-                              {prereq}
-                            </div>
-                          ))}
+                    {achievement.prerequisites &&
+                      achievement.prerequisites.length > 0 && (
+                        <div>
+                          <span className="font-medium">Prerequisites:</span>
+                          <div className="mt-1 space-y-1">
+                            {achievement.prerequisites.map((prereq, index) => (
+                              <div
+                                key={index}
+                                className="text-xs bg-background/50 rounded px-2 py-1"
+                              >
+                                {prereq}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </motion.div>
               )}
@@ -418,15 +462,15 @@ export function AchievementCard({
 
   const renderDefaultView = () => (
     <motion.div
+      className={`cursor-pointer ${className}`}
+      variants={cardVariants}
       whileHover="hover"
       whileTap="tap"
-      variants={cardVariants}
-      className={`cursor-pointer ${className}`}
       onClick={handleClick}
     >
-      <GlassmorphicCard 
+      <GlassmorphicCard
         {...GameGenCardPresets.gameCard}
-        className={isCompleted ? `${rarityConfig.borderColor} border` : ''}
+        className={isCompleted ? `${rarityConfig.borderColor} border` : ""}
       >
         <div className="p-5">
           <div className="flex items-start gap-4">
@@ -434,9 +478,9 @@ export function AchievementCard({
             <div className="flex-shrink-0">
               <AchievementBadge
                 achievement={achievement}
-                size="lg"
-                showRarity={true}
                 animated={isCompleted}
+                showRarity={true}
+                size="lg"
               />
             </div>
 
@@ -444,33 +488,39 @@ export function AchievementCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className={`font-semibold text-lg ${isLocked ? 'text-foreground/50' : ''}`}>
-                    {achievement.secret && isLocked ? "Secret Achievement" : achievement.title}
+                  <h3
+                    className={`font-semibold text-lg ${isLocked ? "text-foreground/50" : ""}`}
+                  >
+                    {achievement.secret && isLocked
+                      ? "Secret Achievement"
+                      : achievement.title}
                   </h3>
-                  
+
                   <div className="flex items-center gap-2 mt-1">
                     <Chip
                       size="sm"
-                      variant="flat"
-                      style={{ 
+                      style={{
                         backgroundColor: `${rarityConfig.color}20`,
-                        color: rarityConfig.color 
+                        color: rarityConfig.color,
                       }}
+                      variant="flat"
                     >
                       {rarityConfig.label}
                     </Chip>
-                    
+
                     <Chip
-                      size="sm"
-                      variant="flat"
                       color="warning"
+                      size="sm"
                       startContent={<Trophy size={12} />}
+                      variant="flat"
                     >
                       {achievement.points} pts
                     </Chip>
 
                     {achievement.unlocked_at && (
-                      <Tooltip content={`Unlocked on ${new Date(achievement.unlocked_at).toLocaleDateString()}`}>
+                      <Tooltip
+                        content={`Unlocked on ${new Date(achievement.unlocked_at).toLocaleDateString()}`}
+                      >
                         <Calendar className="w-4 h-4 text-foreground/50" />
                       </Tooltip>
                     )}
@@ -479,10 +529,10 @@ export function AchievementCard({
 
                 {isCompleted && (
                   <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
                     className="flex-shrink-0"
+                    initial={{ scale: 0, rotate: -180 }}
+                    transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
                   >
                     <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center">
                       <Check className="w-5 h-5 text-success" />
@@ -491,11 +541,12 @@ export function AchievementCard({
                 )}
               </div>
 
-              <p className={`text-foreground/70 mb-4 ${isLocked ? 'text-foreground/40' : ''}`}>
-                {achievement.secret && isLocked 
-                  ? "Complete the prerequisites to reveal this achievement" 
-                  : achievement.description
-                }
+              <p
+                className={`text-foreground/70 mb-4 ${isLocked ? "text-foreground/40" : ""}`}
+              >
+                {achievement.secret && isLocked
+                  ? "Complete the prerequisites to reveal this achievement"
+                  : achievement.description}
               </p>
 
               {/* Progress Bar */}
@@ -504,15 +555,17 @@ export function AchievementCard({
                   <div className="flex items-center justify-between text-sm text-foreground/70 mb-2">
                     <span>Progress</span>
                     <span>
-                      {achievement.progress.current.toLocaleString()} / {achievement.progress.target.toLocaleString()}
-                      {achievement.progress.unit && ` ${achievement.progress.unit}`}
+                      {achievement.progress.current.toLocaleString()} /{" "}
+                      {achievement.progress.target.toLocaleString()}
+                      {achievement.progress.unit &&
+                        ` ${achievement.progress.unit}`}
                     </span>
                   </div>
                   <Progress
-                    value={progressPercentage}
-                    size="md"
-                    color={isCompleted ? "success" : "primary"}
                     className="w-full"
+                    color={isCompleted ? "success" : "primary"}
+                    size="md"
+                    value={progressPercentage}
                   />
                 </div>
               )}
@@ -522,20 +575,20 @@ export function AchievementCard({
                 <div className="flex items-center gap-2">
                   {isCompleted && (
                     <Button
-                      size="sm"
-                      variant="flat"
                       color="primary"
+                      size="sm"
                       startContent={<Share2 size={14} />}
+                      variant="flat"
                       onPress={handleShare}
                     >
                       Share Achievement
                     </Button>
                   )}
-                  
+
                   <Button
                     size="sm"
-                    variant="flat"
                     startContent={<Info size={14} />}
+                    variant="flat"
                     onPress={() => setShowDetails(!showDetails)}
                   >
                     {showDetails ? "Hide" : "Show"} Details
@@ -549,10 +602,10 @@ export function AchievementCard({
           <AnimatePresence>
             {showDetails && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
                 className="mt-4 pt-4 border-t border-white/10"
+                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, height: 0 }}
               >
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -561,21 +614,26 @@ export function AchievementCard({
                   </div>
                   <div>
                     <span className="text-foreground/60">Category:</span>
-                    <span className="ml-2">{achievement.category || "General"}</span>
+                    <span className="ml-2">
+                      {achievement.category || "General"}
+                    </span>
                   </div>
-                  
-                  {achievement.prerequisites && achievement.prerequisites.length > 0 && (
-                    <div className="col-span-2">
-                      <span className="text-foreground/60 block mb-2">Prerequisites:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {achievement.prerequisites.map((prereq, index) => (
-                          <Chip key={index} size="sm" variant="flat">
-                            {prereq}
-                          </Chip>
-                        ))}
+
+                  {achievement.prerequisites &&
+                    achievement.prerequisites.length > 0 && (
+                      <div className="col-span-2">
+                        <span className="text-foreground/60 block mb-2">
+                          Prerequisites:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {achievement.prerequisites.map((prereq, index) => (
+                            <Chip key={index} size="sm" variant="flat">
+                              {prereq}
+                            </Chip>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </motion.div>
             )}

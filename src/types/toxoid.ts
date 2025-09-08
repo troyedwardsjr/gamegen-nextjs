@@ -1,6 +1,6 @@
 /**
  * Toxoid WASM Engine TypeScript Type Definitions
- * 
+ *
  * This file provides comprehensive TypeScript bindings for the Toxoid WASM game engine,
  * including the QuickJS scripting API and all ECS functionality.
  */
@@ -46,13 +46,13 @@ export interface ToxoidColor {
 // COMPONENT SCHEMA TYPES
 // =============================================================================
 
-export type ComponentPropertyType = 
-  | "number" 
-  | "boolean" 
-  | "string" 
+export type ComponentPropertyType =
+  | "number"
+  | "boolean"
+  | "string"
   | "entity"
-  | "u32" 
-  | "f32" 
+  | "u32"
+  | "f32"
   | "u64"
   | "i32"
   | "i64";
@@ -151,7 +151,7 @@ export enum ToxoidPhases {
 
 export enum ToxoidEvents {
   ON_ADD = "OnAdd",
-  ON_REMOVE = "OnRemove", 
+  ON_REMOVE = "OnRemove",
   ON_SET = "OnSet",
 }
 
@@ -208,16 +208,35 @@ export interface ToxoidCoreAPI {
   // Rendering
   loadSprite(path: string): SpriteLoadResult;
   loadSpineAnimation(config: SpineAnimationConfig): number;
-  filledRect(x: number, y: number, width: number, height: number, color: ToxoidColor): void;
-  outlineRect(x: number, y: number, width: number, height: number, color: ToxoidColor, border_width: number): void;
+  filledRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: ToxoidColor,
+  ): void;
+  outlineRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: ToxoidColor,
+    border_width: number,
+  ): void;
   filledCircle(x: number, y: number, radius: number, color: ToxoidColor): void;
-  outlineCircle(x: number, y: number, radius: number, color: ToxoidColor, border_width: number): void;
+  outlineCircle(
+    x: number,
+    y: number,
+    radius: number,
+    color: ToxoidColor,
+    border_width: number,
+  ): void;
 
   // System Management
   getSystemCount(): number;
   getEntityCount(): number;
   getDeltaTime(): number;
-  
+
   // Singletons
   getKeyboardInput(): KeyboardInputSingleton;
   getMouseInput(): MouseInputSingleton;
@@ -226,7 +245,12 @@ export interface ToxoidCoreAPI {
 }
 
 export interface ToxoidSystemAPI {
-  create(name: string, query: string, phase: ToxoidPhases, callback: SystemCallback): void;
+  create(
+    name: string,
+    query: string,
+    phase: ToxoidPhases,
+    callback: SystemCallback,
+  ): void;
   remove(name: string): void;
   enable(name: string): void;
   disable(name: string): void;
@@ -260,9 +284,9 @@ export interface ToxoidEngine {
   Phases: typeof ToxoidPhases;
   Events: typeof ToxoidEvents;
   ObserverEvents: typeof ToxoidEvents; // Alias for cleaner code
-  
+
   // Component registration shorthand
-  registerComponent: ToxoidCoreAPI['registerComponent'];
+  registerComponent: ToxoidCoreAPI["registerComponent"];
 }
 
 // =============================================================================
@@ -275,7 +299,12 @@ export interface ToxoidWasmModule {
   HEAPU8: Uint8Array;
   HEAP32: Int32Array;
   cwrap: (name: string, returnType: string, argTypes: string[]) => Function;
-  ccall: (name: string, returnType: string, argTypes: string[], args: any[]) => any;
+  ccall: (
+    name: string,
+    returnType: string,
+    argTypes: string[],
+    args: any[],
+  ) => any;
 }
 
 // =============================================================================
@@ -288,7 +317,7 @@ export interface ToxoidInitConfig {
   height: number;
   enableScripting?: boolean;
   memoryLimit?: number; // Default 50MB
-  stackSize?: number;   // Default 1MB
+  stackSize?: number; // Default 1MB
   debugMode?: boolean;
   assetPath?: string;
   onReady?: () => void;
@@ -336,14 +365,14 @@ export interface ScriptingContext {
 export interface AssetInfo {
   id: string;
   name: string;
-  type: 'sprite' | 'audio' | 'spine' | 'script';
+  type: "sprite" | "audio" | "spine" | "script";
   path: string;
   size: number;
   isLoaded: boolean;
 }
 
 export interface AssetManager {
-  loadAsset(path: string, type: AssetInfo['type']): Promise<AssetInfo>;
+  loadAsset(path: string, type: AssetInfo["type"]): Promise<AssetInfo>;
   preloadAssets(paths: string[]): Promise<AssetInfo[]>;
   getAsset(id: string): AssetInfo | null;
   unloadAsset(id: string): boolean;
@@ -361,7 +390,7 @@ declare global {
     ToxoidModule?: ToxoidWasmModule;
     toxoidReady?: boolean;
   }
-  
+
   // For scripts running in QuickJS context
   var Toxoid: ToxoidEngine;
   var console: {

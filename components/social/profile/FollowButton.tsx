@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { Button } from "@heroui/button";
 import { UserPlus, UserCheck, UserMinus, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+
+import { createClient } from "@/lib/supabase/client";
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -13,7 +14,14 @@ interface FollowButtonProps {
   isFollowing: boolean;
   onFollowChange?: (isFollowing: boolean) => void;
   size?: "sm" | "md" | "lg";
-  variant?: "solid" | "flat" | "bordered" | "light" | "faded" | "shadow" | "ghost";
+  variant?:
+    | "solid"
+    | "flat"
+    | "bordered"
+    | "light"
+    | "faded"
+    | "shadow"
+    | "ghost";
   className?: string;
 }
 
@@ -58,17 +66,14 @@ export function FollowButton({
           activity_type: "user_followed",
           target_user_id: targetUserId,
           activity_data: { action: "unfollow" },
-          visibility: "private"
+          visibility: "private",
         });
-
       } else {
         // Follow
-        const { error } = await supabase
-          .from("user_follows")
-          .insert({
-            follower_id: currentUserId,
-            following_id: targetUserId,
-          });
+        const { error } = await supabase.from("user_follows").insert({
+          follower_id: currentUserId,
+          following_id: targetUserId,
+        });
 
         if (error) throw error;
 
@@ -82,7 +87,7 @@ export function FollowButton({
           activity_type: "user_followed",
           target_user_id: targetUserId,
           activity_data: { action: "follow" },
-          visibility: "followers"
+          visibility: "followers",
         });
 
         // Create notification for the followed user
@@ -103,7 +108,7 @@ export function FollowButton({
             notification_data: {
               follower_username: followerProfile.username,
               follower_display_name: followerProfile.display_name,
-            }
+            },
           });
         }
       }
@@ -119,7 +124,7 @@ export function FollowButton({
     if (isLoading) {
       return (
         <>
-          <Loader2 size={16} className="animate-spin" />
+          <Loader2 className="animate-spin" size={16} />
           <span>{isFollowing ? "Unfollowing..." : "Following..."}</span>
         </>
       );
@@ -134,6 +139,7 @@ export function FollowButton({
           </>
         );
       }
+
       return (
         <>
           <UserCheck size={16} />
@@ -154,6 +160,7 @@ export function FollowButton({
     if (isFollowing) {
       return isHovered ? "danger" : "success";
     }
+
     return "secondary";
   };
 
@@ -161,30 +168,31 @@ export function FollowButton({
     if (isFollowing && !isHovered) {
       return variant === "solid" ? "flat" : variant;
     }
+
     return variant;
   };
 
   return (
     <motion.div
+      className={className}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      className={className}
     >
       <Button
-        color={getButtonColor() as any}
-        variant={getButtonVariant() as any}
-        size={size}
-        onPress={handleFollow}
-        isLoading={isLoading}
-        isDisabled={currentUserId === targetUserId}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        startContent={!isLoading && getButtonContent().props.children[0]}
         className={`
           transition-all duration-200
-          ${isFollowing && isHovered ? 'border-danger-500 text-danger-500' : ''}
-          ${isFollowing && !isHovered ? 'border-success-500/50' : ''}
+          ${isFollowing && isHovered ? "border-danger-500 text-danger-500" : ""}
+          ${isFollowing && !isHovered ? "border-success-500/50" : ""}
         `}
+        color={getButtonColor() as any}
+        isDisabled={currentUserId === targetUserId}
+        isLoading={isLoading}
+        size={size}
+        startContent={!isLoading && getButtonContent().props.children[0]}
+        variant={getButtonVariant() as any}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onPress={handleFollow}
       >
         {getButtonContent().props.children[1]}
       </Button>
@@ -193,7 +201,7 @@ export function FollowButton({
 }
 
 // Compact version for use in lists or cards
-interface CompactFollowButtonProps extends Omit<FollowButtonProps, 'size'> {
+interface CompactFollowButtonProps extends Omit<FollowButtonProps, "size"> {
   showLabel?: boolean;
 }
 
@@ -212,11 +220,11 @@ export function CompactFollowButton({
   return (
     <FollowButton
       {...props}
+      className="min-w-fit"
       isFollowing={isFollowing}
-      onFollowChange={handleFollowChange}
       size="sm"
       variant="flat"
-      className="min-w-fit"
+      onFollowChange={handleFollowChange}
     />
   );
 }
@@ -246,11 +254,11 @@ export function BulkFollowButton({
 
     try {
       const supabase = createClient();
-      
+
       // Filter out current user and create follow records
-      const validUserIds = userIds.filter(id => id !== currentUserId);
-      
-      const followRecords = validUserIds.map(targetUserId => ({
+      const validUserIds = userIds.filter((id) => id !== currentUserId);
+
+      const followRecords = validUserIds.map((targetUserId) => ({
         follower_id: currentUserId,
         following_id: targetUserId,
       }));
@@ -266,8 +274,9 @@ export function BulkFollowButton({
       setFollowedCount(successCount);
       onBulkFollowChange?.(successCount);
 
-      toast.success(`Started following ${successCount} creator${successCount === 1 ? '' : 's'}`);
-
+      toast.success(
+        `Started following ${successCount} creator${successCount === 1 ? "" : "s"}`,
+      );
     } catch (error) {
       console.error("Error bulk following users:", error);
       toast.error("Failed to follow some users");
@@ -276,19 +285,19 @@ export function BulkFollowButton({
     }
   };
 
-  if (userIds.length === 0 || userIds.every(id => id === currentUserId)) {
+  if (userIds.length === 0 || userIds.every((id) => id === currentUserId)) {
     return null;
   }
 
   return (
     <Button
-      color="secondary"
-      variant="flat"
-      size="md"
-      onPress={handleBulkFollow}
-      isLoading={isLoading}
-      startContent={!isLoading && <UserPlus size={16} />}
       className={className}
+      color="secondary"
+      isLoading={isLoading}
+      size="md"
+      startContent={!isLoading && <UserPlus size={16} />}
+      variant="flat"
+      onPress={handleBulkFollow}
     >
       {isLoading ? "Following..." : `Follow All (${userIds.length})`}
     </Button>

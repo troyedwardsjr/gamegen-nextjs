@@ -1,4 +1,4 @@
-import { env } from './env';
+import { env } from "./env";
 
 /**
  * API endpoint configuration for GameGen application
@@ -7,10 +7,10 @@ import { env } from './env';
 
 // Base URLs
 export const BASE_URLS = {
-  api: '/api',
-  supabase: env.get('NEXT_PUBLIC_SUPABASE_URL'),
-  toxoid: env.get('NEXT_PUBLIC_TOXOID_ENGINE_URL'),
-  assets: env.get('NEXT_PUBLIC_ASSET_CDN_URL'),
+  api: "/api",
+  supabase: env.get("NEXT_PUBLIC_SUPABASE_URL"),
+  toxoid: env.get("NEXT_PUBLIC_TOXOID_ENGINE_URL"),
+  assets: env.get("NEXT_PUBLIC_ASSET_CDN_URL"),
 } as const;
 
 // Authentication endpoints
@@ -105,7 +105,7 @@ export const CHAT_ENDPOINTS = {
   sessions: `${BASE_URLS.api}/chat/sessions`,
   messages: `${BASE_URLS.api}/chat/messages`,
   session: (id: string) => `${BASE_URLS.api}/chat/sessions/${id}`,
-  message: (sessionId: string, messageId: string) => 
+  message: (sessionId: string, messageId: string) =>
     `${BASE_URLS.api}/chat/sessions/${sessionId}/messages/${messageId}`,
   templates: `${BASE_URLS.api}/chat/templates`,
   useTemplate: (id: string) => `${BASE_URLS.api}/chat/templates/${id}/use`,
@@ -147,12 +147,12 @@ export const ANALYTICS_ENDPOINTS = {
 // External service endpoints
 export const EXTERNAL_ENDPOINTS = {
   stripe: {
-    createSession: 'https://api.stripe.com/v1/checkout/sessions',
-    webhook: 'https://api.stripe.com/v1/webhooks',
+    createSession: "https://api.stripe.com/v1/checkout/sessions",
+    webhook: "https://api.stripe.com/v1/webhooks",
   },
   anthropic: {
-    messages: 'https://api.anthropic.com/v1/messages',
-    complete: 'https://api.anthropic.com/v1/complete',
+    messages: "https://api.anthropic.com/v1/messages",
+    complete: "https://api.anthropic.com/v1/complete",
   },
   toxoid: {
     compile: `${BASE_URLS.toxoid}/compile`,
@@ -163,21 +163,34 @@ export const EXTERNAL_ENDPOINTS = {
 } as const;
 
 // Utility functions for building dynamic endpoints
-export const buildEndpoint = (template: string, params: Record<string, string>): string => {
+export const buildEndpoint = (
+  template: string,
+  params: Record<string, string>,
+): string => {
   let endpoint = template;
+
   Object.entries(params).forEach(([key, value]) => {
     endpoint = endpoint.replace(`{${key}}`, encodeURIComponent(value));
   });
+
   return endpoint;
 };
 
-export const withQueryParams = (endpoint: string, params: Record<string, any>): string => {
-  const url = new URL(endpoint, window?.location?.origin || 'http://localhost:3000');
+export const withQueryParams = (
+  endpoint: string,
+  params: Record<string, any>,
+): string => {
+  const url = new URL(
+    endpoint,
+    window?.location?.origin || "http://localhost:3000",
+  );
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       url.searchParams.set(key, String(value));
     }
   });
+
   return url.toString();
 };
 
@@ -187,8 +200,8 @@ export const API_CONFIG = {
   retryAttempts: 3,
   retryDelay: 1000, // 1 second
   maxFileSize: 10 * 1024 * 1024, // 10MB
-  supportedImageTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-  supportedAudioTypes: ['audio/mpeg', 'audio/wav', 'audio/ogg'],
+  supportedImageTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
+  supportedAudioTypes: ["audio/mpeg", "audio/wav", "audio/ogg"],
   rateLimits: {
     aiRequests: 100, // per hour
     uploads: 50, // per hour

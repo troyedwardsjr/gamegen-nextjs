@@ -1,16 +1,16 @@
 /**
  * Toxoid WASM Module Loader
- * 
+ *
  * Handles loading and initializing the Toxoid WASM game engine with QuickJS scripting support.
  * Provides a clean API for integrating with React components and NextJS.
  */
 
-import { 
-  ToxoidWasmModule, 
-  ToxoidEngine, 
-  ToxoidInitConfig, 
-  ToxoidGameState 
-} from '@/types/toxoid';
+import {
+  ToxoidWasmModule,
+  ToxoidEngine,
+  ToxoidInitConfig,
+  ToxoidGameState,
+} from "@/types/toxoid";
 
 // =============================================================================
 // CONFIGURATION
@@ -19,24 +19,24 @@ import {
 const DEFAULT_CONFIG: Partial<ToxoidInitConfig> = {
   enableScripting: true,
   memoryLimit: 50 * 1024 * 1024, // 50MB
-  stackSize: 1024 * 1024,         // 1MB
-  debugMode: process.env.NODE_ENV === 'development',
-  assetPath: '/assets/toxoid',
+  stackSize: 1024 * 1024, // 1MB
+  debugMode: process.env.NODE_ENV === "development",
+  assetPath: "/assets/toxoid",
 };
 
 // WASM file paths - will be served from public directory
 const WASM_PATHS = {
-  dev: '/toxoid/host.wasm',
-  prod: 'toxoid/host.wasm',
-  webgl_dev: 'toxoid/host.wasm',
-  webgl_prod: 'toxoid/host.wasm',
+  dev: "/toxoid/host.wasm",
+  prod: "toxoid/host.wasm",
+  webgl_dev: "toxoid/host.wasm",
+  webgl_prod: "toxoid/host.wasm",
 } as const;
 
 const JS_GLUE_PATHS = {
-  dev: '/toxoid/host.js',
-  prod: '/toxoid/host.js',
-  webgl_dev: '/toxoid/host.js',
-  webgl_prod: '/toxoid/host.js',
+  dev: "/toxoid/host.js",
+  prod: "/toxoid/host.js",
+  webgl_dev: "/toxoid/host.js",
+  webgl_prod: "/toxoid/host.js",
 } as const;
 
 // =============================================================================
@@ -67,6 +67,7 @@ export class ToxoidWasmLoader {
     if (!ToxoidWasmLoader.instance) {
       ToxoidWasmLoader.instance = new ToxoidWasmLoader();
     }
+
     return ToxoidWasmLoader.instance;
   }
 
@@ -79,12 +80,14 @@ export class ToxoidWasmLoader {
    */
   async initialize(config: ToxoidInitConfig): Promise<boolean> {
     if (this.isInitialized) {
-      console.warn('[ToxoidLoader] Already initialized');
+      console.warn("[ToxoidLoader] Already initialized");
+
       return true;
     }
 
     if (this.isLoading) {
-      console.warn('[ToxoidLoader] Already loading');
+      console.warn("[ToxoidLoader] Already loading");
+
       return false;
     }
 
@@ -112,24 +115,26 @@ export class ToxoidWasmLoader {
 
       this.isInitialized = true;
       this.isLoading = false;
-      
+
       // Call ready callback
       if (this.config.onReady) {
         this.config.onReady();
       }
 
-      console.log('[ToxoidLoader] ✅ Initialization completed successfully');
-      return true;
+      console.log("[ToxoidLoader] ✅ Initialization completed successfully");
 
+      return true;
     } catch (error) {
       this.isLoading = false;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[ToxoidLoader] ❌ Initialization failed:', errorMessage);
-      
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
+      console.error("[ToxoidLoader] ❌ Initialization failed:", errorMessage);
+
       if (this.config?.onError) {
         this.config.onError(errorMessage);
       }
-      
+
       return false;
     }
   }
@@ -161,6 +166,7 @@ export class ToxoidWasmLoader {
         // Note: fps and frameTime would be updated from the engine's main loop
       };
     }
+
     return { ...this.gameState };
   }
 
@@ -169,12 +175,12 @@ export class ToxoidWasmLoader {
    */
   start(): void {
     if (!this.isInitialized || !this.engine) {
-      throw new Error('Engine not initialized');
+      throw new Error("Engine not initialized");
     }
-    
+
     this.gameState.isRunning = true;
     this.gameState.isPaused = false;
-    console.log('[ToxoidLoader] 🎮 Game started');
+    console.log("[ToxoidLoader] 🎮 Game started");
   }
 
   /**
@@ -183,7 +189,7 @@ export class ToxoidWasmLoader {
   stop(): void {
     this.gameState.isRunning = false;
     this.gameState.isPaused = false;
-    console.log('[ToxoidLoader] ⏹️ Game stopped');
+    console.log("[ToxoidLoader] ⏹️ Game stopped");
   }
 
   /**
@@ -192,7 +198,9 @@ export class ToxoidWasmLoader {
   setPaused(paused: boolean): void {
     if (this.gameState.isRunning) {
       this.gameState.isPaused = paused;
-      console.log(`[ToxoidLoader] ${paused ? '⏸️' : '▶️'} Game ${paused ? 'paused' : 'resumed'}`);
+      console.log(
+        `[ToxoidLoader] ${paused ? "⏸️" : "▶️"} Game ${paused ? "paused" : "resumed"}`,
+      );
     }
   }
 
@@ -201,26 +209,31 @@ export class ToxoidWasmLoader {
    */
   async executeScript(code: string): Promise<boolean> {
     if (!this.isInitialized || !this.engine) {
-      throw new Error('Engine not initialized');
+      throw new Error("Engine not initialized");
     }
 
     try {
       // This would be implemented via the QuickJS binding
       // For now, we'll use a placeholder approach
       const wrappedCode = this.wrapScriptCode(code);
-      
+
       // Execute in QuickJS context via WASM
       // This is a placeholder - the actual implementation would use
       // the QuickJS bindings from the WASM module
       if (this.module) {
         // Call into WASM to execute script
-        console.log('[ToxoidLoader] Executing script:', code.substring(0, 100) + '...');
+        console.log(
+          "[ToxoidLoader] Executing script:",
+          code.substring(0, 100) + "...",
+        );
+
         return true;
       }
-      
+
       return false;
     } catch (error) {
-      console.error('[ToxoidLoader] Script execution error:', error);
+      console.error("[ToxoidLoader] Script execution error:", error);
+
       return false;
     }
   }
@@ -238,8 +251,8 @@ export class ToxoidWasmLoader {
     this.canvas = null;
     this.config = null;
     this.isInitialized = false;
-    
-    console.log('[ToxoidLoader] 🧹 Cleanup completed');
+
+    console.log("[ToxoidLoader] 🧹 Cleanup completed");
   }
 
   // ==========================================================================
@@ -247,12 +260,12 @@ export class ToxoidWasmLoader {
   // ==========================================================================
 
   private async loadWasmModule(): Promise<void> {
-    if (!this.config) throw new Error('Config not set');
+    if (!this.config) throw new Error("Config not set");
 
     // Determine which WASM build to use
     const useWebGL = this.detectWebGLSupport();
     const isDev = this.config.debugMode;
-    
+
     let wasmPath: string;
     let jsPath: string;
 
@@ -275,11 +288,11 @@ export class ToxoidWasmLoader {
     try {
       // Load the Emscripten glue code
       await this.loadEmscriptenGlue(jsPath);
-      
+
       // Initialize the module with our canvas
       this.module = await this.createWasmModule(wasmPath);
-      
-      console.log('[ToxoidLoader] ✅ WASM module loaded successfully');
+
+      console.log("[ToxoidLoader] ✅ WASM module loaded successfully");
     } catch (error) {
       throw new Error(`Failed to load WASM module: ${error}`);
     }
@@ -287,7 +300,8 @@ export class ToxoidWasmLoader {
 
   private async loadEmscriptenGlue(jsPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
+      const script = document.createElement("script");
+
       script.src = jsPath;
       script.onload = () => resolve();
       script.onerror = () => reject(new Error(`Failed to load ${jsPath}`));
@@ -301,14 +315,20 @@ export class ToxoidWasmLoader {
     return new Promise((resolve, reject) => {
       // In the real implementation, this would be:
       // const Module = window.Module || {};
-      
+
       const mockModule: ToxoidWasmModule = {
         _malloc: (size: number) => 0,
         _free: (ptr: number) => {},
         HEAPU8: new Uint8Array(1024),
         HEAP32: new Int32Array(256),
-        cwrap: (name: string, returnType: string, argTypes: string[]) => () => {},
-        ccall: (name: string, returnType: string, argTypes: string[], args: any[]) => {},
+        cwrap:
+          (name: string, returnType: string, argTypes: string[]) => () => {},
+        ccall: (
+          name: string,
+          returnType: string,
+          argTypes: string[],
+          args: any[],
+        ) => {},
       };
 
       // Simulate async loading
@@ -318,7 +338,7 @@ export class ToxoidWasmLoader {
 
   private async initializeEngine(): Promise<void> {
     if (!this.module || !this.config || !this.canvas) {
-      throw new Error('Prerequisites not met for engine initialization');
+      throw new Error("Prerequisites not met for engine initialization");
     }
 
     // Create the Toxoid engine API wrapper
@@ -327,22 +347,26 @@ export class ToxoidWasmLoader {
     // Initialize the canvas and rendering context
     await this.initializeRendering();
 
-    console.log('[ToxoidLoader] ✅ Engine initialized');
+    console.log("[ToxoidLoader] ✅ Engine initialized");
   }
 
   private async initializeScripting(): Promise<void> {
     if (!this.module || !this.config) {
-      throw new Error('Prerequisites not met for scripting initialization');
+      throw new Error("Prerequisites not met for scripting initialization");
     }
 
     // Initialize QuickJS runtime with memory limits
     console.log(`[ToxoidLoader] Initializing QuickJS runtime:`);
-    console.log(`  - Memory limit: ${(this.config.memoryLimit! / 1024 / 1024).toFixed(1)}MB`);
-    console.log(`  - Stack size: ${(this.config.stackSize! / 1024).toFixed(1)}KB`);
+    console.log(
+      `  - Memory limit: ${(this.config.memoryLimit! / 1024 / 1024).toFixed(1)}MB`,
+    );
+    console.log(
+      `  - Stack size: ${(this.config.stackSize! / 1024).toFixed(1)}KB`,
+    );
 
     // This would call into the WASM module to initialize QuickJS
     // For now, we'll just log the initialization
-    console.log('[ToxoidLoader] ✅ Scripting context initialized');
+    console.log("[ToxoidLoader] ✅ Scripting context initialized");
   }
 
   private async initializeRendering(): Promise<void> {
@@ -353,17 +377,20 @@ export class ToxoidWasmLoader {
     this.canvas.height = this.config.height;
 
     // Set up pixel-perfect rendering for pixel art games
-    this.canvas.style.imageRendering = 'pixelated';
-    this.canvas.style.imageRendering = 'crisp-edges';
+    this.canvas.style.imageRendering = "pixelated";
+    this.canvas.style.imageRendering = "crisp-edges";
 
     // Initialize WebGL or Canvas 2D context as needed
-    const gl = this.canvas.getContext('webgl2') || this.canvas.getContext('webgl');
+    const gl =
+      this.canvas.getContext("webgl2") || this.canvas.getContext("webgl");
+
     if (gl) {
-      console.log('[ToxoidLoader] ✅ WebGL context initialized');
+      console.log("[ToxoidLoader] ✅ WebGL context initialized");
     } else {
-      const ctx = this.canvas.getContext('2d');
+      const ctx = this.canvas.getContext("2d");
+
       if (ctx) {
-        console.log('[ToxoidLoader] ✅ Canvas 2D context initialized');
+        console.log("[ToxoidLoader] ✅ Canvas 2D context initialized");
       }
     }
   }
@@ -375,8 +402,8 @@ export class ToxoidWasmLoader {
         createEntity: (name?: string) => ({
           id: Math.random(),
           name,
-          add: () => ({} as any),
-          remove: () => ({} as any),
+          add: () => ({}) as any,
+          remove: () => ({}) as any,
           has: () => false,
           getComponent: () => ({}),
           setComponent: () => {},
@@ -396,10 +423,10 @@ export class ToxoidWasmLoader {
         getSystemCount: () => 0,
         getEntityCount: () => 0,
         getDeltaTime: () => 0.016,
-        getKeyboardInput: () => ({} as any),
-        getMouseInput: () => ({} as any),
-        getGamepadInput: () => ({} as any),
-        getCamera: () => ({} as any),
+        getKeyboardInput: () => ({}) as any,
+        getMouseInput: () => ({}) as any,
+        getGamepadInput: () => ({}) as any,
+        getCamera: () => ({}) as any,
       },
       System: {
         create: () => {},
@@ -409,7 +436,7 @@ export class ToxoidWasmLoader {
         exists: () => false,
       },
       Query: {
-        create: () => ({} as any),
+        create: () => ({}) as any,
         count: () => 0,
         first: () => null,
         each: () => {},
@@ -431,8 +458,9 @@ export class ToxoidWasmLoader {
   }
 
   private detectWebGLSupport(): boolean {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    const canvas = document.createElement("canvas");
+    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+
     return !!gl;
   }
 
@@ -463,9 +491,12 @@ try {
 /**
  * Initialize Toxoid engine (convenience function)
  */
-export async function initializeToxoid(config: ToxoidInitConfig): Promise<ToxoidEngine | null> {
+export async function initializeToxoid(
+  config: ToxoidInitConfig,
+): Promise<ToxoidEngine | null> {
   const loader = ToxoidWasmLoader.getInstance();
   const success = await loader.initialize(config);
+
   return success ? loader.getEngine() : null;
 }
 

@@ -6,7 +6,15 @@ import { clsx } from "clsx";
 import { motion, HTMLMotionProps } from "framer-motion";
 
 export interface GlassmorphicButtonProps extends Omit<ButtonProps, "variant"> {
-  variant?: "glass" | "glass-filled" | "glass-bordered" | "glass-ghost" | "gaming" | "accent" | "danger" | "success";
+  variant?:
+    | "glass"
+    | "glass-filled"
+    | "glass-bordered"
+    | "glass-ghost"
+    | "gaming"
+    | "accent"
+    | "danger"
+    | "success";
   blur?: "sm" | "md" | "lg";
   intensity?: "subtle" | "medium" | "strong";
   glow?: boolean;
@@ -53,29 +61,29 @@ export function GlassmorphicButton({
   const getVariantClasses = () => {
     const intensityClasses = getIntensityValues();
     const blurClass = `backdrop-blur-${blur}`;
-    
+
     switch (variant) {
       case "glass-filled":
         return `${intensityClasses.background} ${blurClass} backdrop-saturate-150 border ${intensityClasses.border} ${intensityClasses.hover}`;
-      
+
       case "glass-bordered":
         return `bg-transparent ${blurClass} border-2 ${intensityClasses.border} hover:bg-white/10 dark:hover:bg-black/10`;
-      
+
       case "glass-ghost":
         return `bg-transparent ${blurClass} hover:${intensityClasses.background}`;
-      
+
       case "gaming":
         return `bg-gradient-to-r from-purple-500/30 to-purple-600/40 ${blurClass} backdrop-saturate-150 border border-purple-400/50 hover:from-purple-400/40 hover:to-purple-500/50 hover:border-purple-300/60`;
-      
+
       case "accent":
         return `bg-gradient-to-r from-cyan-500/30 to-purple-500/30 ${blurClass} backdrop-saturate-150 border border-cyan-400/50 hover:from-cyan-400/40 hover:to-purple-400/40 hover:border-cyan-300/60`;
-      
+
       case "danger":
         return `bg-gradient-to-r from-rose-500/30 to-red-500/30 ${blurClass} backdrop-saturate-150 border border-rose-400/50 hover:from-rose-400/40 hover:to-red-400/40 hover:border-rose-300/60`;
-      
+
       case "success":
         return `bg-gradient-to-r from-emerald-500/30 to-green-500/30 ${blurClass} backdrop-saturate-150 border border-emerald-400/50 hover:from-emerald-400/40 hover:to-green-400/40 hover:border-emerald-300/60`;
-      
+
       default: // glass
         return `${intensityClasses.background} ${blurClass} backdrop-saturate-150 ${intensityClasses.hover}`;
     }
@@ -83,7 +91,7 @@ export function GlassmorphicButton({
 
   const getGlowClasses = () => {
     if (!glow) return "";
-    
+
     switch (variant) {
       case "gaming":
         return "shadow-lg shadow-purple-500/25 hover:shadow-purple-400/40";
@@ -124,17 +132,19 @@ export function GlassmorphicButton({
     className,
   );
 
-  const motionProps: HTMLMotionProps<"button"> = animated ? {
-    whileHover: { scale: 1.05, y: -1 },
-    whileTap: { scale: 0.95 },
-    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-  } : {};
+  const motionProps: HTMLMotionProps<"button"> = animated
+    ? {
+        whileHover: { scale: 1.05, y: -1 },
+        whileTap: { scale: 0.95 },
+        transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+      }
+    : {};
 
   const ButtonComponent = animated ? MotionButton : Button;
 
   return (
-    <ButtonComponent 
-      className={glassClasses} 
+    <ButtonComponent
+      className={glassClasses}
       variant="light"
       {...(animated ? motionProps : {})}
       {...props}

@@ -1,127 +1,135 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from './lib/supabase/middleware'
-import { isDevModeEnabled, logDevModeBypass } from './lib/dev-mode'
+import { NextResponse, type NextRequest } from "next/server";
+
+import { updateSession } from "./lib/supabase/middleware";
+import { isDevModeEnabled, logDevModeBypass } from "./lib/dev-mode";
 
 // Define protected routes that require authentication
 const protectedRoutes = [
-  '/dashboard',
-  '/create',
-  '/creator',
-  '/game-creator',
-  '/profile',
-  '/settings',
-  '/analytics',
-]
+  "/dashboard",
+  "/create",
+  "/creator",
+  "/game-creator",
+  "/profile",
+  "/settings",
+  "/analytics",
+];
 
 // Define public routes that don't require authentication
 const publicRoutes = [
-  '/',
-  '/auth',
-  '/auth/callback',
-  '/games',
-  '/community',
-  '/about',
-  '/pricing',
-]
+  "/",
+  "/auth",
+  "/auth/callback",
+  "/games",
+  "/community",
+  "/about",
+  "/pricing",
+];
 
 // Define admin routes that require special permissions
-const adminRoutes = [
-  '/admin',
-]
+const adminRoutes = ["/admin"];
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
 
   // Skip middleware for static files and API routes we don't need to protect
   if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.')
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/static") ||
+    pathname.includes(".")
   ) {
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
   // Update Supabase session
-  const response = await updateSession(request)
+  const response = await updateSession(request);
 
   // Get the updated request with the session
-  const supabase = response.locals?.supabase
-  const user = response.locals?.user
+  const supabase = response.locals?.supabase;
+  const user = response.locals?.user;
 
   // Check if dev mode is enabled and bypass authentication if so
   if (isDevModeEnabled()) {
     logDevModeBypass(pathname);
-    
+
     // If accessing auth routes in dev mode, redirect to dashboard
-    if (pathname.startsWith('/auth') && !pathname.includes('callback')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith("/auth") && !pathname.includes("callback")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    
+
     // For all other routes in dev mode, allow access without authentication
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
   // Check if the route requires authentication
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  )
-  
-  const isAdminRoute = adminRoutes.some(route => 
-    pathname.startsWith(route)
-  )
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
 
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname === route || pathname.startsWith(route)
-  )
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+
+  const isPublicRoute = publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route),
+  );
 
   // Handle admin routes
   if (isAdminRoute) {
     if (!user) {
-      const redirectUrl = new URL('/auth?redirect=' + pathname, request.url)
-      return NextResponse.redirect(redirectUrl)
+      const redirectUrl = new URL("/auth?redirect=" + pathname, request.url);
+
+      return NextResponse.redirect(redirectUrl);
     }
 
     // Check if user has admin privileges (you can customize this logic)
     // For now, we'll assume any authenticated user can access admin (update as needed)
     try {
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier, is_verified')
-        .eq('id', user.id)
-        .single()
+        .from("profiles")
+        .select("subscription_tier, is_verified")
+        .eq("id", user.id)
+        .single();
 
-      if (!profile || (!profile.is_verified && profile.subscription_tier !== 'max')) {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
+      if (
+        !profile ||
+        (!profile.is_verified && profile.subscription_tier !== "max")
+      ) {
+        return NextResponse.redirect(new URL("/unauthorized", request.url));
       }
     } catch (error) {
-      console.error('Error checking admin permissions:', error)
-      return NextResponse.redirect(new URL('/auth?redirect=' + pathname, request.url))
+      console.error("Error checking admin permissions:", error);
+
+      return NextResponse.redirect(
+        new URL("/auth?redirect=" + pathname, request.url),
+      );
     }
   }
 
   // Handle protected routes
   if (isProtectedRoute && !user) {
-    const redirectUrl = new URL('/auth?redirect=' + pathname, request.url)
-    return NextResponse.redirect(redirectUrl)
+    const redirectUrl = new URL("/auth?redirect=" + pathname, request.url);
+
+    return NextResponse.redirect(redirectUrl);
   }
 
   // Handle auth routes - redirect to dashboard if already logged in
-  if (pathname.startsWith('/auth') && user && !pathname.includes('callback')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (pathname.startsWith("/auth") && user && !pathname.includes("callback")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Add security headers
-  const responseWithHeaders = NextResponse.next()
-  
+  const responseWithHeaders = NextResponse.next();
+
   // Security headers
-  responseWithHeaders.headers.set('X-Frame-Options', 'DENY')
-  responseWithHeaders.headers.set('X-Content-Type-Options', 'nosniff')
-  responseWithHeaders.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+  responseWithHeaders.headers.set("X-Frame-Options", "DENY");
+  responseWithHeaders.headers.set("X-Content-Type-Options", "nosniff");
   responseWithHeaders.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=()'
-  )
+    "Referrer-Policy",
+    "origin-when-cross-origin",
+  );
+  responseWithHeaders.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()",
+  );
 
   // Content Security Policy (adjust as needed for your application)
   const csp = [
@@ -135,11 +143,11 @@ export async function middleware(request: NextRequest) {
     "frame-src 'self' https://js.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
-  ].join('; ')
+  ].join("; ");
 
-  responseWithHeaders.headers.set('Content-Security-Policy', csp)
+  responseWithHeaders.headers.set("Content-Security-Policy", csp);
 
-  return response || responseWithHeaders
+  return response || responseWithHeaders;
 }
 
 export const config = {
@@ -151,6 +159,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public files (public folder)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
   ],
-}
+};

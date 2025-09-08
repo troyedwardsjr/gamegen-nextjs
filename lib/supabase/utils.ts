@@ -1,7 +1,13 @@
-import { createClient } from './client'
-import { createClient as createServerClient } from './server'
-import { createAdminClient } from './admin'
-import type { Database, Tables, TablesInsert, TablesUpdate } from './database.types'
+import type {
+  Database,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "./database.types";
+
+import { createClient } from "./client";
+import { createClient as createServerClient } from "./server";
+import { createAdminClient } from "./admin";
 
 // Database utility functions
 export class DatabaseError extends Error {
@@ -9,329 +15,334 @@ export class DatabaseError extends Error {
     message: string,
     public code?: string,
     public details?: any,
-    public hint?: string
+    public hint?: string,
   ) {
-    super(message)
-    this.name = 'DatabaseError'
+    super(message);
+    this.name = "DatabaseError";
   }
 }
 
 // Generic CRUD operations
-export class SupabaseService<T extends keyof Database['public']['Tables']> {
+export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
   constructor(
     private tableName: T,
-    private isServer: boolean = false
+    private isServer: boolean = false,
   ) {}
 
   private getClient() {
     if (this.isServer) {
-      return createServerClient()
+      return createServerClient();
     }
-    return createClient()
+
+    return createClient();
   }
 
   async findById(id: string): Promise<Tables<T> | null> {
-    const supabase = this.getClient()
+    const supabase = this.getClient();
     const { data, error } = await supabase
       .from(this.tableName)
-      .select('*')
-      .eq('id', id)
-      .single()
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null // Not found
+      if (error.code === "PGRST116") {
+        return null; // Not found
       }
       throw new DatabaseError(
         `Failed to find ${this.tableName} by id: ${id}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data
+    return data;
   }
 
   async findMany(
     options: {
-      filters?: Record<string, any>
-      orderBy?: { column: string; ascending?: boolean }
-      limit?: number
-      offset?: number
-    } = {}
+      filters?: Record<string, any>;
+      orderBy?: { column: string; ascending?: boolean };
+      limit?: number;
+      offset?: number;
+    } = {},
   ): Promise<Tables<T>[]> {
-    const supabase = this.getClient()
-    let query = supabase.from(this.tableName).select('*')
+    const supabase = this.getClient();
+    let query = supabase.from(this.tableName).select("*");
 
     // Apply filters
     if (options.filters) {
       Object.entries(options.filters).forEach(([key, value]) => {
-        query = query.eq(key, value)
-      })
+        query = query.eq(key, value);
+      });
     }
 
     // Apply ordering
     if (options.orderBy) {
       query = query.order(options.orderBy.column, {
         ascending: options.orderBy.ascending ?? true,
-      })
+      });
     }
 
     // Apply pagination
     if (options.limit) {
-      query = query.limit(options.limit)
+      query = query.limit(options.limit);
     }
     if (options.offset) {
-      query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1)
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit ?? 50) - 1,
+      );
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
       throw new DatabaseError(
         `Failed to find ${this.tableName} records`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data || []
+    return data || [];
   }
 
   async create(input: TablesInsert<T>): Promise<Tables<T>> {
-    const supabase = this.getClient()
+    const supabase = this.getClient();
     const { data, error } = await supabase
       .from(this.tableName)
       .insert(input)
       .select()
-      .single()
+      .single();
 
     if (error) {
       throw new DatabaseError(
         `Failed to create ${this.tableName} record`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data
+    return data;
   }
 
   async update(id: string, input: TablesUpdate<T>): Promise<Tables<T>> {
-    const supabase = this.getClient()
+    const supabase = this.getClient();
     const { data, error } = await supabase
       .from(this.tableName)
       .update(input)
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
     if (error) {
       throw new DatabaseError(
         `Failed to update ${this.tableName} record: ${id}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data
+    return data;
   }
 
   async delete(id: string): Promise<void> {
-    const supabase = this.getClient()
-    const { error } = await supabase
-      .from(this.tableName)
-      .delete()
-      .eq('id', id)
+    const supabase = this.getClient();
+    const { error } = await supabase.from(this.tableName).delete().eq("id", id);
 
     if (error) {
       throw new DatabaseError(
         `Failed to delete ${this.tableName} record: ${id}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
   }
 
   async count(filters?: Record<string, any>): Promise<number> {
-    const supabase = this.getClient()
+    const supabase = this.getClient();
     let query = supabase
       .from(this.tableName)
-      .select('*', { count: 'exact', head: true })
+      .select("*", { count: "exact", head: true });
 
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value)
-      })
+        query = query.eq(key, value);
+      });
     }
 
-    const { count, error } = await query
+    const { count, error } = await query;
 
     if (error) {
       throw new DatabaseError(
         `Failed to count ${this.tableName} records`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return count || 0
+    return count || 0;
   }
 }
 
 // Specialized service classes for complex operations
-export class GameService extends SupabaseService<'games'> {
+export class GameService extends SupabaseService<"games"> {
   constructor(isServer: boolean = false) {
-    super('games', isServer)
+    super("games", isServer);
   }
 
-  async findPublicGames(options: {
-    limit?: number
-    offset?: number
-    genre?: string
-    search?: string
-  } = {}): Promise<Tables<'games'>[]> {
-    const supabase = this.getClient()
+  async findPublicGames(
+    options: {
+      limit?: number;
+      offset?: number;
+      genre?: string;
+      search?: string;
+    } = {},
+  ): Promise<Tables<"games">[]> {
+    const supabase = this.getClient();
     let query = supabase
-      .from('games')
-      .select(`
+      .from("games")
+      .select(
+        `
         *,
         profiles:creator_id(username, display_name, avatar_url)
-      `)
-      .in('visibility', ['public', 'educational'])
-      .order('published_at', { ascending: false })
+      `,
+      )
+      .in("visibility", ["public", "educational"])
+      .order("published_at", { ascending: false });
 
     if (options.genre) {
-      query = query.eq('genre', options.genre)
+      query = query.eq("genre", options.genre);
     }
 
     if (options.search) {
-      query = query.textSearch('search_vector', options.search)
+      query = query.textSearch("search_vector", options.search);
     }
 
     if (options.limit) {
-      query = query.limit(options.limit)
+      query = query.limit(options.limit);
     }
 
     if (options.offset) {
       query = query.range(
         options.offset,
-        options.offset + (options.limit ?? 20) - 1
-      )
+        options.offset + (options.limit ?? 20) - 1,
+      );
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
       throw new DatabaseError(
-        'Failed to fetch public games',
+        "Failed to fetch public games",
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data || []
+    return data || [];
   }
 
   async findUserGames(
     userId: string,
-    includePrivate: boolean = true
-  ): Promise<Tables<'games'>[]> {
-    const supabase = this.getClient()
+    includePrivate: boolean = true,
+  ): Promise<Tables<"games">[]> {
+    const supabase = this.getClient();
     let query = supabase
-      .from('games')
-      .select('*')
-      .eq('creator_id', userId)
-      .order('updated_at', { ascending: false })
+      .from("games")
+      .select("*")
+      .eq("creator_id", userId)
+      .order("updated_at", { ascending: false });
 
     if (!includePrivate) {
-      query = query.in('visibility', ['public', 'educational', 'unlisted'])
+      query = query.in("visibility", ["public", "educational", "unlisted"]);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
       throw new DatabaseError(
         `Failed to fetch games for user: ${userId}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data || []
+    return data || [];
   }
 
   async incrementPlayCount(gameId: string): Promise<void> {
-    const supabase = this.getClient()
-    const { error } = await supabase.rpc('increment_play_count', {
+    const supabase = this.getClient();
+    const { error } = await supabase.rpc("increment_play_count", {
       game_id: gameId,
-    })
+    });
 
     if (error) {
       throw new DatabaseError(
         `Failed to increment play count for game: ${gameId}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
   }
 }
 
-export class ProfileService extends SupabaseService<'profiles'> {
+export class ProfileService extends SupabaseService<"profiles"> {
   constructor(isServer: boolean = false) {
-    super('profiles', isServer)
+    super("profiles", isServer);
   }
 
-  async findByUsername(username: string): Promise<Tables<'profiles'> | null> {
-    const supabase = this.getClient()
+  async findByUsername(username: string): Promise<Tables<"profiles"> | null> {
+    const supabase = this.getClient();
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('username', username)
-      .single()
+      .from("profiles")
+      .select("*")
+      .eq("username", username)
+      .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null // Not found
+      if (error.code === "PGRST116") {
+        return null; // Not found
       }
       throw new DatabaseError(
         `Failed to find profile by username: ${username}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data
+    return data;
   }
 
   async updateCredits(
     userId: string,
-    creditsUsed: number
-  ): Promise<Tables<'profiles'>> {
-    const supabase = this.getClient()
-    
+    creditsUsed: number,
+  ): Promise<Tables<"profiles">> {
+    const supabase = this.getClient();
+
     // Check if we need to reset daily credits
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('credits_reset_date, credits_used_today')
-      .eq('id', userId)
-      .single()
+      .from("profiles")
+      .select("credits_reset_date, credits_used_today")
+      .eq("id", userId)
+      .single();
 
-    const today = new Date().toISOString().split('T')[0]
-    const shouldReset = profile && profile.credits_reset_date !== today
+    const today = new Date().toISOString().split("T")[0];
+    const shouldReset = profile && profile.credits_reset_date !== today;
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({
         credits_remaining: shouldReset
           ? Math.max(0, 100 - creditsUsed) // Reset to daily limit
@@ -341,105 +352,106 @@ export class ProfileService extends SupabaseService<'profiles'> {
           : (profile?.credits_used_today || 0) + creditsUsed,
         credits_reset_date: today,
       })
-      .eq('id', userId)
+      .eq("id", userId)
       .select()
-      .single()
+      .single();
 
     if (error) {
       throw new DatabaseError(
         `Failed to update credits for user: ${userId}`,
         error.code,
         error.details,
-        error.hint
-      )
+        error.hint,
+      );
     }
 
-    return data
+    return data;
   }
 }
 
 // Migration runner
 export class MigrationRunner {
-  private adminClient = createAdminClient()
+  private adminClient = createAdminClient();
 
   async runMigration(migrationName: string, sql: string): Promise<void> {
     try {
       // Check if migration already ran
       const { data: existingMigration } = await this.adminClient
-        .from('_migration_log')
-        .select('migration_name')
-        .eq('migration_name', migrationName)
-        .single()
+        .from("_migration_log")
+        .select("migration_name")
+        .eq("migration_name", migrationName)
+        .single();
 
       if (existingMigration) {
-        console.log(`Migration ${migrationName} already applied`)
-        return
+        console.log(`Migration ${migrationName} already applied`);
+
+        return;
       }
 
       // Run the migration
-      const { error: migrationError } = await this.adminClient.rpc('exec_sql', {
+      const { error: migrationError } = await this.adminClient.rpc("exec_sql", {
         sql: sql,
-      })
+      });
 
       if (migrationError) {
         throw new DatabaseError(
           `Migration ${migrationName} failed`,
           migrationError.code,
           migrationError.details,
-          migrationError.hint
-        )
+          migrationError.hint,
+        );
       }
 
-      console.log(`Migration ${migrationName} completed successfully`)
+      console.log(`Migration ${migrationName} completed successfully`);
     } catch (error) {
-      console.error(`Migration ${migrationName} failed:`, error)
-      throw error
+      console.error(`Migration ${migrationName} failed:`, error);
+      throw error;
     }
   }
 
   async runAllMigrations(): Promise<void> {
     // This would read all migration files and run them in order
     // For now, this is a placeholder for the migration system
-    console.log('Migration runner ready - implement file reading logic')
+    console.log("Migration runner ready - implement file reading logic");
   }
 }
 
 // Utility functions
 export function handleSupabaseError(error: any): DatabaseError {
   return new DatabaseError(
-    error.message || 'Database operation failed',
+    error.message || "Database operation failed",
     error.code,
     error.details,
-    error.hint
-  )
+    error.hint,
+  );
 }
 
 export function withErrorHandling<T extends any[], R>(
-  fn: (...args: T) => Promise<R>
+  fn: (...args: T) => Promise<R>,
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     try {
-      return await fn(...args)
+      return await fn(...args);
     } catch (error: any) {
       if (error instanceof DatabaseError) {
-        throw error
+        throw error;
       }
-      throw handleSupabaseError(error)
+      throw handleSupabaseError(error);
     }
-  }
+  };
 }
 
 // Connection health check
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const supabase = createClient()
+    const supabase = createClient();
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(1)
+      .from("profiles")
+      .select("id")
+      .limit(1);
 
-    return !error
+    return !error;
   } catch {
-    return false
+    return false;
   }
 }

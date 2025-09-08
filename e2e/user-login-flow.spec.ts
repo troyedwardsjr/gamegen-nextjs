@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+
 import { GameGenAuthHelper, TestUser } from "./helpers/auth-helper";
 import { GameGenLandingPage } from "./pages/landing-page";
 import { GameGenCreatorPage } from "./pages/game-creator-page";
@@ -15,11 +16,13 @@ test.describe("GameGen Existing User Login Flow", () => {
   });
 
   test.describe("Standard Login Flow", () => {
-    test("should complete full login flow from landing page", async ({ page }) => {
+    test("should complete full login flow from landing page", async ({
+      page,
+    }) => {
       // Step 1: Visit landing page
       await landingPage.goto();
       await landingPage.waitForPageLoad();
-      
+
       // Verify landing page loads correctly
       await landingPage.verifyHeroSection();
 
@@ -31,11 +34,14 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Step 3: Verify login page elements
       const loginForm = page.locator('[data-testid="login-form"], form');
+
       await expect(loginForm).toBeVisible();
 
       const emailInput = page.locator('input[type="email"]');
       const passwordInput = page.locator('input[type="password"]');
-      const loginButton = page.locator('button[type="submit"], button:has-text("Sign In")');
+      const loginButton = page.locator(
+        'button[type="submit"], button:has-text("Sign In")',
+      );
 
       await expect(emailInput).toBeVisible();
       await expect(passwordInput).toBeVisible();
@@ -56,7 +62,7 @@ test.describe("GameGen Existing User Login Flow", () => {
       // Fill login form
       const testUser = {
         email: "remember-me@test.gamegen.com",
-        password: "RememberMe123!"
+        password: "RememberMe123!",
       };
 
       await page.fill('input[type="email"]', testUser.email);
@@ -64,15 +70,16 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Check "Remember Me" if available
       const rememberCheckbox = page.locator(
-        '[data-testid="remember-me"], input[type="checkbox"], input[name="remember"]'
+        '[data-testid="remember-me"], input[type="checkbox"], input[name="remember"]',
       );
-      
+
       if (await rememberCheckbox.isVisible({ timeout: 2000 })) {
         await rememberCheckbox.check();
         await expect(rememberCheckbox).toBeChecked();
       }
 
       const loginButton = page.locator('button[type="submit"]');
+
       await loginButton.click();
 
       // After successful login, logout and revisit
@@ -82,13 +89,16 @@ test.describe("GameGen Existing User Login Flow", () => {
 
         // Email should be pre-filled if remember me was checked
         const emailValue = await page.inputValue('input[type="email"]');
+
         if (emailValue) {
           expect(emailValue).toBe(testUser.email);
         }
       }
     });
 
-    test("should handle direct access to authenticated routes", async ({ page }) => {
+    test("should handle direct access to authenticated routes", async ({
+      page,
+    }) => {
       // Try to access creator page without being logged in
       await page.goto("/creator");
 
@@ -98,7 +108,7 @@ test.describe("GameGen Existing User Login Flow", () => {
       // Login and should redirect back to originally requested page
       await authHelper.loginAsTestUser();
       await expect(page).toHaveURL(/creator/);
-      
+
       await creatorPage.verifyCreatorLayout();
     });
   });
@@ -108,17 +118,17 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       const googleButton = page.locator(
-        '[data-testid="google-login"], button:has-text("Google"), .oauth-google'
+        '[data-testid="google-login"], button:has-text("Google"), .oauth-google',
       );
-      
+
       if (await googleButton.isVisible({ timeout: 3000 })) {
         // Mock successful Google OAuth
         await page.route("**/auth/google**", (route) => {
           route.fulfill({
             status: 302,
             headers: {
-              location: "/creator?oauth=success"
-            }
+              location: "/creator?oauth=success",
+            },
           });
         });
 
@@ -136,17 +146,17 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       const githubButton = page.locator(
-        '[data-testid="github-login"], button:has-text("GitHub"), .oauth-github'
+        '[data-testid="github-login"], button:has-text("GitHub"), .oauth-github',
       );
-      
+
       if (await githubButton.isVisible({ timeout: 3000 })) {
         // Mock successful GitHub OAuth
         await page.route("**/auth/github**", (route) => {
           route.fulfill({
             status: 302,
             headers: {
-              location: "/creator?oauth=success"
-            }
+              location: "/creator?oauth=success",
+            },
           });
         });
 
@@ -162,14 +172,14 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       const googleButton = page.locator('button:has-text("Google")');
-      
+
       if (await googleButton.isVisible({ timeout: 3000 })) {
         // Mock OAuth error
         await page.route("**/auth/google**", (route) => {
           route.fulfill({
             status: 400,
             contentType: "application/json",
-            body: JSON.stringify({ error: "OAuth authentication failed" })
+            body: JSON.stringify({ error: "OAuth authentication failed" }),
           });
         });
 
@@ -177,12 +187,14 @@ test.describe("GameGen Existing User Login Flow", () => {
 
         // Should show error message
         const oauthError = page.locator(
-          '[data-testid="oauth-error"], .oauth-error, .auth-error'
+          '[data-testid="oauth-error"], .oauth-error, .auth-error',
         );
-        
+
         if (await oauthError.isVisible({ timeout: 5000 })) {
           await expect(oauthError).toBeVisible();
-          await expect(oauthError).toContainText(/oauth|authentication.*failed/i);
+          await expect(oauthError).toContainText(
+            /oauth|authentication.*failed/i,
+          );
         }
       }
     });
@@ -194,23 +206,26 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       const passwordInput = page.locator('input[type="password"]');
       const toggleButton = page.locator(
-        '[data-testid="password-toggle"], button:has([data-icon="eye"]), .password-toggle'
+        '[data-testid="password-toggle"], button:has([data-icon="eye"]), .password-toggle',
       );
 
       // Password should be hidden initially
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await expect(passwordInput).toHaveAttribute("type", "password");
 
       if (await toggleButton.isVisible({ timeout: 2000 })) {
         // Toggle to show password
         await toggleButton.click();
-        
+
         // Password should be visible now (type changed to text)
-        const visiblePasswordInput = page.locator('input[type="text"]').or(passwordInput);
+        const visiblePasswordInput = page
+          .locator('input[type="text"]')
+          .or(passwordInput);
+
         await expect(visiblePasswordInput).toBeVisible();
 
         // Toggle back to hide
         await toggleButton.click();
-        await expect(passwordInput).toHaveAttribute('type', 'password');
+        await expect(passwordInput).toHaveAttribute("type", "password");
       }
     });
 
@@ -218,7 +233,7 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       const forgotPasswordLink = page.locator(
-        '[data-testid="forgot-password"], a:has-text("Forgot"), a[href*="forgot"]'
+        '[data-testid="forgot-password"], a:has-text("Forgot"), a[href*="forgot"]',
       );
 
       if (await forgotPasswordLink.isVisible({ timeout: 2000 })) {
@@ -226,10 +241,14 @@ test.describe("GameGen Existing User Login Flow", () => {
         await expect(page).toHaveURL(/forgot|reset/);
 
         // Verify forgot password page
-        const forgotForm = page.locator('form, [data-testid="forgot-password-form"]');
+        const forgotForm = page.locator(
+          'form, [data-testid="forgot-password-form"]',
+        );
+
         await expect(forgotForm).toBeVisible();
 
         const emailInput = page.locator('input[type="email"]');
+
         await expect(emailInput).toBeVisible();
       }
     });
@@ -239,7 +258,7 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       const emailInput = page.locator('input[type="email"]');
       const resetButton = page.locator(
-        'button[type="submit"], button:has-text("Reset"), [data-testid="reset-button"]'
+        'button[type="submit"], button:has-text("Reset"), [data-testid="reset-button"]',
       );
 
       if (await emailInput.isVisible({ timeout: 3000 })) {
@@ -248,24 +267,33 @@ test.describe("GameGen Existing User Login Flow", () => {
 
         // Should show confirmation message
         const confirmationMessage = page.locator(
-          '[data-testid="reset-confirmation"], .reset-confirmation, .success-message'
+          '[data-testid="reset-confirmation"], .reset-confirmation, .success-message',
         );
-        
+
         if (await confirmationMessage.isVisible({ timeout: 3000 })) {
           await expect(confirmationMessage).toBeVisible();
-          await expect(confirmationMessage).toContainText(/email.*sent|reset.*link/i);
+          await expect(confirmationMessage).toContainText(
+            /email.*sent|reset.*link/i,
+          );
         }
 
         // Test reset token validation
         await page.goto("/reset-password?token=test-reset-token");
-        
-        const newPasswordForm = page.locator('[data-testid="new-password-form"], form');
+
+        const newPasswordForm = page.locator(
+          '[data-testid="new-password-form"], form',
+        );
+
         if (await newPasswordForm.isVisible({ timeout: 3000 })) {
           await expect(newPasswordForm).toBeVisible();
-          
-          const newPasswordInput = page.locator('input[type="password"]:first-of-type');
-          const confirmPasswordInput = page.locator('input[type="password"]:last-of-type');
-          
+
+          const newPasswordInput = page.locator(
+            'input[type="password"]:first-of-type',
+          );
+          const confirmPasswordInput = page.locator(
+            'input[type="password"]:last-of-type',
+          );
+
           await expect(newPasswordInput).toBeVisible();
           await expect(confirmPasswordInput).toBeVisible();
         }
@@ -280,7 +308,7 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Reload page
       await page.reload();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState("networkidle");
 
       // Should still be logged in
       await expect(authHelper.isLoggedIn()).resolves.toBe(true);
@@ -316,28 +344,31 @@ test.describe("GameGen Existing User Login Flow", () => {
       const context1 = await browser.newContext();
       const page1 = await context1.newPage();
       const authHelper1 = new GameGenAuthHelper(page1);
+
       await authHelper1.loginAsTestUser();
 
       // Login with different user in second context
       const context2 = await browser.newContext();
       const page2 = await context2.newPage();
       const authHelper2 = new GameGenAuthHelper(page2);
-      
+
       const secondUser: TestUser = {
         email: "second-user@test.gamegen.com",
-        password: "SecondUser123!"
+        password: "SecondUser123!",
       };
-      
+
       try {
         await authHelper2.login(secondUser);
       } catch {
         // If user doesn't exist, that's fine for this test
-        console.log("Second user doesn't exist, skipping concurrent session test");
+        console.log(
+          "Second user doesn't exist, skipping concurrent session test",
+        );
       }
 
       // Both sessions should remain independent
       await expect(authHelper1.isLoggedIn()).resolves.toBe(true);
-      
+
       await context1.close();
       await context2.close();
     });
@@ -349,14 +380,17 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Try to submit empty form
       const submitButton = page.locator('button[type="submit"]');
+
       await submitButton.click();
 
       // Should show validation or disable button
       const isDisabled = await submitButton.isDisabled();
+
       if (!isDisabled) {
         const validationError = page.locator(
-          '.validation-error, [data-testid="validation-error"]'
+          '.validation-error, [data-testid="validation-error"]',
         );
+
         if (await validationError.isVisible({ timeout: 2000 })) {
           await expect(validationError).toBeVisible();
         }
@@ -368,18 +402,21 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       await page.fill('input[type="email"]', "wrong@gamegen.com");
       await page.fill('input[type="password"]', "wrongpassword");
-      
+
       const submitButton = page.locator('button[type="submit"]');
+
       await submitButton.click();
 
       // Should show invalid credentials error
       const credentialsError = page.locator(
-        '[data-testid="credentials-error"], .auth-error, .login-error'
+        '[data-testid="credentials-error"], .auth-error, .login-error',
       );
-      
+
       if (await credentialsError.isVisible({ timeout: 5000 })) {
         await expect(credentialsError).toBeVisible();
-        await expect(credentialsError).toContainText(/invalid.*credentials|incorrect.*password/i);
+        await expect(credentialsError).toContainText(
+          /invalid.*credentials|incorrect.*password/i,
+        );
       }
     });
 
@@ -389,7 +426,7 @@ test.describe("GameGen Existing User Login Flow", () => {
       // Simulate multiple failed login attempts
       const wrongCredentials = {
         email: "lockout-test@gamegen.com",
-        password: "wrongpassword"
+        password: "wrongpassword",
       };
 
       for (let i = 0; i < 3; i++) {
@@ -401,12 +438,14 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Should show account lockout message
       const lockoutMessage = page.locator(
-        '[data-testid="account-locked"], .account-lockout, .too-many-attempts'
+        '[data-testid="account-locked"], .account-lockout, .too-many-attempts',
       );
-      
+
       if (await lockoutMessage.isVisible({ timeout: 3000 })) {
         await expect(lockoutMessage).toBeVisible();
-        await expect(lockoutMessage).toContainText(/locked|too.*many.*attempts|try.*again/i);
+        await expect(lockoutMessage).toContainText(
+          /locked|too.*many.*attempts|try.*again/i,
+        );
       }
     });
 
@@ -418,7 +457,7 @@ test.describe("GameGen Existing User Login Flow", () => {
         route.fulfill({
           status: 500,
           contentType: "application/json",
-          body: JSON.stringify({ error: "Internal server error" })
+          body: JSON.stringify({ error: "Internal server error" }),
         });
       });
 
@@ -428,12 +467,14 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Should show server error message
       const serverError = page.locator(
-        '[data-testid="server-error"], .server-error, .system-error'
+        '[data-testid="server-error"], .server-error, .system-error',
       );
-      
+
       if (await serverError.isVisible({ timeout: 5000 })) {
         await expect(serverError).toBeVisible();
-        await expect(serverError).toContainText(/server.*error|system.*unavailable/i);
+        await expect(serverError).toContainText(
+          /server.*error|system.*unavailable/i,
+        );
       }
     });
 
@@ -449,9 +490,9 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Should show network error
       const networkError = page.locator(
-        '[data-testid="network-error"], .network-error, .connection-error'
+        '[data-testid="network-error"], .network-error, .connection-error',
       );
-      
+
       if (await networkError.isVisible({ timeout: 5000 })) {
         await expect(networkError).toBeVisible();
         await expect(networkError).toContainText(/network|connection|offline/i);
@@ -465,21 +506,22 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Mock slow login response
       await page.route("**/api/auth/login**", async (route) => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         route.continue();
       });
 
       await page.fill('input[type="email"]', "test@gamegen.com");
       await page.fill('input[type="password"]', "password123");
-      
+
       const submitButton = page.locator('button[type="submit"]');
+
       await submitButton.click();
 
       // Should show loading state
       const loadingSpinner = page.locator(
-        '[data-testid="loading-spinner"], .spinner, .loading'
+        '[data-testid="loading-spinner"], .spinner, .loading',
       );
-      
+
       if (await loadingSpinner.isVisible({ timeout: 1000 })) {
         await expect(loadingSpinner).toBeVisible();
       }
@@ -492,43 +534,53 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       // Tab through form elements
-      await page.keyboard.press('Tab'); // Email
-      const emailInput = page.locator(':focus');
-      await expect(emailInput).toHaveAttribute('type', 'email');
+      await page.keyboard.press("Tab"); // Email
+      const emailInput = page.locator(":focus");
 
-      await page.keyboard.press('Tab'); // Password
-      const passwordInput = page.locator(':focus');
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await expect(emailInput).toHaveAttribute("type", "email");
 
-      await page.keyboard.press('Tab'); // Submit button
-      const submitButton = page.locator(':focus');
-      await expect(submitButton).toHaveAttribute('type', 'submit');
+      await page.keyboard.press("Tab"); // Password
+      const passwordInput = page.locator(":focus");
+
+      await expect(passwordInput).toHaveAttribute("type", "password");
+
+      await page.keyboard.press("Tab"); // Submit button
+      const submitButton = page.locator(":focus");
+
+      await expect(submitButton).toHaveAttribute("type", "submit");
 
       // Should be able to submit with Enter
       await emailInput.focus();
-      await page.keyboard.type('test@gamegen.com');
-      await page.keyboard.press('Tab');
-      await page.keyboard.type('password123');
-      await page.keyboard.press('Enter');
+      await page.keyboard.type("test@gamegen.com");
+      await page.keyboard.press("Tab");
+      await page.keyboard.type("password123");
+      await page.keyboard.press("Enter");
     });
 
-    test("should have proper ARIA labels and form structure", async ({ page }) => {
+    test("should have proper ARIA labels and form structure", async ({
+      page,
+    }) => {
       await page.goto("/auth");
 
       // Check form accessibility
       const loginForm = page.locator('form, [role="form"]');
+
       await expect(loginForm).toBeVisible();
 
       const emailInput = page.locator('input[type="email"]');
       const passwordInput = page.locator('input[type="password"]');
 
       // Inputs should have labels or aria-labels
-      const emailLabel = await emailInput.getAttribute('aria-label') || 
-                        await page.locator('label[for]').first().textContent();
+      const emailLabel =
+        (await emailInput.getAttribute("aria-label")) ||
+        (await page.locator("label[for]").first().textContent());
+
       expect(emailLabel).toBeTruthy();
 
-      const passwordLabel = await passwordInput.getAttribute('aria-label') || 
-                           await page.locator('label').nth(1).textContent();
+      const passwordLabel =
+        (await passwordInput.getAttribute("aria-label")) ||
+        (await page.locator("label").nth(1).textContent());
+
       expect(passwordLabel).toBeTruthy();
     });
 
@@ -536,11 +588,14 @@ test.describe("GameGen Existing User Login Flow", () => {
       await page.goto("/auth");
 
       // Test email format validation
-      await page.fill('input[type="email"]', 'invalid-email');
-      await page.fill('input[type="password"]', 'password123');
+      await page.fill('input[type="email"]', "invalid-email");
+      await page.fill('input[type="password"]', "password123");
       await page.click('button[type="submit"]');
 
-      const emailError = page.locator('.email-error, [data-testid="email-error"]');
+      const emailError = page.locator(
+        '.email-error, [data-testid="email-error"]',
+      );
+
       if (await emailError.isVisible({ timeout: 2000 })) {
         await expect(emailError).toContainText(/valid.*email|format/i);
       }
@@ -554,6 +609,7 @@ test.describe("GameGen Existing User Login Flow", () => {
 
       // Form should be visible and usable on mobile
       const loginForm = page.locator('form, [data-testid="login-form"]');
+
       await expect(loginForm).toBeVisible();
 
       const emailInput = page.locator('input[type="email"]');

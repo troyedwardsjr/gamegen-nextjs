@@ -6,22 +6,27 @@ import { Input } from "@heroui/input";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Chip } from "@heroui/chip";
 import { motion } from "framer-motion";
-import { 
-  Search, 
-  TrendingUp, 
-  Star, 
-  Users, 
+import {
+  Search,
+  TrendingUp,
+  Star,
+  Users,
   Calendar,
-  Filter,
   Gamepad2,
   Crown,
   BookOpen,
-  Zap
+  Zap,
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+
 import { GameGrid } from "../game/GameGrid";
+
 import { TrendingGames } from "./TrendingGames";
 import { FeaturedCreators } from "./FeaturedCreators";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
 
@@ -63,14 +68,14 @@ export function CommunityDiscover({
 
   const fetchCommunityData = async () => {
     setLoading(true);
-    
+
     try {
       const [
         gamesResponse,
         creatorsResponse,
         featuredResponse,
         trendingResponse,
-        statsResponse
+        statsResponse,
       ] = await Promise.all([
         // Total games count
         supabase
@@ -80,9 +85,7 @@ export function CommunityDiscover({
           .eq("status", "published"),
 
         // Total creators count
-        supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true }),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
 
         // Featured games
         supabase
@@ -100,18 +103,22 @@ export function CommunityDiscover({
           .select("*")
           .eq("is_public", true)
           .eq("status", "published")
-          .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
+          .gte(
+            "created_at",
+            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          ) // Last 7 days
           .order("play_count", { ascending: false })
           .limit(8),
 
         // Total plays (approximate)
-        supabase
-          .from("games")
-          .select("play_count")
-          .eq("is_public", true)
+        supabase.from("games").select("play_count").eq("is_public", true),
       ]);
 
-      const totalPlays = statsResponse.data?.reduce((sum, game) => sum + (game.play_count || 0), 0) || 0;
+      const totalPlays =
+        statsResponse.data?.reduce(
+          (sum, game) => sum + (game.play_count || 0),
+          0,
+        ) || 0;
 
       setStats({
         totalGames: gamesResponse.count || 0,
@@ -122,7 +129,6 @@ export function CommunityDiscover({
 
       setFeaturedGames(featuredResponse.data || []);
       setTrendingGames(trendingResponse.data || []);
-
     } catch (error) {
       console.error("Error fetching community data:", error);
     } finally {
@@ -132,9 +138,9 @@ export function CommunityDiscover({
 
   const renderWelcomeSection = () => (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="text-center mb-8"
+      initial={{ opacity: 0, y: 20 }}
     >
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 rounded-2xl blur-xl" />
@@ -144,10 +150,10 @@ export function CommunityDiscover({
               Community Hub
             </h1>
             <p className="text-lg text-foreground/70 mb-6 max-w-2xl mx-auto">
-              Discover amazing games created by our community, connect with talented creators, 
-              and share your own creations with the world.
+              Discover amazing games created by our community, connect with
+              talented creators, and share your own creations with the world.
             </p>
-            
+
             {/* Community Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center">
@@ -179,15 +185,16 @@ export function CommunityDiscover({
             {/* Search Bar */}
             <div className="max-w-md mx-auto">
               <Input
-                placeholder="Search games, creators, or topics..."
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-                startContent={<Search size={20} />}
-                size="lg"
                 classNames={{
                   input: "bg-transparent",
-                  inputWrapper: "bg-background/50 backdrop-blur-md border-1 border-white/20",
+                  inputWrapper:
+                    "bg-background/50 backdrop-blur-md border-1 border-white/20",
                 }}
+                placeholder="Search games, creators, or topics..."
+                size="lg"
+                startContent={<Search size={20} />}
+                value={searchQuery}
+                onValueChange={setSearchQuery}
               />
             </div>
           </div>
@@ -198,50 +205,50 @@ export function CommunityDiscover({
 
   const renderQuickFilters = () => (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
       className="flex flex-wrap gap-2 mb-6"
+      initial={{ opacity: 0, y: 10 }}
+      transition={{ delay: 0.1 }}
     >
       <Chip
-        variant="flat"
-        startContent={<Crown size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<Crown size={14} />}
+        variant="flat"
       >
         Featured
       </Chip>
       <Chip
-        variant="flat"
-        startContent={<TrendingUp size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<TrendingUp size={14} />}
+        variant="flat"
       >
         Trending
       </Chip>
       <Chip
-        variant="flat"
-        startContent={<BookOpen size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<BookOpen size={14} />}
+        variant="flat"
       >
         Educational
       </Chip>
       <Chip
-        variant="flat"
-        startContent={<Gamepad2 size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<Gamepad2 size={14} />}
+        variant="flat"
       >
         Arcade
       </Chip>
       <Chip
-        variant="flat"
-        startContent={<Zap size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<Zap size={14} />}
+        variant="flat"
       >
         New
       </Chip>
       <Chip
-        variant="flat"
-        startContent={<Star size={14} />}
         className="cursor-pointer hover:scale-105 transition-transform"
+        startContent={<Star size={14} />}
+        variant="flat"
       >
         Top Rated
       </Chip>
@@ -254,14 +261,14 @@ export function CommunityDiscover({
         return (
           <div className="space-y-8">
             <TrendingGames
-              games={trendingGames}
               currentUserId={currentUserId}
+              games={trendingGames}
               loading={loading}
             />
             <GameGrid
               currentUserId={currentUserId}
-              showSearch={false}
               maxGames={12}
+              showSearch={false}
               variant="default"
             />
           </div>
@@ -270,22 +277,18 @@ export function CommunityDiscover({
       case "featured":
         return (
           <GameGrid
-            initialGames={featuredGames}
             currentUserId={currentUserId}
-            showSearch={false}
-            showFilters={false}
-            maxGames={12}
-            variant="default"
             emptyMessage="No featured games available at the moment."
+            initialGames={featuredGames}
+            maxGames={12}
+            showFilters={false}
+            showSearch={false}
+            variant="default"
           />
         );
 
       case "creators":
-        return (
-          <FeaturedCreators
-            currentUserId={currentUserId}
-          />
-        );
+        return <FeaturedCreators currentUserId={currentUserId} />;
 
       case "events":
         return (
@@ -293,7 +296,8 @@ export function CommunityDiscover({
             <Calendar className="w-16 h-16 text-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Community Events</h3>
             <p className="text-foreground/70 mb-6">
-              Stay tuned for exciting community events, game jams, and competitions!
+              Stay tuned for exciting community events, game jams, and
+              competitions!
             </p>
             <Button color="primary" variant="flat">
               Subscribe to Updates
@@ -306,8 +310,8 @@ export function CommunityDiscover({
         return (
           <GameGrid
             currentUserId={currentUserId}
-            showSearch={!searchQuery}
             showFilters={true}
+            showSearch={!searchQuery}
             variant="default"
           />
         );
@@ -320,22 +324,23 @@ export function CommunityDiscover({
       {renderQuickFilters()}
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.2 }}
       >
         <GlassmorphicCard {...GameGenCardPresets.gameCard}>
           <div className="p-6">
             <Tabs
-              selectedKey={activeTab}
-              onSelectionChange={(key) => setActiveTab(key as string)}
-              variant="underlined"
               classNames={{
-                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                tabList:
+                  "gap-6 w-full relative rounded-none p-0 border-b border-divider",
                 cursor: "w-full bg-primary",
                 tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary"
+                tabContent: "group-data-[selected=true]:text-primary",
               }}
+              selectedKey={activeTab}
+              variant="underlined"
+              onSelectionChange={(key) => setActiveTab(key as string)}
             >
               <Tab
                 key="trending"
@@ -384,9 +389,7 @@ export function CommunityDiscover({
               />
             </Tabs>
 
-            <div className="mt-6">
-              {renderTabContent()}
-            </div>
+            <div className="mt-6">{renderTabContent()}</div>
           </div>
         </GlassmorphicCard>
       </motion.div>

@@ -3,17 +3,19 @@
  * Server-side route protection utilities for Next.js middleware and API routes
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getSession, getUser, getProfile } from './auth-utils';
-import type { Database } from '../supabase/database.types';
+import type { Database } from "../supabase/database.types";
 
-export type UserProfile = Database['public']['Tables']['profiles']['Row'];
+import { NextRequest, NextResponse } from "next/server";
+
+import { getSession, getUser, getProfile } from "./auth-utils";
+
+export type UserProfile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export interface RouteGuardOptions {
   requireAuth?: boolean;
   requireEmailVerified?: boolean;
   requiredPermissions?: string[];
-  requiredTier?: 'free' | 'pro' | 'max' | 'educational';
+  requiredTier?: "free" | "pro" | "max" | "educational";
   requiredRole?: string[];
   redirectTo?: string;
   allowedPaths?: string[];
@@ -34,7 +36,7 @@ export interface AuthGuardResult {
  */
 export async function authGuard(
   request: NextRequest,
-  options: RouteGuardOptions = {}
+  options: RouteGuardOptions = {},
 ): Promise<AuthGuardResult> {
   const {
     requireAuth = true,
@@ -42,20 +44,20 @@ export async function authGuard(
     requiredPermissions = [],
     requiredTier,
     requiredRole = [],
-    redirectTo = '/auth/login',
+    redirectTo = "/auth/login",
     allowedPaths = [],
-    publicPaths = ['/auth', '/', '/pricing', '/about'],
+    publicPaths = ["/auth", "/", "/pricing", "/about"],
   } = options;
 
   const pathname = request.nextUrl.pathname;
 
   // Check if this is a public path
-  if (publicPaths.some(path => pathname.startsWith(path))) {
+  if (publicPaths.some((path) => pathname.startsWith(path))) {
     return { allowed: true };
   }
 
   // Check if this is an allowed path (bypasses all checks)
-  if (allowedPaths.some(path => pathname.startsWith(path))) {
+  if (allowedPaths.some((path) => pathname.startsWith(path))) {
     return { allowed: true };
   }
 
@@ -68,7 +70,7 @@ export async function authGuard(
       return {
         allowed: false,
         redirectTo,
-        reason: 'Authentication required',
+        reason: "Authentication required",
       };
     }
 
@@ -81,27 +83,36 @@ export async function authGuard(
     if (requireEmailVerified && user && !user.email_confirmed_at) {
       return {
         allowed: false,
-        redirectTo: '/auth/verify-email',
-        reason: 'Email verification required',
+        redirectTo: "/auth/verify-email",
+        reason: "Email verification required",
       };
     }
 
     // Get user profile for additional checks
     let profile: UserProfile | null = null;
-    if (user && (requiredTier || requiredRole.length > 0 || requiredPermissions.length > 0)) {
+
+    if (
+      user &&
+      (requiredTier ||
+        requiredRole.length > 0 ||
+        requiredPermissions.length > 0)
+    ) {
       profile = await getProfile(user.id);
     }
 
     // Check subscription tier
     if (requiredTier && profile) {
       const tierHierarchy = { free: 0, educational: 1, pro: 2, max: 3 };
-      const currentTierLevel = tierHierarchy[profile.subscription_tier as keyof typeof tierHierarchy] || 0;
+      const currentTierLevel =
+        tierHierarchy[
+          profile.subscription_tier as keyof typeof tierHierarchy
+        ] || 0;
       const requiredTierLevel = tierHierarchy[requiredTier];
 
       if (currentTierLevel < requiredTierLevel) {
         return {
           allowed: false,
-          redirectTo: '/pricing',
+          redirectTo: "/pricing",
           reason: `${requiredTier} tier required`,
         };
       }
@@ -111,13 +122,15 @@ export async function authGuard(
     if (requiredRole.length > 0 && profile) {
       // Assuming roles are stored in user metadata or profile
       const userRoles = (user.user_metadata?.roles as string[]) || [];
-      const hasRequiredRole = requiredRole.some(role => userRoles.includes(role));
+      const hasRequiredRole = requiredRole.some((role) =>
+        userRoles.includes(role),
+      );
 
       if (!hasRequiredRole) {
         return {
           allowed: false,
-          redirectTo: '/unauthorized',
-          reason: 'Insufficient permissions',
+          redirectTo: "/unauthorized",
+          reason: "Insufficient permissions",
         };
       }
     }
@@ -125,16 +138,17 @@ export async function authGuard(
     // Check permissions (if implemented in your profile structure)
     if (requiredPermissions.length > 0 && profile) {
       // Assuming permissions are stored in user metadata
-      const userPermissions = (user.user_metadata?.permissions as string[]) || [];
-      const hasAllPermissions = requiredPermissions.every(permission => 
-        userPermissions.includes(permission)
+      const userPermissions =
+        (user.user_metadata?.permissions as string[]) || [];
+      const hasAllPermissions = requiredPermissions.every((permission) =>
+        userPermissions.includes(permission),
       );
 
       if (!hasAllPermissions) {
         return {
           allowed: false,
-          redirectTo: '/unauthorized',
-          reason: 'Missing required permissions',
+          redirectTo: "/unauthorized",
+          reason: "Missing required permissions",
         };
       }
     }
@@ -144,14 +158,13 @@ export async function authGuard(
       user,
       profile,
     };
-
   } catch (error) {
-    console.error('Auth guard error:', error);
-    
+    console.error("Auth guard error:", error);
+
     return {
       allowed: false,
       redirectTo,
-      reason: 'Authentication check failed',
+      reason: "Authentication check failed",
     };
   }
 }
@@ -162,7 +175,7 @@ export async function authGuard(
  */
 export async function apiAuthGuard(
   request: NextRequest,
-  options: Omit<RouteGuardOptions, 'redirectTo'> = {}
+  options: Omit<RouteGuardOptions, "redirectTo"> = {},
 ): Promise<{
   success: boolean;
   user?: any;
@@ -186,7 +199,7 @@ export async function apiAuthGuard(
     if (requireAuth && !user) {
       return {
         success: false,
-        error: 'Authentication required',
+        error: "Authentication required",
         status: 401,
       };
     }
@@ -200,21 +213,30 @@ export async function apiAuthGuard(
     if (requireEmailVerified && user && !user.email_confirmed_at) {
       return {
         success: false,
-        error: 'Email verification required',
+        error: "Email verification required",
         status: 403,
       };
     }
 
     // Get user profile for additional checks
     let profile: UserProfile | null = null;
-    if (user && (requiredTier || requiredRole.length > 0 || requiredPermissions.length > 0)) {
+
+    if (
+      user &&
+      (requiredTier ||
+        requiredRole.length > 0 ||
+        requiredPermissions.length > 0)
+    ) {
       profile = await getProfile(user.id);
     }
 
     // Check subscription tier
     if (requiredTier && profile) {
       const tierHierarchy = { free: 0, educational: 1, pro: 2, max: 3 };
-      const currentTierLevel = tierHierarchy[profile.subscription_tier as keyof typeof tierHierarchy] || 0;
+      const currentTierLevel =
+        tierHierarchy[
+          profile.subscription_tier as keyof typeof tierHierarchy
+        ] || 0;
       const requiredTierLevel = tierHierarchy[requiredTier];
 
       if (currentTierLevel < requiredTierLevel) {
@@ -229,12 +251,14 @@ export async function apiAuthGuard(
     // Check roles
     if (requiredRole.length > 0 && profile) {
       const userRoles = (user.user_metadata?.roles as string[]) || [];
-      const hasRequiredRole = requiredRole.some(role => userRoles.includes(role));
+      const hasRequiredRole = requiredRole.some((role) =>
+        userRoles.includes(role),
+      );
 
       if (!hasRequiredRole) {
         return {
           success: false,
-          error: 'Insufficient permissions',
+          error: "Insufficient permissions",
           status: 403,
         };
       }
@@ -242,15 +266,16 @@ export async function apiAuthGuard(
 
     // Check permissions
     if (requiredPermissions.length > 0 && profile) {
-      const userPermissions = (user.user_metadata?.permissions as string[]) || [];
-      const hasAllPermissions = requiredPermissions.every(permission => 
-        userPermissions.includes(permission)
+      const userPermissions =
+        (user.user_metadata?.permissions as string[]) || [];
+      const hasAllPermissions = requiredPermissions.every((permission) =>
+        userPermissions.includes(permission),
       );
 
       if (!hasAllPermissions) {
         return {
           success: false,
-          error: 'Missing required permissions',
+          error: "Missing required permissions",
           status: 403,
         };
       }
@@ -261,13 +286,12 @@ export async function apiAuthGuard(
       user,
       profile,
     };
-
   } catch (error) {
-    console.error('API auth guard error:', error);
-    
+    console.error("API auth guard error:", error);
+
     return {
       success: false,
-      error: 'Authentication check failed',
+      error: "Authentication check failed",
       status: 500,
     };
   }
@@ -281,11 +305,11 @@ export function createAuthMiddleware(options: RouteGuardOptions = {}) {
     const result = await authGuard(request, options);
 
     if (!result.allowed) {
-      const url = new URL(result.redirectTo || '/auth/login', request.url);
-      
+      const url = new URL(result.redirectTo || "/auth/login", request.url);
+
       // Add return URL for post-auth redirect
-      if (result.redirectTo === '/auth/login' || !result.redirectTo) {
-        url.searchParams.set('returnTo', request.nextUrl.pathname);
+      if (result.redirectTo === "/auth/login" || !result.redirectTo) {
+        url.searchParams.set("returnTo", request.nextUrl.pathname);
       }
 
       return NextResponse.redirect(url);
@@ -300,8 +324,9 @@ export function createAuthMiddleware(options: RouteGuardOptions = {}) {
  */
 export function hasPermission(user: any, permission: string): boolean {
   if (!user) return false;
-  
+
   const permissions = (user.user_metadata?.permissions as string[]) || [];
+
   return permissions.includes(permission);
 }
 
@@ -310,8 +335,9 @@ export function hasPermission(user: any, permission: string): boolean {
  */
 export function hasRole(user: any, role: string): boolean {
   if (!user) return false;
-  
+
   const roles = (user.user_metadata?.roles as string[]) || [];
+
   return roles.includes(role);
 }
 
@@ -319,15 +345,16 @@ export function hasRole(user: any, role: string): boolean {
  * Helper function to check subscription tier
  */
 export function hasMinimumTier(
-  profile: UserProfile | null, 
-  requiredTier: 'free' | 'pro' | 'max' | 'educational'
+  profile: UserProfile | null,
+  requiredTier: "free" | "pro" | "max" | "educational",
 ): boolean {
-  if (!profile) return requiredTier === 'free';
-  
+  if (!profile) return requiredTier === "free";
+
   const tierHierarchy = { free: 0, educational: 1, pro: 2, max: 3 };
-  const currentTierLevel = tierHierarchy[profile.subscription_tier as keyof typeof tierHierarchy] || 0;
+  const currentTierLevel =
+    tierHierarchy[profile.subscription_tier as keyof typeof tierHierarchy] || 0;
   const requiredTierLevel = tierHierarchy[requiredTier];
-  
+
   return currentTierLevel >= requiredTierLevel;
 }
 
@@ -338,49 +365,56 @@ export const middleware = {
   // Protect dashboard and user areas
   protected: createAuthMiddleware({
     requireAuth: true,
-    publicPaths: ['/auth', '/', '/pricing', '/about', '/api/public'],
+    publicPaths: ["/auth", "/", "/pricing", "/about", "/api/public"],
   }),
 
   // Protect admin areas
   admin: createAuthMiddleware({
     requireAuth: true,
-    requiredRole: ['admin'],
-    publicPaths: ['/auth', '/', '/pricing', '/about'],
-    redirectTo: '/unauthorized',
+    requiredRole: ["admin"],
+    publicPaths: ["/auth", "/", "/pricing", "/about"],
+    redirectTo: "/unauthorized",
   }),
 
   // Protect pro features
   pro: createAuthMiddleware({
     requireAuth: true,
-    requiredTier: 'pro',
-    publicPaths: ['/auth', '/', '/pricing', '/about'],
-    redirectTo: '/pricing',
+    requiredTier: "pro",
+    publicPaths: ["/auth", "/", "/pricing", "/about"],
+    redirectTo: "/pricing",
   }),
 
   // Redirect authenticated users away from auth pages
   authPages: async (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
-    
+
     // Only apply to auth pages
-    if (!pathname.startsWith('/auth/')) {
+    if (!pathname.startsWith("/auth/")) {
       return NextResponse.next();
     }
 
     // Allow certain auth pages even when authenticated
-    const allowedAuthPages = ['/auth/logout', '/auth/verify-email', '/auth/reset-password'];
-    if (allowedAuthPages.some(path => pathname.startsWith(path))) {
+    const allowedAuthPages = [
+      "/auth/logout",
+      "/auth/verify-email",
+      "/auth/reset-password",
+    ];
+
+    if (allowedAuthPages.some((path) => pathname.startsWith(path))) {
       return NextResponse.next();
     }
 
     try {
       const user = await getUser();
+
       if (user) {
-        const returnTo = request.nextUrl.searchParams.get('returnTo');
-        const redirectUrl = new URL(returnTo || '/dashboard', request.url);
+        const returnTo = request.nextUrl.searchParams.get("returnTo");
+        const redirectUrl = new URL(returnTo || "/dashboard", request.url);
+
         return NextResponse.redirect(redirectUrl);
       }
     } catch (error) {
-      console.error('Auth redirect check failed:', error);
+      console.error("Auth redirect check failed:", error);
     }
 
     return NextResponse.next();

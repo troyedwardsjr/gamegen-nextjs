@@ -51,43 +51,43 @@ export function GlassmorphicAlert({
 
   const getVariantClasses = () => {
     const blurClass = `backdrop-blur-${blur}`;
-    
+
     switch (variant) {
       case "success":
         return `bg-gradient-to-r from-emerald-500/20 to-green-500/30 ${blurClass} backdrop-saturate-150 border border-emerald-400/50 text-emerald-100 shadow-md shadow-emerald-500/20`;
-      
+
       case "warning":
         return `bg-gradient-to-r from-amber-500/20 to-yellow-500/30 ${blurClass} backdrop-saturate-150 border border-amber-400/50 text-amber-100 shadow-md shadow-amber-500/20`;
-      
+
       case "error":
         return `bg-gradient-to-r from-rose-500/20 to-red-500/30 ${blurClass} backdrop-saturate-150 border border-rose-400/50 text-rose-100 shadow-md shadow-rose-500/20`;
-      
+
       case "gaming":
         return `bg-gradient-to-r from-purple-500/20 to-purple-600/30 ${blurClass} backdrop-saturate-150 border border-purple-400/50 text-purple-100 shadow-md shadow-purple-500/20`;
-      
+
       default: // info
         return `bg-gradient-to-r from-cyan-500/20 to-blue-500/30 ${blurClass} backdrop-saturate-150 border border-cyan-400/50 text-cyan-100 shadow-md shadow-cyan-500/20`;
     }
   };
 
   const alertVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: -20, 
+    hidden: {
+      opacity: 0,
+      y: -20,
       scale: 0.95,
     },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       scale: 1,
       transition: {
         duration: 0.3,
         ease: [0.4, 0, 0.2, 1],
       },
     },
-    exit: { 
-      opacity: 0, 
-      y: -20, 
+    exit: {
+      opacity: 0,
+      y: -20,
       scale: 0.95,
       transition: {
         duration: 0.2,
@@ -107,36 +107,22 @@ export function GlassmorphicAlert({
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className="flex-shrink-0 mt-0.5">
-          {icon || (
-            <span className="text-lg">
-              {defaultIcons[variant]}
-            </span>
-          )}
+          {icon || <span className="text-lg">{defaultIcons[variant]}</span>}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {title && (
-            <h4 className="font-semibold text-sm mb-1">
-              {title}
-            </h4>
-          )}
-          <p className="text-sm opacity-90">
-            {message}
-          </p>
-          {children && (
-            <div className="mt-2">
-              {children}
-            </div>
-          )}
+          {title && <h4 className="font-semibold text-sm mb-1">{title}</h4>}
+          <p className="text-sm opacity-90">{message}</p>
+          {children && <div className="mt-2">{children}</div>}
         </div>
 
         {/* Close button */}
         {closable && (
           <button
-            onClick={handleClose}
-            className="flex-shrink-0 p-1 rounded-md hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
             aria-label="Close alert"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/20"
+            onClick={handleClose}
           >
             <span className="text-sm opacity-70 hover:opacity-100">✕</span>
           </button>
@@ -158,10 +144,10 @@ export function GlassmorphicAlert({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          variants={alertVariants}
-          initial="hidden"
           animate="visible"
           exit="exit"
+          initial="hidden"
+          variants={alertVariants}
         >
           {alertContent}
         </motion.div>
@@ -198,7 +184,7 @@ export function GameNotification({
         setIsVisible(false);
         setTimeout(() => onClose?.(), 300);
       }, duration);
-      
+
       return () => clearTimeout(timer);
     }
   }, [duration, onClose]);
@@ -244,23 +230,23 @@ export function GameNotification({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, x: 300, scale: 0.8 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 300, scale: 0.8 }}
+          initial={{ opacity: 0, x: 300, scale: 0.8 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         >
           <GlassmorphicAlert
-            variant={config.variant}
-            title={config.title}
-            message={message}
-            icon={config.icon}
+            animated={false} // We handle animation externally
+            className={className}
             closable={true}
+            icon={config.icon}
+            message={message}
+            title={config.title}
+            variant={config.variant}
             onClose={() => {
               setIsVisible(false);
               setTimeout(() => onClose?.(), 300);
             }}
-            animated={false} // We handle animation externally
-            className={className}
           />
         </motion.div>
       )}

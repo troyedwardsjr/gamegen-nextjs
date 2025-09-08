@@ -6,28 +6,28 @@ import { Chip } from "@heroui/chip";
 import { Avatar } from "@heroui/avatar";
 import { Spinner } from "@heroui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Users, 
-  Star, 
-  Crown, 
-  Heart,
+import {
+  Users,
+  Star,
+  Crown,
   Play,
   Trophy,
-  Calendar,
-  MapPin,
   ExternalLink,
   UserPlus,
   UserCheck,
   Gamepad2,
   TrendingUp,
-  Award
+  Award,
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
-import { FollowButton } from "../profile/FollowButton";
-import { createClient } from "@/lib/supabase/client";
-import { Database } from "@/lib/supabase/database.types";
 import { toast } from "sonner";
 import Image from "next/image";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
+import { createClient } from "@/lib/supabase/client";
+import { Database } from "@/lib/supabase/database.types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   creator_stats?: {
@@ -90,12 +90,13 @@ export function FeaturedCreators({
 
   const fetchFeaturedCreators = async () => {
     setLoading(true);
-    
+
     try {
       // Fetch top creators based on games and engagement
       const { data: creatorsData, error } = await supabase
         .from("profiles")
-        .select(`
+        .select(
+          `
           *,
           games!games_creator_id_fkey (
             id,
@@ -105,7 +106,8 @@ export function FeaturedCreators({
             like_count,
             is_featured
           )
-        `)
+        `,
+        )
         .not("games", "is", null)
         .limit(maxCreators * 2); // Fetch more for better filtering
 
@@ -113,25 +115,40 @@ export function FeaturedCreators({
 
       if (creatorsData) {
         // Calculate creator stats and sort by engagement
-        const creatorsWithStats = creatorsData.map(creator => {
+        const creatorsWithStats = creatorsData.map((creator) => {
           const games = creator.games || [];
           const totalGames = games.length;
-          const totalLikes = games.reduce((sum, game) => sum + (game.like_count || 0), 0);
-          const totalPlays = games.reduce((sum, game) => sum + (game.play_count || 0), 0);
-          const featuredGames = games.filter(game => game.is_featured).length;
-          const avgRating = totalGames > 0 ? (totalLikes / totalGames) * 0.2 + 4.0 : 0; // Simplified rating calculation
+          const totalLikes = games.reduce(
+            (sum, game) => sum + (game.like_count || 0),
+            0,
+          );
+          const totalPlays = games.reduce(
+            (sum, game) => sum + (game.play_count || 0),
+            0,
+          );
+          const featuredGames = games.filter((game) => game.is_featured).length;
+          const avgRating =
+            totalGames > 0 ? (totalLikes / totalGames) * 0.2 + 4.0 : 0; // Simplified rating calculation
 
           // Determine badges based on stats
           const badges: string[] = [];
+
           if (featuredGames > 0) badges.push("featured");
           if (totalGames >= 10) badges.push("prolific");
           if (avgRating >= 4.5) badges.push("top_rated");
           if (totalPlays > 10000) badges.push("trending");
-          if (creator.bio?.toLowerCase().includes("teacher") || 
-              creator.bio?.toLowerCase().includes("educator")) badges.push("educator");
+          if (
+            creator.bio?.toLowerCase().includes("teacher") ||
+            creator.bio?.toLowerCase().includes("educator")
+          )
+            badges.push("educator");
 
           // Engagement score for sorting
-          const engagementScore = (totalLikes * 2) + (totalPlays * 0.1) + (totalGames * 10) + (featuredGames * 50);
+          const engagementScore =
+            totalLikes * 2 +
+            totalPlays * 0.1 +
+            totalGames * 10 +
+            featuredGames * 50;
 
           return {
             ...creator,
@@ -143,7 +160,7 @@ export function FeaturedCreators({
               featured_games: featuredGames,
               avg_rating: avgRating,
             },
-            recent_games: games.slice(0, 3).map(game => ({
+            recent_games: games.slice(0, 3).map((game) => ({
               id: game.id,
               title: game.title,
               thumbnail_url: game.thumbnail_url,
@@ -155,7 +172,7 @@ export function FeaturedCreators({
 
         // Sort by engagement score and take top creators
         const topCreators = creatorsWithStats
-          .filter(creator => creator.creator_stats!.total_games > 0)
+          .filter((creator) => creator.creator_stats!.total_games > 0)
           .sort((a, b) => (b.engagement_score || 0) - (a.engagement_score || 0))
           .slice(0, maxCreators);
 
@@ -176,19 +193,26 @@ export function FeaturedCreators({
         .from("user_follows")
         .select("following_id")
         .eq("follower_id", currentUserId)
-        .in("following_id", creators.map(c => c.id));
+        .in(
+          "following_id",
+          creators.map((c) => c.id),
+        );
 
       if (!error && data) {
-        setFollowingIds(new Set(data.map(follow => follow.following_id)));
+        setFollowingIds(new Set(data.map((follow) => follow.following_id)));
       }
     } catch (error) {
       console.error("Error fetching following status:", error);
     }
   };
 
-  const handleFollowToggle = async (creatorId: string, isFollowing: boolean) => {
+  const handleFollowToggle = async (
+    creatorId: string,
+    isFollowing: boolean,
+  ) => {
     if (!currentUserId) {
       toast.error("Please log in to follow creators");
+
       return;
     }
 
@@ -202,24 +226,24 @@ export function FeaturedCreators({
 
         if (error) throw error;
 
-        setFollowingIds(prev => {
+        setFollowingIds((prev) => {
           const newSet = new Set(prev);
+
           newSet.delete(creatorId);
+
           return newSet;
         });
 
         toast.success("Unfollowed creator");
       } else {
-        const { error } = await supabase
-          .from("user_follows")
-          .insert({
-            follower_id: currentUserId,
-            following_id: creatorId,
-          });
+        const { error } = await supabase.from("user_follows").insert({
+          follower_id: currentUserId,
+          following_id: creatorId,
+        });
 
         if (error) throw error;
 
-        setFollowingIds(prev => new Set([...prev, creatorId]));
+        setFollowingIds((prev) => new Set([...prev, creatorId]));
 
         // Create activity
         await supabase.from("activities").insert({
@@ -250,24 +274,24 @@ export function FeaturedCreators({
 
     const cardVariants = {
       hidden: { opacity: 0, y: 20 },
-      visible: { 
-        opacity: 1, 
+      visible: {
+        opacity: 1,
         y: 0,
-        transition: { delay: index * 0.1 }
+        transition: { delay: index * 0.1 },
       },
-      hover: { scale: 1.02, transition: { duration: 0.2 } }
+      hover: { scale: 1.02, transition: { duration: 0.2 } },
     };
 
     if (variant === "list") {
       return (
         <motion.div
           key={creator.id}
-          variants={cardVariants}
-          initial="hidden"
           animate="visible"
+          initial="hidden"
+          variants={cardVariants}
           whileHover="hover"
         >
-          <GlassmorphicCard 
+          <GlassmorphicCard
             {...GameGenCardPresets.gameCard}
             className="cursor-pointer"
             onClick={() => handleCreatorClick(creator)}
@@ -277,10 +301,10 @@ export function FeaturedCreators({
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <Avatar
-                    src={creator.avatar_url || undefined}
+                    className="w-16 h-16"
                     name={creator.display_name || creator.username}
                     size="lg"
-                    className="w-16 h-16"
+                    src={creator.avatar_url || undefined}
                   />
                   {creator.badges?.includes("verified") && (
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
@@ -295,28 +319,33 @@ export function FeaturedCreators({
                     <h3 className="text-xl font-semibold truncate">
                       {creator.display_name || creator.username}
                     </h3>
-                    {creator.badges?.map(badge => {
-                      const BadgeConfig = CREATOR_BADGES[badge as keyof typeof CREATOR_BADGES];
+                    {creator.badges?.map((badge) => {
+                      const BadgeConfig =
+                        CREATOR_BADGES[badge as keyof typeof CREATOR_BADGES];
+
                       if (BadgeConfig) {
                         const Icon = BadgeConfig.icon;
+
                         return (
                           <Chip
                             key={badge}
-                            size="sm"
-                            variant="flat"
                             color={BadgeConfig.color as any}
+                            size="sm"
                             startContent={<Icon size={12} />}
+                            variant="flat"
                           >
                             {BadgeConfig.label}
                           </Chip>
                         );
                       }
+
                       return null;
                     })}
                   </div>
-                  
+
                   <p className="text-foreground/70 mb-4 line-clamp-2">
-                    {creator.bio || "Game creator passionate about making amazing experiences."}
+                    {creator.bio ||
+                      "Game creator passionate about making amazing experiences."}
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -349,17 +378,19 @@ export function FeaturedCreators({
 
                 {/* Recent Games */}
                 <div className="hidden lg:flex flex-col gap-2 w-48">
-                  <h4 className="text-sm font-medium text-foreground/70 mb-2">Recent Games</h4>
-                  {creator.recent_games?.slice(0, 3).map(game => (
+                  <h4 className="text-sm font-medium text-foreground/70 mb-2">
+                    Recent Games
+                  </h4>
+                  {creator.recent_games?.slice(0, 3).map((game) => (
                     <div key={game.id} className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
                         {game.thumbnail_url ? (
                           <Image
-                            src={game.thumbnail_url}
                             alt={game.title}
-                            width={32}
-                            height={32}
                             className="w-full h-full object-cover rounded"
+                            height={32}
+                            src={game.thumbnail_url}
+                            width={32}
                           />
                         ) : (
                           <Play className="w-4 h-4 text-foreground/40" />
@@ -373,19 +404,25 @@ export function FeaturedCreators({
                 {/* Actions */}
                 <div className="flex flex-col gap-2">
                   <Button
-                    color={isFollowing ? "default" : "primary"}
-                    variant={isFollowing ? "flat" : "solid"}
-                    size="sm"
-                    startContent={isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
-                    onPress={() => handleFollowToggle(creator.id, isFollowing)}
                     className="min-w-24"
+                    color={isFollowing ? "default" : "primary"}
+                    size="sm"
+                    startContent={
+                      isFollowing ? (
+                        <UserCheck size={14} />
+                      ) : (
+                        <UserPlus size={14} />
+                      )
+                    }
+                    variant={isFollowing ? "flat" : "solid"}
+                    onPress={() => handleFollowToggle(creator.id, isFollowing)}
                   >
                     {isFollowing ? "Following" : "Follow"}
                   </Button>
                   <Button
-                    variant="flat"
                     size="sm"
                     startContent={<ExternalLink size={14} />}
+                    variant="flat"
                   >
                     View Profile
                   </Button>
@@ -401,13 +438,13 @@ export function FeaturedCreators({
     return (
       <motion.div
         key={creator.id}
-        variants={cardVariants}
-        initial="hidden"
         animate="visible"
-        whileHover="hover"
         className="group"
+        initial="hidden"
+        variants={cardVariants}
+        whileHover="hover"
       >
-        <GlassmorphicCard 
+        <GlassmorphicCard
           {...GameGenCardPresets.gameCard}
           className="cursor-pointer h-full"
           onClick={() => handleCreatorClick(creator)}
@@ -416,10 +453,10 @@ export function FeaturedCreators({
             {/* Avatar */}
             <div className="relative mb-4">
               <Avatar
-                src={creator.avatar_url || undefined}
+                className="w-20 h-20 mx-auto"
                 name={creator.display_name || creator.username}
                 size="lg"
-                className="w-20 h-20 mx-auto"
+                src={creator.avatar_url || undefined}
               />
               {creator.badges?.includes("verified") && (
                 <div className="absolute -bottom-1 -right-1/2 translate-x-1/2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
@@ -432,32 +469,37 @@ export function FeaturedCreators({
             <h3 className="text-lg font-semibold mb-2">
               {creator.display_name || creator.username}
             </h3>
-            
+
             <div className="flex flex-wrap justify-center gap-1 mb-3">
-              {creator.badges?.slice(0, 2).map(badge => {
-                const BadgeConfig = CREATOR_BADGES[badge as keyof typeof CREATOR_BADGES];
+              {creator.badges?.slice(0, 2).map((badge) => {
+                const BadgeConfig =
+                  CREATOR_BADGES[badge as keyof typeof CREATOR_BADGES];
+
                 if (BadgeConfig) {
                   const Icon = BadgeConfig.icon;
+
                   return (
                     <Chip
                       key={badge}
-                      size="sm"
-                      variant="flat"
-                      color={BadgeConfig.color as any}
-                      startContent={<Icon size={10} />}
                       className="text-xs"
+                      color={BadgeConfig.color as any}
+                      size="sm"
+                      startContent={<Icon size={10} />}
+                      variant="flat"
                     >
                       {BadgeConfig.label}
                     </Chip>
                   );
                 }
+
                 return null;
               })}
             </div>
 
             {/* Bio */}
             <p className="text-sm text-foreground/70 mb-4 line-clamp-2">
-              {creator.bio || "Game creator passionate about making amazing experiences."}
+              {creator.bio ||
+                "Game creator passionate about making amazing experiences."}
             </p>
 
             {/* Stats Grid */}
@@ -480,19 +522,19 @@ export function FeaturedCreators({
             {creator.recent_games && creator.recent_games.length > 0 && (
               <div className="mb-4">
                 <div className="flex justify-center gap-1">
-                  {creator.recent_games.slice(0, 3).map(game => (
-                    <div 
-                      key={game.id} 
+                  {creator.recent_games.slice(0, 3).map((game) => (
+                    <div
+                      key={game.id}
                       className="w-8 h-8 rounded bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center"
                       title={game.title}
                     >
                       {game.thumbnail_url ? (
                         <Image
-                          src={game.thumbnail_url}
                           alt={game.title}
-                          width={32}
-                          height={32}
                           className="w-full h-full object-cover rounded"
+                          height={32}
+                          src={game.thumbnail_url}
+                          width={32}
                         />
                       ) : (
                         <Play className="w-3 h-3 text-foreground/40" />
@@ -506,12 +548,14 @@ export function FeaturedCreators({
             {/* Actions */}
             <div className="space-y-2">
               <Button
-                color={isFollowing ? "default" : "primary"}
-                variant={isFollowing ? "flat" : "solid"}
-                size="sm"
-                startContent={isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
-                onPress={() => handleFollowToggle(creator.id, isFollowing)}
                 className="w-full"
+                color={isFollowing ? "default" : "primary"}
+                size="sm"
+                startContent={
+                  isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />
+                }
+                variant={isFollowing ? "flat" : "solid"}
+                onPress={() => handleFollowToggle(creator.id, isFollowing)}
               >
                 {isFollowing ? "Following" : "Follow"}
               </Button>
@@ -535,15 +579,22 @@ export function FeaturedCreators({
       return (
         <div className="text-center py-12">
           <Users className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
-          <p className="text-foreground/70">No featured creators available at the moment.</p>
+          <p className="text-foreground/70">
+            No featured creators available at the moment.
+          </p>
         </div>
       );
     }
 
-    const gridCols = variant === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "";
+    const gridCols =
+      variant === "grid"
+        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        : "";
 
     return (
-      <div className={variant === "grid" ? `grid ${gridCols} gap-6` : "space-y-4"}>
+      <div
+        className={variant === "grid" ? `grid ${gridCols} gap-6` : "space-y-4"}
+      >
         <AnimatePresence>
           {creators.map((creator, index) => renderCreatorCard(creator, index))}
         </AnimatePresence>
@@ -561,11 +612,13 @@ export function FeaturedCreators({
             </div>
             <div>
               <h2 className="text-2xl font-bold">Featured Creators</h2>
-              <p className="text-foreground/70">Talented creators making amazing games</p>
+              <p className="text-foreground/70">
+                Talented creators making amazing games
+              </p>
             </div>
           </div>
-          
-          <Button variant="flat" size="sm">
+
+          <Button size="sm" variant="flat">
             View All Creators
           </Button>
         </div>

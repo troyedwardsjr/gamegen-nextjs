@@ -2,7 +2,8 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
   name: "GameGen",
-  description: "AI-powered pixel art game creation platform. Create games with vibe coding, pixel art assets, and no-code development.",
+  description:
+    "AI-powered pixel art game creation platform. Create games with vibe coding, pixel art assets, and no-code development.",
   url: "https://gamegen.app",
   ogImage: "https://gamegen.app/og.jpg",
   author: {
@@ -104,7 +105,8 @@ export const siteConfig = {
     {
       id: "rpg",
       name: "RPG",
-      description: "Role-playing games with character progression and storytelling",
+      description:
+        "Role-playing games with character progression and storytelling",
       icon: "⚔️",
     },
     {
@@ -163,7 +165,7 @@ export const siteConfig = {
       id: "max",
       name: "Max",
       description: "For professional game studios",
-      price: "$49/month", 
+      price: "$49/month",
       features: [
         "Everything in Pro",
         "White-label publishing",
@@ -177,17 +179,20 @@ export const siteConfig = {
   features: {
     vibeCoding: {
       name: "Vibe Coding Chat",
-      description: "Describe your game ideas in natural language and watch them come to life",
+      description:
+        "Describe your game ideas in natural language and watch them come to life",
       icon: "💭",
     },
     pixelArt: {
       name: "Pixel Art Assets",
-      description: "Extensive library of pixel art sprites, tiles, and animations",
+      description:
+        "Extensive library of pixel art sprites, tiles, and animations",
       icon: "🎨",
     },
     gameEngine: {
       name: "Toxoid Game Engine",
-      description: "Powerful Rust-based WASM game engine with JavaScript scripting",
+      description:
+        "Powerful Rust-based WASM game engine with JavaScript scripting",
       icon: "⚡",
     },
     aiAssistant: {

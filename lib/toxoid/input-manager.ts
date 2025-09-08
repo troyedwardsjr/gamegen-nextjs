@@ -1,6 +1,6 @@
 /**
  * Toxoid Input Management System
- * 
+ *
  * Handles all input events for the Toxoid game engine including:
  * - Keyboard input with key state tracking
  * - Mouse input with position and button states
@@ -9,11 +9,11 @@
  * - Input event forwarding to WASM engine
  */
 
-import { 
-  KeyboardInputSingleton, 
-  MouseInputSingleton, 
-  GamepadInputSingleton 
-} from '@/types/toxoid';
+import {
+  KeyboardInputSingleton,
+  MouseInputSingleton,
+  GamepadInputSingleton,
+} from "@/types/toxoid";
 
 // =============================================================================
 // INPUT STATE INTERFACES
@@ -42,39 +42,64 @@ interface InputState {
 
 const KEY_MAPPINGS = {
   // Arrow keys
-  'ArrowUp': 'up',
-  'ArrowDown': 'down',
-  'ArrowLeft': 'left',
-  'ArrowRight': 'right',
-  
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+
   // WASD
-  'KeyW': 'w',
-  'KeyA': 'a',
-  'KeyS': 's',
-  'KeyD': 'd',
-  
+  KeyW: "w",
+  KeyA: "a",
+  KeyS: "s",
+  KeyD: "d",
+
   // Common game keys
-  'Space': 'space',
-  'ShiftLeft': 'shift',
-  'ShiftRight': 'shift',
-  'ControlLeft': 'ctrl',
-  'ControlRight': 'ctrl',
-  'AltLeft': 'alt',
-  'AltRight': 'alt',
-  'Enter': 'enter',
-  'Escape': 'escape',
-  'Tab': 'tab',
-  
+  Space: "space",
+  ShiftLeft: "shift",
+  ShiftRight: "shift",
+  ControlLeft: "ctrl",
+  ControlRight: "ctrl",
+  AltLeft: "alt",
+  AltRight: "alt",
+  Enter: "enter",
+  Escape: "escape",
+  Tab: "tab",
+
   // Number keys
-  'Digit0': '0', 'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4',
-  'Digit5': '5', 'Digit6': '6', 'Digit7': '7', 'Digit8': '8', 'Digit9': '9',
-  
+  Digit0: "0",
+  Digit1: "1",
+  Digit2: "2",
+  Digit3: "3",
+  Digit4: "4",
+  Digit5: "5",
+  Digit6: "6",
+  Digit7: "7",
+  Digit8: "8",
+  Digit9: "9",
+
   // Letter keys (for completeness)
-  'KeyQ': 'q', 'KeyE': 'e', 'KeyR': 'r', 'KeyT': 't', 'KeyY': 'y',
-  'KeyU': 'u', 'KeyI': 'i', 'KeyO': 'o', 'KeyP': 'p',
-  'KeyF': 'f', 'KeyG': 'g', 'KeyH': 'h', 'KeyJ': 'j', 'KeyK': 'k',
-  'KeyL': 'l', 'KeyZ': 'z', 'KeyX': 'x', 'KeyC': 'c', 'KeyV': 'v',
-  'KeyB': 'b', 'KeyN': 'n', 'KeyM': 'm',
+  KeyQ: "q",
+  KeyE: "e",
+  KeyR: "r",
+  KeyT: "t",
+  KeyY: "y",
+  KeyU: "u",
+  KeyI: "i",
+  KeyO: "o",
+  KeyP: "p",
+  KeyF: "f",
+  KeyG: "g",
+  KeyH: "h",
+  KeyJ: "j",
+  KeyK: "k",
+  KeyL: "l",
+  KeyZ: "z",
+  KeyX: "x",
+  KeyC: "c",
+  KeyV: "v",
+  KeyB: "b",
+  KeyN: "n",
+  KeyM: "m",
 } as const;
 
 // =============================================================================
@@ -105,10 +130,16 @@ export class ToxoidInputManager {
     this.setupEventListeners();
     this.detectInputSupport();
     this.isActive = true;
-    
-    console.log('[ToxoidInput] ✅ Input manager initialized');
-    console.log('[ToxoidInput] Touch support:', this.inputState.touch.isSupported);
-    console.log('[ToxoidInput] Gamepad support:', navigator.getGamepads !== undefined);
+
+    console.log("[ToxoidInput] ✅ Input manager initialized");
+    console.log(
+      "[ToxoidInput] Touch support:",
+      this.inputState.touch.isSupported,
+    );
+    console.log(
+      "[ToxoidInput] Gamepad support:",
+      navigator.getGamepads !== undefined,
+    );
   }
 
   /**
@@ -118,7 +149,7 @@ export class ToxoidInputManager {
     this.removeEventListeners();
     this.canvas = null;
     this.isActive = false;
-    console.log('[ToxoidInput] 🧹 Input manager destroyed');
+    console.log("[ToxoidInput] 🧹 Input manager destroyed");
   }
 
   // ==========================================================================
@@ -152,7 +183,7 @@ export class ToxoidInputManager {
   getTouchInput(): { points: TouchPoint[]; isSupported: boolean } {
     return {
       points: [...this.inputState.touch.points],
-      isSupported: this.inputState.touch.isSupported
+      isSupported: this.inputState.touch.isSupported,
     };
   }
 
@@ -165,6 +196,7 @@ export class ToxoidInputManager {
    */
   isKeyPressed(key: string): boolean {
     const normalizedKey = this.normalizeKey(key);
+
     return this.inputState.keyboard[normalizedKey] || false;
   }
 
@@ -173,8 +205,11 @@ export class ToxoidInputManager {
    */
   isKeyJustPressed(key: string): boolean {
     const normalizedKey = this.normalizeKey(key);
-    return (this.inputState.keyboard[normalizedKey] || false) && 
-           !(this.previousInputState.keyboard[normalizedKey] || false);
+
+    return (
+      (this.inputState.keyboard[normalizedKey] || false) &&
+      !(this.previousInputState.keyboard[normalizedKey] || false)
+    );
   }
 
   /**
@@ -182,8 +217,11 @@ export class ToxoidInputManager {
    */
   isKeyJustReleased(key: string): boolean {
     const normalizedKey = this.normalizeKey(key);
-    return !(this.inputState.keyboard[normalizedKey] || false) && 
-           (this.previousInputState.keyboard[normalizedKey] || false);
+
+    return (
+      !(this.inputState.keyboard[normalizedKey] || false) &&
+      (this.previousInputState.keyboard[normalizedKey] || false)
+    );
   }
 
   /**
@@ -192,19 +230,23 @@ export class ToxoidInputManager {
   getMousePosition(): { x: number; y: number } {
     return {
       x: this.inputState.mouse.x,
-      y: this.inputState.mouse.y
+      y: this.inputState.mouse.y,
     };
   }
 
   /**
    * Check if mouse button is pressed
    */
-  isMouseButtonPressed(button: 'left' | 'right' | 'middle'): boolean {
+  isMouseButtonPressed(button: "left" | "right" | "middle"): boolean {
     switch (button) {
-      case 'left': return this.inputState.mouse.left_button;
-      case 'right': return this.inputState.mouse.right_button;
-      case 'middle': return this.inputState.mouse.middle_button;
-      default: return false;
+      case "left":
+        return this.inputState.mouse.left_button;
+      case "right":
+        return this.inputState.mouse.right_button;
+      case "middle":
+        return this.inputState.mouse.middle_button;
+      default:
+        return false;
     }
   }
 
@@ -255,7 +297,7 @@ export class ToxoidInputManager {
       touch: {
         points: [],
         isSupported: false,
-      }
+      },
     };
   }
 
@@ -270,8 +312,8 @@ export class ToxoidInputManager {
       },
       touch: {
         ...state.touch,
-        points: state.touch.points.map(p => ({ ...p })),
-      }
+        points: state.touch.points.map((p) => ({ ...p })),
+      },
     };
   }
 
@@ -280,12 +322,13 @@ export class ToxoidInputManager {
     if (KEY_MAPPINGS[key as keyof typeof KEY_MAPPINGS]) {
       return KEY_MAPPINGS[key as keyof typeof KEY_MAPPINGS];
     }
+
     return key.toLowerCase();
   }
 
   private detectInputSupport(): void {
-    this.inputState.touch.isSupported = 'ontouchstart' in window || 
-                                       navigator.maxTouchPoints > 0;
+    this.inputState.touch.isSupported =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
   }
 
   private setupEventListeners(): void {
@@ -295,12 +338,14 @@ export class ToxoidInputManager {
     const keyDownListener = (e: KeyboardEvent) => {
       e.preventDefault();
       const key = this.normalizeKey(e.code || e.key);
+
       this.inputState.keyboard[key] = true;
     };
 
     const keyUpListener = (e: KeyboardEvent) => {
       e.preventDefault();
       const key = this.normalizeKey(e.code || e.key);
+
       this.inputState.keyboard[key] = false;
     };
 
@@ -309,9 +354,15 @@ export class ToxoidInputManager {
       e.preventDefault();
       this.updateMousePosition(e);
       switch (e.button) {
-        case 0: this.inputState.mouse.left_button = true; break;
-        case 1: this.inputState.mouse.middle_button = true; break;
-        case 2: this.inputState.mouse.right_button = true; break;
+        case 0:
+          this.inputState.mouse.left_button = true;
+          break;
+        case 1:
+          this.inputState.mouse.middle_button = true;
+          break;
+        case 2:
+          this.inputState.mouse.right_button = true;
+          break;
       }
     };
 
@@ -319,9 +370,15 @@ export class ToxoidInputManager {
       e.preventDefault();
       this.updateMousePosition(e);
       switch (e.button) {
-        case 0: this.inputState.mouse.left_button = false; break;
-        case 1: this.inputState.mouse.middle_button = false; break;
-        case 2: this.inputState.mouse.right_button = false; break;
+        case 0:
+          this.inputState.mouse.left_button = false;
+          break;
+        case 1:
+          this.inputState.mouse.middle_button = false;
+          break;
+        case 2:
+          this.inputState.mouse.right_button = false;
+          break;
       }
     };
 
@@ -351,34 +408,34 @@ export class ToxoidInputManager {
     };
 
     // Add event listeners
-    document.addEventListener('keydown', keyDownListener);
-    document.addEventListener('keyup', keyUpListener);
-    
-    this.canvas.addEventListener('mousedown', mouseDownListener);
-    this.canvas.addEventListener('mouseup', mouseUpListener);
-    this.canvas.addEventListener('mousemove', mouseMoveListener);
-    this.canvas.addEventListener('wheel', wheelListener);
-    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener("keydown", keyDownListener);
+    document.addEventListener("keyup", keyUpListener);
+
+    this.canvas.addEventListener("mousedown", mouseDownListener);
+    this.canvas.addEventListener("mouseup", mouseUpListener);
+    this.canvas.addEventListener("mousemove", mouseMoveListener);
+    this.canvas.addEventListener("wheel", wheelListener);
+    this.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     if (this.inputState.touch.isSupported) {
-      this.canvas.addEventListener('touchstart', touchStartListener);
-      this.canvas.addEventListener('touchmove', touchMoveListener);
-      this.canvas.addEventListener('touchend', touchEndListener);
-      this.canvas.addEventListener('touchcancel', touchEndListener);
+      this.canvas.addEventListener("touchstart", touchStartListener);
+      this.canvas.addEventListener("touchmove", touchMoveListener);
+      this.canvas.addEventListener("touchend", touchEndListener);
+      this.canvas.addEventListener("touchcancel", touchEndListener);
     }
 
     // Store listeners for cleanup
-    this.eventListeners.set('keydown', keyDownListener);
-    this.eventListeners.set('keyup', keyUpListener);
-    this.eventListeners.set('mousedown', mouseDownListener);
-    this.eventListeners.set('mouseup', mouseUpListener);
-    this.eventListeners.set('mousemove', mouseMoveListener);
-    this.eventListeners.set('wheel', wheelListener);
-    
+    this.eventListeners.set("keydown", keyDownListener);
+    this.eventListeners.set("keyup", keyUpListener);
+    this.eventListeners.set("mousedown", mouseDownListener);
+    this.eventListeners.set("mouseup", mouseUpListener);
+    this.eventListeners.set("mousemove", mouseMoveListener);
+    this.eventListeners.set("wheel", wheelListener);
+
     if (this.inputState.touch.isSupported) {
-      this.eventListeners.set('touchstart', touchStartListener);
-      this.eventListeners.set('touchmove', touchMoveListener);
-      this.eventListeners.set('touchend', touchEndListener);
+      this.eventListeners.set("touchstart", touchStartListener);
+      this.eventListeners.set("touchmove", touchMoveListener);
+      this.eventListeners.set("touchend", touchEndListener);
     }
   }
 
@@ -386,20 +443,26 @@ export class ToxoidInputManager {
     if (!this.canvas) return;
 
     // Remove all stored event listeners
-    const keyDownListener = this.eventListeners.get('keydown');
-    const keyUpListener = this.eventListeners.get('keyup');
-    if (keyDownListener) document.removeEventListener('keydown', keyDownListener);
-    if (keyUpListener) document.removeEventListener('keyup', keyUpListener);
+    const keyDownListener = this.eventListeners.get("keydown");
+    const keyUpListener = this.eventListeners.get("keyup");
 
-    const mouseListeners = ['mousedown', 'mouseup', 'mousemove', 'wheel'];
-    mouseListeners.forEach(event => {
+    if (keyDownListener)
+      document.removeEventListener("keydown", keyDownListener);
+    if (keyUpListener) document.removeEventListener("keyup", keyUpListener);
+
+    const mouseListeners = ["mousedown", "mouseup", "mousemove", "wheel"];
+
+    mouseListeners.forEach((event) => {
       const listener = this.eventListeners.get(event);
+
       if (listener) this.canvas!.removeEventListener(event, listener);
     });
 
-    const touchListeners = ['touchstart', 'touchmove', 'touchend'];
-    touchListeners.forEach(event => {
+    const touchListeners = ["touchstart", "touchmove", "touchend"];
+
+    touchListeners.forEach((event) => {
       const listener = this.eventListeners.get(event);
+
       if (listener) this.canvas!.removeEventListener(event, listener);
     });
 
@@ -424,7 +487,7 @@ export class ToxoidInputManager {
     const scaleX = this.canvas.width / rect.width;
     const scaleY = this.canvas.height / rect.height;
 
-    this.inputState.touch.points = Array.from(e.touches).map(touch => ({
+    this.inputState.touch.points = Array.from(e.touches).map((touch) => ({
       id: touch.identifier,
       x: (touch.clientX - rect.left) * scaleX,
       y: (touch.clientY - rect.top) * scaleY,
@@ -438,7 +501,9 @@ export class ToxoidInputManager {
 
     if (gamepad) {
       this.inputState.gamepad.connected = true;
-      this.inputState.gamepad.buttons = Array.from(gamepad.buttons).map(button => button.pressed);
+      this.inputState.gamepad.buttons = Array.from(gamepad.buttons).map(
+        (button) => button.pressed,
+      );
       this.inputState.gamepad.axes = Array.from(gamepad.axes);
     } else {
       this.inputState.gamepad.connected = false;
@@ -461,6 +526,7 @@ export function getInputManager(): ToxoidInputManager {
   if (!globalInputManager) {
     globalInputManager = new ToxoidInputManager();
   }
+
   return globalInputManager;
 }
 
@@ -469,7 +535,9 @@ export function getInputManager(): ToxoidInputManager {
  */
 export function initializeInput(canvas: HTMLCanvasElement): ToxoidInputManager {
   const manager = getInputManager();
+
   manager.initialize(canvas);
+
   return manager;
 }
 

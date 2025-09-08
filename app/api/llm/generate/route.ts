@@ -1,37 +1,38 @@
 /**
  * LLM Generation API Endpoint
- * 
+ *
  * RESTful API endpoint for LLM text generation with streaming support,
  * authentication, rate limiting, and comprehensive error handling.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { ProviderManager } from '@/lib/llm/providers/manager'
-import { ClaudeProvider } from '@/lib/llm/providers/claude'
-import { LLMConfigManager } from '@/lib/llm/config'
-import { BillingTracker } from '@/lib/llm/billing/tracker'
-import { LLMLogger } from '@/lib/llm/monitoring/logger'
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+import { ProviderManager } from "@/lib/llm/providers/manager";
+import { ClaudeProvider } from "@/lib/llm/providers/claude";
+import { LLMConfigManager } from "@/lib/llm/config";
+import { BillingTracker } from "@/lib/llm/billing/tracker";
+import { LLMLogger } from "@/lib/llm/monitoring/logger";
 import {
   GenerationRequest,
   GenerationResponse,
   LLMError,
   RateLimitError,
   CircuitBreakerError,
-  InsufficientCreditsError
-} from '@/lib/llm/types'
+  InsufficientCreditsError,
+} from "@/lib/llm/types";
 
 // Initialize system components
-const configManager = LLMConfigManager.fromEnvironment()
+const configManager = LLMConfigManager.fromEnvironment();
 const providerManager = new ProviderManager({
-  default_provider: 'claude',
-  fallback_chain: ['claude'],
-  load_balancing: { type: 'round_robin' },
+  default_provider: "claude",
+  fallback_chain: ["claude"],
+  load_balancing: { type: "round_robin" },
   health_check_interval: 30000,
   failover_enabled: true,
-  max_concurrent_requests: 10
-})
+  max_concurrent_requests: 10,
+});
 
 // Initialize billing and logging
 const billingTracker = new BillingTracker({
@@ -40,20 +41,20 @@ const billingTracker = new BillingTracker({
   auto_deduct_credits: true,
   minimum_balance: 1.0,
   low_balance_threshold: 5.0,
-  billing_cycle: 'monthly',
+  billing_cycle: "monthly",
   cost_per_token: {
-    claude: { input: 3.0, output: 15.0 } // Per million tokens
+    claude: { input: 3.0, output: 15.0 }, // Per million tokens
   },
   user_tier_discounts: {
     free: 0,
     pro: 0.1,
-    enterprise: 0.2
+    enterprise: 0.2,
   },
   free_tier_limits: {
     monthly_tokens: 100000,
-    monthly_requests: 1000
-  }
-})
+    monthly_requests: 1000,
+  },
+});
 
 const logger = new LLMLogger({
   enabled: true,
@@ -66,28 +67,29 @@ const logger = new LLMLogger({
   max_payload_size: 10000,
   async_logging: true,
   buffer_size: 100,
-  flush_interval: 60000
-})
+  flush_interval: 60000,
+});
 
 // Register Claude provider
-const claudeConfig = configManager.getProviderConfig('claude')
+const claudeConfig = configManager.getProviderConfig("claude");
+
 if (claudeConfig && process.env.ANTHROPIC_API_KEY) {
   const claudeProvider = new ClaudeProvider({
     api_key: process.env.ANTHROPIC_API_KEY!,
-    endpoint: 'https://api.anthropic.com',
-    model: 'claude-3-5-sonnet-20241022',
+    endpoint: "https://api.anthropic.com",
+    model: "claude-3-5-sonnet-20241022",
     max_tokens: 4000,
     temperature: 0.7,
     rate_limit: {
       requests_per_minute: 100,
-      tokens_per_minute: 100000
+      tokens_per_minute: 100000,
     },
     health_check_interval: 60000,
     timeout: 30000,
-    retry_attempts: 3
-  })
-  
-  providerManager.registerProvider(claudeProvider)
+    retry_attempts: 3,
+  });
+
+  providerManager.registerProvider(claudeProvider);
 }
 
 /**
@@ -95,141 +97,158 @@ if (claudeConfig && process.env.ANTHROPIC_API_KEY) {
  * Generate text using LLM providers
  */
 export async function POST(request: NextRequest): Promise<Response> {
-  const startTime = Date.now()
-  let userId: string | undefined
-  let generationRequest: GenerationRequest | undefined
-  let reservationId: string | undefined
-  
+  const startTime = Date.now();
+  let userId: string | undefined;
+  let generationRequest: GenerationRequest | undefined;
+  let reservationId: string | undefined;
+
   try {
     // Authentication
-    const cookieStore = cookies()
+    const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+            return cookieStore.get(name)?.value;
+          },
+        },
+      },
+    );
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      )
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 },
+      );
     }
-    
-    userId = user.id
-    
+
+    userId = user.id;
+
     // Parse request body
     try {
-      generationRequest = await request.json() as GenerationRequest
+      generationRequest = (await request.json()) as GenerationRequest;
     } catch (parseError) {
       return NextResponse.json(
-        { error: 'Invalid JSON in request body', code: 'INVALID_REQUEST' },
-        { status: 400 }
-      )
+        { error: "Invalid JSON in request body", code: "INVALID_REQUEST" },
+        { status: 400 },
+      );
     }
-    
+
     // Validate request
-    const validationError = validateGenerationRequest(generationRequest)
+    const validationError = validateGenerationRequest(generationRequest);
+
     if (validationError) {
       return NextResponse.json(
-        { error: validationError, code: 'INVALID_REQUEST' },
-        { status: 400 }
-      )
+        { error: validationError, code: "INVALID_REQUEST" },
+        { status: 400 },
+      );
     }
-    
+
     // Add user context
-    generationRequest.user_id = userId
-    generationRequest.session_id = request.headers.get('x-session-id') || undefined
-    
+    generationRequest.user_id = userId;
+    generationRequest.session_id =
+      request.headers.get("x-session-id") || undefined;
+
     // Estimate token usage for billing
-    const estimatedTokens = estimateTokenUsage(generationRequest)
-    
+    const estimatedTokens = estimateTokenUsage(generationRequest);
+
     // Check credits and reserve them
-    const hasCredits = await billingTracker.checkCredits(userId, estimatedTokens, 'claude')
+    const hasCredits = await billingTracker.checkCredits(
+      userId,
+      estimatedTokens,
+      "claude",
+    );
+
     if (!hasCredits) {
-      const balance = await billingTracker.getCreditBalance(userId)
+      const balance = await billingTracker.getCreditBalance(userId);
+
       return NextResponse.json(
         {
           error: `Insufficient credits. Available: $${balance.available.toFixed(2)}`,
-          code: 'INSUFFICIENT_CREDITS',
-          balance: balance.available
+          code: "INSUFFICIENT_CREDITS",
+          balance: balance.available,
         },
-        { status: 402 }
-      )
+        { status: 402 },
+      );
     }
-    
+
     // Reserve credits for the request
-    reservationId = await billingTracker.reserveCredits(userId, estimatedTokens, 'claude')
-    
+    reservationId = await billingTracker.reserveCredits(
+      userId,
+      estimatedTokens,
+      "claude",
+    );
+
     // Handle streaming vs non-streaming
     if (generationRequest.stream) {
-      return handleStreamingRequest(generationRequest, userId, reservationId)
+      return handleStreamingRequest(generationRequest, userId, reservationId);
     } else {
-      return handleRegularRequest(generationRequest, userId, reservationId)
+      return handleRegularRequest(generationRequest, userId, reservationId);
     }
-    
   } catch (error) {
     // Log error
     if (userId && generationRequest) {
       await logger.logRequest(
         generationRequest,
         undefined,
-        error instanceof LLMError ? error : new LLMError(error.message, 'INTERNAL_ERROR'),
+        error instanceof LLMError
+          ? error
+          : new LLMError(error.message, "INTERNAL_ERROR"),
         undefined,
-        userId
-      )
+        userId,
+      );
     }
-    
+
     // Release reservation on error
     if (reservationId && userId) {
-      await billingTracker.releaseReservation(userId, reservationId)
+      await billingTracker.releaseReservation(userId, reservationId);
     }
-    
+
     // Handle different error types
     if (error instanceof RateLimitError) {
       return NextResponse.json(
         { error: error.message, code: error.code },
-        { status: 429 }
-      )
+        { status: 429 },
+      );
     }
-    
+
     if (error instanceof CircuitBreakerError) {
       return NextResponse.json(
         { error: error.message, code: error.code },
-        { status: 503 }
-      )
+        { status: 503 },
+      );
     }
-    
+
     if (error instanceof InsufficientCreditsError) {
       return NextResponse.json(
         { error: error.message, code: error.code },
-        { status: 402 }
-      )
+        { status: 402 },
+      );
     }
-    
+
     if (error instanceof LLMError) {
-      const statusCode = getStatusCodeForError(error.code)
+      const statusCode = getStatusCodeForError(error.code);
+
       return NextResponse.json(
         { error: error.message, code: error.code },
-        { status: statusCode }
-      )
+        { status: statusCode },
+      );
     }
-    
+
     // Generic error
-    console.error('[LLM API] Unexpected error:', error)
-    
+    console.error("[LLM API] Unexpected error:", error);
+
     return NextResponse.json(
-      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
-      { status: 500 }
-    )
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { status: 500 },
+    );
   }
 }
 
@@ -239,30 +258,40 @@ export async function POST(request: NextRequest): Promise<Response> {
 async function handleRegularRequest(
   request: GenerationRequest,
   userId: string,
-  reservationId: string
+  reservationId: string,
 ): Promise<Response> {
   try {
     // Generate response
-    const response = await providerManager.generate(request)
-    
+    const response = await providerManager.generate(request);
+
     // Record usage and billing
-    await billingTracker.recordUsage(userId, response, 'generation', reservationId)
-    
+    await billingTracker.recordUsage(
+      userId,
+      response,
+      "generation",
+      reservationId,
+    );
+
     // Log request/response
-    await logger.logRequest(request, response, undefined, response.provider_id, userId)
-    
+    await logger.logRequest(
+      request,
+      response,
+      undefined,
+      response.provider_id,
+      userId,
+    );
+
     return NextResponse.json({
       success: true,
       data: response,
       usage: response.usage,
-      cost: billingTracker.calculateCost ? undefined : 0 // Would be calculated in billing tracker
-    })
-    
+      cost: billingTracker.calculateCost ? undefined : 0, // Would be calculated in billing tracker
+    });
   } catch (error) {
     // Release reservation
-    await billingTracker.releaseReservation(userId, reservationId)
-    
-    throw error
+    await billingTracker.releaseReservation(userId, reservationId);
+
+    throw error;
   }
 }
 
@@ -272,42 +301,42 @@ async function handleRegularRequest(
 async function handleStreamingRequest(
   request: GenerationRequest,
   userId: string,
-  reservationId: string
+  reservationId: string,
 ): Promise<Response> {
-  const encoder = new TextEncoder()
-  let totalTokens = 0
-  let responseContent = ''
-  let responseId = ''
-  let providerId = ''
-  
+  const encoder = new TextEncoder();
+  let totalTokens = 0;
+  let responseContent = "";
+  let responseId = "";
+  let providerId = "";
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
         await providerManager.generateStream(request, (chunk) => {
           // Track streaming data
-          if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
-            responseContent += chunk.delta.text
-            totalTokens += estimateTokensFromText(chunk.delta.text)
+          if (chunk.type === "content_block_delta" && chunk.delta?.text) {
+            responseContent += chunk.delta.text;
+            totalTokens += estimateTokensFromText(chunk.delta.text);
           }
-          
+
           if (chunk.usage) {
-            totalTokens = chunk.usage.total_tokens
+            totalTokens = chunk.usage.total_tokens;
           }
-          
+
           // Send chunk to client
           const data = JSON.stringify({
             type: chunk.type,
             delta: chunk.delta,
-            usage: chunk.usage
-          })
-          
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`))
-        })
-        
+            usage: chunk.usage,
+          });
+
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        });
+
         // Stream completed successfully
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-        
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+
         // Create response object for logging/billing
         const mockResponse: GenerationResponse = {
           id: generateId(),
@@ -315,93 +344,112 @@ async function handleStreamingRequest(
           usage: {
             prompt_tokens: estimateTokenUsage(request),
             completion_tokens: totalTokens,
-            total_tokens: estimateTokenUsage(request) + totalTokens
+            total_tokens: estimateTokenUsage(request) + totalTokens,
           },
-          model: 'claude-3-5-sonnet-20241022',
-          finish_reason: 'stop',
-          provider_id: 'claude',
-          response_time: Date.now() - parseInt(request.metadata?.start_time || '0'),
-          created_at: new Date()
-        }
-        
+          model: "claude-3-5-sonnet-20241022",
+          finish_reason: "stop",
+          provider_id: "claude",
+          response_time:
+            Date.now() - parseInt(request.metadata?.start_time || "0"),
+          created_at: new Date(),
+        };
+
         // Record usage and billing
-        await billingTracker.recordUsage(userId, mockResponse, 'streaming', reservationId)
-        
+        await billingTracker.recordUsage(
+          userId,
+          mockResponse,
+          "streaming",
+          reservationId,
+        );
+
         // Log request/response
-        await logger.logRequest(request, mockResponse, undefined, 'claude', userId)
-        
+        await logger.logRequest(
+          request,
+          mockResponse,
+          undefined,
+          "claude",
+          userId,
+        );
       } catch (error) {
         // Release reservation on error
-        await billingTracker.releaseReservation(userId, reservationId)
-        
+        await billingTracker.releaseReservation(userId, reservationId);
+
         // Send error to client
         const errorData = JSON.stringify({
-          type: 'error',
+          type: "error",
           error: error.message,
-          code: error.code || 'STREAMING_ERROR'
-        })
-        
-        controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
-        controller.close()
-        
+          code: error.code || "STREAMING_ERROR",
+        });
+
+        controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
+        controller.close();
+
         // Log error
         await logger.logRequest(
           request,
           undefined,
-          error instanceof LLMError ? error : new LLMError(error.message, 'STREAMING_ERROR'),
-          'claude',
-          userId
-        )
+          error instanceof LLMError
+            ? error
+            : new LLMError(error.message, "STREAMING_ERROR"),
+          "claude",
+          userId,
+        );
       }
-    }
-  })
-  
+    },
+  });
+
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
-  })
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
 
 /**
  * Validate generation request
  */
 function validateGenerationRequest(request: any): string | null {
-  if (!request || typeof request !== 'object') {
-    return 'Request must be an object'
+  if (!request || typeof request !== "object") {
+    return "Request must be an object";
   }
-  
+
   if (!request.messages || !Array.isArray(request.messages)) {
-    return 'messages field is required and must be an array'
+    return "messages field is required and must be an array";
   }
-  
+
   if (request.messages.length === 0) {
-    return 'At least one message is required'
+    return "At least one message is required";
   }
-  
+
   for (const message of request.messages) {
     if (!message.role || !message.content) {
-      return 'Each message must have role and content'
+      return "Each message must have role and content";
     }
-    
-    if (!['user', 'assistant', 'system'].includes(message.role)) {
-      return 'Message role must be user, assistant, or system'
+
+    if (!["user", "assistant", "system"].includes(message.role)) {
+      return "Message role must be user, assistant, or system";
     }
   }
-  
-  if (request.max_tokens && (request.max_tokens < 1 || request.max_tokens > 8000)) {
-    return 'max_tokens must be between 1 and 8000'
+
+  if (
+    request.max_tokens &&
+    (request.max_tokens < 1 || request.max_tokens > 8000)
+  ) {
+    return "max_tokens must be between 1 and 8000";
   }
-  
-  if (request.temperature && (request.temperature < 0 || request.temperature > 2)) {
-    return 'temperature must be between 0 and 2'
+
+  if (
+    request.temperature &&
+    (request.temperature < 0 || request.temperature > 2)
+  ) {
+    return "temperature must be between 0 and 2";
   }
-  
-  return null
+
+  return null;
 }
 
 /**
@@ -409,21 +457,21 @@ function validateGenerationRequest(request: any): string | null {
  */
 function estimateTokenUsage(request: GenerationRequest): number {
   const messagesText = request.messages
-    .map(msg => typeof msg.content === 'string' ? msg.content : '')
-    .join(' ')
-  
-  const systemPromptText = request.system_prompt || ''
-  const totalText = messagesText + systemPromptText
-  
+    .map((msg) => (typeof msg.content === "string" ? msg.content : ""))
+    .join(" ");
+
+  const systemPromptText = request.system_prompt || "";
+  const totalText = messagesText + systemPromptText;
+
   // Rough approximation: ~4 characters per token
-  return Math.ceil(totalText.length / 4)
+  return Math.ceil(totalText.length / 4);
 }
 
 /**
  * Estimate tokens from text
  */
 function estimateTokensFromText(text: string): number {
-  return Math.ceil(text.length / 4)
+  return Math.ceil(text.length / 4);
 }
 
 /**
@@ -431,28 +479,28 @@ function estimateTokensFromText(text: string): number {
  */
 function getStatusCodeForError(code: string): number {
   switch (code) {
-    case 'AUTHENTICATION_FAILED':
-    case 'UNAUTHORIZED':
-      return 401
-    case 'INSUFFICIENT_CREDITS':
-      return 402
-    case 'RATE_LIMIT_EXCEEDED':
-      return 429
-    case 'INVALID_REQUEST':
-    case 'CONTENT_FILTERED':
-      return 400
-    case 'PROVIDER_NOT_FOUND':
-    case 'NO_PROVIDERS_AVAILABLE':
-      return 404
-    case 'CIRCUIT_BREAKER_OPEN':
-    case 'SERVICE_OVERLOADED':
-      return 503
-    case 'TIMEOUT':
-      return 408
-    case 'SERVER_ERROR':
-    case 'PROVIDER_ERROR':
+    case "AUTHENTICATION_FAILED":
+    case "UNAUTHORIZED":
+      return 401;
+    case "INSUFFICIENT_CREDITS":
+      return 402;
+    case "RATE_LIMIT_EXCEEDED":
+      return 429;
+    case "INVALID_REQUEST":
+    case "CONTENT_FILTERED":
+      return 400;
+    case "PROVIDER_NOT_FOUND":
+    case "NO_PROVIDERS_AVAILABLE":
+      return 404;
+    case "CIRCUIT_BREAKER_OPEN":
+    case "SERVICE_OVERLOADED":
+      return 503;
+    case "TIMEOUT":
+      return 408;
+    case "SERVER_ERROR":
+    case "PROVIDER_ERROR":
     default:
-      return 500
+      return 500;
   }
 }
 
@@ -460,7 +508,7 @@ function getStatusCodeForError(code: string): number {
  * Generate unique ID
  */
 function generateId(): string {
-  return `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 /**
@@ -469,22 +517,21 @@ function generateId(): string {
  */
 export async function GET(): Promise<Response> {
   try {
-    const providerStatus = await providerManager.getAllProviderStatus()
-    const configSummary = configManager.getConfigSummary()
-    
+    const providerStatus = await providerManager.getAllProviderStatus();
+    const configSummary = configManager.getConfigSummary();
+
     return NextResponse.json({
       success: true,
       data: {
         providers: providerStatus,
         config: configSummary,
-        health_check: Date.now()
-      }
-    })
-    
+        health_check: Date.now(),
+      },
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to get status', code: 'STATUS_ERROR' },
-      { status: 500 }
-    )
+      { error: "Failed to get status", code: "STATUS_ERROR" },
+      { status: 500 },
+    );
   }
 }

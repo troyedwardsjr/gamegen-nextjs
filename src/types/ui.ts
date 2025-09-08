@@ -1,11 +1,19 @@
 /**
  * GameGen UI Component Types
- * 
+ *
  * TypeScript type definitions for UI components, props, and styling
  * in the GameGen pixel art game creation platform using HeroUI.
  */
 
-import { SVGProps, ReactNode, ComponentType, MouseEvent, KeyboardEvent, FocusEvent, CSSProperties } from 'react';
+import {
+  SVGProps,
+  ReactNode,
+  ComponentType,
+  MouseEvent,
+  KeyboardEvent,
+  FocusEvent,
+  CSSProperties,
+} from "react";
 
 /**
  * Base icon props extending SVG props
@@ -17,51 +25,47 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 /**
  * Theme and styling types
  */
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ColorScheme = 'default' | 'blue' | 'green' | 'purple' | 'red';
+export type ThemeMode = "light" | "dark" | "system";
+export type ColorScheme = "default" | "blue" | "green" | "purple" | "red";
 
 /**
  * Component size variants
  */
-export type ComponentSize = 'sm' | 'md' | 'lg' | 'xl';
+export type ComponentSize = "sm" | "md" | "lg" | "xl";
 
 /**
  * Component color variants aligned with HeroUI
  */
-export type ComponentColor = 
-  | 'default'
-  | 'primary' 
-  | 'secondary' 
-  | 'success' 
-  | 'warning' 
-  | 'danger';
+export type ComponentColor =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger";
 
 /**
  * Button variants
  */
-export type ButtonVariant = 
-  | 'solid' 
-  | 'bordered' 
-  | 'light' 
-  | 'flat' 
-  | 'faded' 
-  | 'shadow' 
-  | 'ghost';
+export type ButtonVariant =
+  | "solid"
+  | "bordered"
+  | "light"
+  | "flat"
+  | "faded"
+  | "shadow"
+  | "ghost";
 
 /**
  * Input variants
  */
-export type InputVariant = 
-  | 'flat' 
-  | 'bordered' 
-  | 'underlined' 
-  | 'faded';
+export type InputVariant = "flat" | "bordered" | "underlined" | "faded";
 
 /**
  * Layout and spacing types
  */
 export type Spacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24;
-export type Radius = 'none' | 'sm' | 'md' | 'lg' | 'full';
+export type Radius = "none" | "sm" | "md" | "lg" | "full";
 
 /**
  * Loading state types
@@ -79,9 +83,19 @@ export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
-  placement?: 'auto' | 'top' | 'center' | 'bottom';
-  backdrop?: 'transparent' | 'opaque' | 'blur';
+  size?:
+    | "xs"
+    | "sm"
+    | "md"
+    | "lg"
+    | "xl"
+    | "2xl"
+    | "3xl"
+    | "4xl"
+    | "5xl"
+    | "full";
+  placement?: "auto" | "top" | "center" | "bottom";
+  backdrop?: "transparent" | "opaque" | "blur";
   isDismissable?: boolean;
   hideCloseButton?: boolean;
   className?: string;
@@ -91,7 +105,7 @@ export interface ModalProps {
 /**
  * Toast notification types
  */
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = "success" | "error" | "warning" | "info";
 
 export interface ToastOptions {
   type: ToastType;
@@ -152,7 +166,7 @@ export interface TableColumn<T = any> {
   sortable?: boolean;
   searchable?: boolean;
   width?: string | number;
-  align?: 'start' | 'center' | 'end';
+  align?: "start" | "center" | "end";
   render?: (item: T, columnKey: string) => ReactNode;
   className?: string;
 }
@@ -163,14 +177,17 @@ export interface TableProps<T = any> {
   isLoading?: boolean;
   emptyContent?: ReactNode;
   loadingContent?: ReactNode;
-  selectionMode?: 'none' | 'single' | 'multiple';
+  selectionMode?: "none" | "single" | "multiple";
   selectedKeys?: Set<string>;
   onSelectionChange?: (keys: Set<string>) => void;
   sortDescriptor?: {
     column: string;
-    direction: 'ascending' | 'descending';
+    direction: "ascending" | "descending";
   };
-  onSortChange?: (descriptor: { column: string; direction: 'ascending' | 'descending' }) => void;
+  onSortChange?: (descriptor: {
+    column: string;
+    direction: "ascending" | "descending";
+  }) => void;
   className?: string;
   itemClassName?: string;
 }
@@ -184,7 +201,7 @@ export interface CardProps {
   isPressable?: boolean;
   isHoverable?: boolean;
   isBlurred?: boolean;
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  shadow?: "none" | "sm" | "md" | "lg";
   radius?: Radius;
   padding?: Spacing;
   header?: ReactNode;
@@ -258,8 +275,8 @@ export interface EditorPanelProps {
 export interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
-  language?: 'javascript' | 'typescript' | 'json';
-  theme?: 'light' | 'dark' | 'high-contrast';
+  language?: "javascript" | "typescript" | "json";
+  theme?: "light" | "dark" | "high-contrast";
   fontSize?: number;
   lineNumbers?: boolean;
   wordWrap?: boolean;
@@ -286,8 +303,8 @@ export interface AssetLibraryProps {
   filterByType?: string[];
   searchQuery?: string;
   onSearch?: (query: string) => void;
-  viewMode?: 'grid' | 'list';
-  onViewModeChange?: (mode: 'grid' | 'list') => void;
+  viewMode?: "grid" | "list";
+  onViewModeChange?: (mode: "grid" | "list") => void;
   isLoading?: boolean;
   className?: string;
 }
@@ -325,7 +342,7 @@ export interface ProgressProps {
 
 export interface StatusBadgeProps {
   status: string;
-  variant?: 'dot' | 'solid' | 'bordered';
+  variant?: "dot" | "solid" | "bordered";
   size?: ComponentSize;
   className?: string;
 }
@@ -351,7 +368,7 @@ export interface FilterChipProps {
   onSelectionChange: (selected: boolean) => void;
   count?: number;
   color?: ComponentColor;
-  variant?: 'solid' | 'bordered' | 'flat';
+  variant?: "solid" | "bordered" | "flat";
   className?: string;
 }
 
@@ -419,7 +436,7 @@ export interface AIGenerationPanelProps {
 /**
  * Responsive design types
  */
-export type Breakpoint = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+export type Breakpoint = "sm" | "md" | "lg" | "xl" | "2xl";
 
 export interface ResponsiveValue<T> {
   base?: T;
@@ -427,29 +444,29 @@ export interface ResponsiveValue<T> {
   md?: T;
   lg?: T;
   xl?: T;
-  '2xl'?: T;
+  "2xl"?: T;
 }
 
 /**
  * Animation and transition types
  */
 export interface AnimationProps {
-  animation?: 'none' | 'fade' | 'slide' | 'scale' | 'bounce';
+  animation?: "none" | "fade" | "slide" | "scale" | "bounce";
   duration?: number;
   delay?: number;
-  easing?: 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+  easing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
 }
 
 /**
  * Accessibility types
  */
 export interface AccessibilityProps {
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
-  'aria-describedby'?: string;
-  'aria-expanded'?: boolean;
-  'aria-selected'?: boolean;
-  'aria-disabled'?: boolean;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  "aria-expanded"?: boolean;
+  "aria-selected"?: boolean;
+  "aria-disabled"?: boolean;
   role?: string;
   tabIndex?: number;
 }
@@ -468,12 +485,14 @@ export interface EventHandlers {
 /**
  * Common component props interface
  */
-export interface CommonComponentProps extends AccessibilityProps, EventHandlers {
+export interface CommonComponentProps
+  extends AccessibilityProps,
+    EventHandlers {
   className?: string;
   id?: string;
   style?: CSSProperties;
   children?: ReactNode;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 /**
@@ -519,24 +538,35 @@ export type PropsWithOptionalChildren<P = {}> = P & { children?: ReactNode };
 
 // Type guards and utility functions
 export const isValidSize = (size: any): size is ComponentSize => {
-  return ['sm', 'md', 'lg', 'xl'].includes(size);
+  return ["sm", "md", "lg", "xl"].includes(size);
 };
 
 export const isValidColor = (color: any): color is ComponentColor => {
-  return ['default', 'primary', 'secondary', 'success', 'warning', 'danger'].includes(color);
+  return [
+    "default",
+    "primary",
+    "secondary",
+    "success",
+    "warning",
+    "danger",
+  ].includes(color);
 };
 
-export const combineClassNames = (...classes: (string | undefined | null | false)[]): string => {
-  return classes.filter(Boolean).join(' ');
+export const combineClassNames = (
+  ...classes: (string | undefined | null | false)[]
+): string => {
+  return classes.filter(Boolean).join(" ");
 };
 
 export const getResponsiveValue = <T>(
   value: T | ResponsiveValue<T>,
-  breakpoint: Breakpoint = 'sm'
+  breakpoint: Breakpoint = "sm",
 ): T => {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
     const responsiveValue = value as ResponsiveValue<T>;
+
     return responsiveValue[breakpoint] ?? responsiveValue.base ?? (value as T);
   }
+
   return value as T;
 };

@@ -1,20 +1,20 @@
 /**
  * GameGen Authentication Types
- * 
+ *
  * TypeScript type definitions for authentication, authorization,
  * and user session management in the GameGen platform.
  */
 
-import { Database } from './database';
+import { Database } from "./database";
 
 // Base authentication status
-export type AuthStatus = 'authenticated' | 'unauthenticated' | 'loading';
+export type AuthStatus = "authenticated" | "unauthenticated" | "loading";
 
 // Authentication providers supported by GameGen
-export type AuthProvider = 'google' | 'github' | 'discord' | 'email';
+export type AuthProvider = "google" | "github" | "discord" | "email";
 
 // User profile from database
-export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+export type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
 /**
  * Supabase Auth User object with metadata
@@ -77,7 +77,10 @@ export interface AuthState {
  * Authentication actions for context/store
  */
 export interface AuthActions {
-  signIn: (provider: AuthProvider, credentials?: SignInCredentials) => Promise<void>;
+  signIn: (
+    provider: AuthProvider,
+    credentials?: SignInCredentials,
+  ) => Promise<void>;
   signUp: (credentials: SignUpCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -106,7 +109,7 @@ export interface SignUpCredentials {
   first_name?: string;
   last_name?: string;
   display_name?: string;
-  use_case?: UserProfile['use_case'];
+  use_case?: UserProfile["use_case"];
   terms_accepted: boolean;
   marketing_consent?: boolean;
 }
@@ -140,26 +143,26 @@ export interface ProfileUpdateRequest {
   language_preference?: string;
   theme_preference?: string;
   notification_preferences?: any;
-  use_case?: UserProfile['use_case'];
+  use_case?: UserProfile["use_case"];
 }
 
 /**
  * Authentication error types specific to GameGen
  */
 export type AuthErrorType =
-  | 'invalid_credentials'
-  | 'email_not_confirmed'
-  | 'user_not_found'
-  | 'email_already_registered'
-  | 'weak_password'
-  | 'rate_limited'
-  | 'provider_error'
-  | 'network_error'
-  | 'session_expired'
-  | 'account_suspended'
-  | 'subscription_required'
-  | 'terms_not_accepted'
-  | 'unknown_error';
+  | "invalid_credentials"
+  | "email_not_confirmed"
+  | "user_not_found"
+  | "email_already_registered"
+  | "weak_password"
+  | "rate_limited"
+  | "provider_error"
+  | "network_error"
+  | "session_expired"
+  | "account_suspended"
+  | "subscription_required"
+  | "terms_not_accepted"
+  | "unknown_error";
 
 /**
  * Authentication error with additional context
@@ -202,7 +205,7 @@ export interface VerificationStatus {
   identity_verified: boolean;
   account_locked: boolean;
   requires_verification: boolean;
-  verification_methods: ('email' | 'phone' | 'identity')[];
+  verification_methods: ("email" | "phone" | "identity")[];
 }
 
 /**
@@ -214,23 +217,23 @@ export interface UserPermissions {
   can_publish_games: boolean;
   can_export_games: boolean;
   can_white_label: boolean;
-  
+
   // Asset permissions
   can_upload_assets: boolean;
   can_download_assets: boolean;
   can_use_ai_generation: boolean;
-  
+
   // Community permissions
   can_comment: boolean;
   can_rate_games: boolean;
   can_create_templates: boolean;
   can_fork_games: boolean;
-  
+
   // Admin permissions
   can_moderate_content: boolean;
   can_manage_users: boolean;
   can_access_analytics: boolean;
-  
+
   // Subscription limits
   monthly_game_limit: number;
   monthly_ai_credits: number;
@@ -240,7 +243,12 @@ export interface UserPermissions {
 /**
  * User role definitions for GameGen
  */
-export type UserRole = 'user' | 'creator' | 'moderator' | 'admin' | 'super_admin';
+export type UserRole =
+  | "user"
+  | "creator"
+  | "moderator"
+  | "admin"
+  | "super_admin";
 
 /**
  * Role-based access control
@@ -249,7 +257,7 @@ export interface RoleConfig {
   role: UserRole;
   permissions: UserPermissions;
   subscription_required: boolean;
-  subscription_tiers: UserProfile['subscription_tier'][];
+  subscription_tiers: UserProfile["subscription_tier"][];
 }
 
 /**
@@ -267,20 +275,20 @@ export interface SessionConfig {
  * Authentication event types for analytics
  */
 export type AuthEventType =
-  | 'sign_up_started'
-  | 'sign_up_completed'
-  | 'sign_in_attempted'
-  | 'sign_in_succeeded'
-  | 'sign_in_failed'
-  | 'sign_out'
-  | 'password_reset_requested'
-  | 'password_reset_completed'
-  | 'profile_updated'
-  | 'account_deleted'
-  | 'session_refreshed'
-  | 'email_verified'
-  | 'provider_linked'
-  | 'provider_unlinked';
+  | "sign_up_started"
+  | "sign_up_completed"
+  | "sign_in_attempted"
+  | "sign_in_succeeded"
+  | "sign_in_failed"
+  | "sign_out"
+  | "password_reset_requested"
+  | "password_reset_completed"
+  | "profile_updated"
+  | "account_deleted"
+  | "session_refreshed"
+  | "email_verified"
+  | "provider_linked"
+  | "provider_unlinked";
 
 /**
  * Authentication analytics event
@@ -298,7 +306,7 @@ export interface AuthEvent {
 /**
  * Multi-factor authentication types
  */
-export type MFAType = 'totp' | 'sms' | 'email';
+export type MFAType = "totp" | "sms" | "email";
 
 /**
  * Multi-factor authentication factor
@@ -306,7 +314,7 @@ export type MFAType = 'totp' | 'sms' | 'email';
 export interface MFAFactor {
   id: string;
   type: MFAType;
-  status: 'unverified' | 'verified';
+  status: "unverified" | "verified";
   friendly_name?: string;
   phone?: string; // for SMS
   created_at: string;
@@ -354,7 +362,7 @@ export interface UseAuthReturn extends AuthState, AuthActions {
   permissions: UserPermissions;
   canAccess: (feature: keyof UserPermissions) => boolean;
   isSubscribed: boolean;
-  subscriptionTier: UserProfile['subscription_tier'];
+  subscriptionTier: UserProfile["subscription_tier"];
 }
 
 /**
@@ -378,7 +386,7 @@ export interface ProtectedRouteProps {
   requireVerification?: boolean;
   requiredPermissions?: (keyof UserPermissions)[];
   requiredSubscription?: boolean;
-  minimumTier?: UserProfile['subscription_tier'];
+  minimumTier?: UserProfile["subscription_tier"];
   redirectTo?: string;
 }
 
@@ -388,8 +396,8 @@ export interface ProtectedRouteProps {
 export interface SocialAuthButtonProps {
   provider: AuthProvider;
   text?: string;
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'default' | 'lg';
+  variant?: "default" | "outline" | "ghost";
+  size?: "sm" | "default" | "lg";
   disabled?: boolean;
   loading?: boolean;
   className?: string;
@@ -399,33 +407,35 @@ export interface SocialAuthButtonProps {
 
 // Type guards for authentication
 export const isAuthUser = (user: any): user is AuthUser => {
-  return user && typeof user === 'object' && 'id' in user && 'email' in user;
+  return user && typeof user === "object" && "id" in user && "email" in user;
 };
 
 export const isAuthError = (error: any): error is AuthError => {
-  return error && typeof error === 'object' && 'type' in error && error.type;
+  return error && typeof error === "object" && "type" in error && error.type;
 };
 
 export const hasPermission = (
   permissions: UserPermissions | undefined,
-  permission: keyof UserPermissions
+  permission: keyof UserPermissions,
 ): boolean => {
   return Boolean(permissions?.[permission]);
 };
 
 export const isSubscribed = (profile: UserProfile | null): boolean => {
-  return Boolean(profile?.subscription_tier && profile.subscription_tier !== 'free');
+  return Boolean(
+    profile?.subscription_tier && profile.subscription_tier !== "free",
+  );
 };
 
 export const canAccessFeature = (
   profile: UserProfile | null,
-  requiredTier: UserProfile['subscription_tier']
+  requiredTier: UserProfile["subscription_tier"],
 ): boolean => {
   if (!profile?.subscription_tier || !requiredTier) return false;
-  
-  const tierOrder = ['free', 'pro', 'max', 'enterprise'];
+
+  const tierOrder = ["free", "pro", "max", "enterprise"];
   const userTierIndex = tierOrder.indexOf(profile.subscription_tier);
   const requiredTierIndex = tierOrder.indexOf(requiredTier);
-  
+
   return userTierIndex >= requiredTierIndex;
 };

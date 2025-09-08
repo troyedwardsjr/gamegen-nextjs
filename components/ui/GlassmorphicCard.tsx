@@ -7,7 +7,15 @@ import { motion, HTMLMotionProps } from "framer-motion";
 
 export interface GlassmorphicCardProps
   extends Omit<CardProps, "className" | "shadow"> {
-  variant?: "default" | "subtle" | "strong" | "gradient" | "gaming" | "accent-cyan" | "accent-emerald" | "accent-rose";
+  variant?:
+    | "default"
+    | "subtle"
+    | "strong"
+    | "gradient"
+    | "gaming"
+    | "accent-cyan"
+    | "accent-emerald"
+    | "accent-rose";
   blur?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   opacity?: "light" | "medium" | "strong";
   border?: "none" | "subtle" | "visible" | "gaming";
@@ -105,15 +113,17 @@ export function GlassmorphicCard({
   const getHoverClasses = () => {
     if (!hover) return "";
 
-    const hoverClass = variant === "gaming" 
-      ? "hover:shadow-xl hover:shadow-purple-500/30 hover:border-purple-400/60"
-      : "hover:shadow-lg hover:shadow-black/10 hover:border-white/40 dark:hover:border-black/40";
+    const hoverClass =
+      variant === "gaming"
+        ? "hover:shadow-xl hover:shadow-purple-500/30 hover:border-purple-400/60"
+        : "hover:shadow-lg hover:shadow-black/10 hover:border-white/40 dark:hover:border-black/40";
 
     return `${hoverClass} hover:scale-[1.02] transition-all duration-300 cursor-pointer`;
   };
 
   const getPatternClasses = () => {
     if (!pattern) return "";
+
     return "relative overflow-hidden";
   };
 
@@ -129,19 +139,21 @@ export function GlassmorphicCard({
     className,
   );
 
-  const motionProps: HTMLMotionProps<"div"> = animated ? {
-    initial: { opacity: 1, y: 0, scale: 1 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-    whileHover: hover ? { y: -2 } : undefined,
-    whileTap: hover ? { scale: 0.98 } : undefined,
-  } : {};
+  const motionProps: HTMLMotionProps<"div"> = animated
+    ? {
+        initial: { opacity: 1, y: 0, scale: 1 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+        whileHover: hover ? { y: -2 } : undefined,
+        whileTap: hover ? { scale: 0.98 } : undefined,
+      }
+    : {};
 
   const CardComponent = animated ? MotionCard : Card;
 
   return (
-    <CardComponent 
-      className={glassClasses} 
+    <CardComponent
+      className={glassClasses}
       {...(animated ? motionProps : {})}
       {...props}
     >

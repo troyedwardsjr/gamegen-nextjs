@@ -1,21 +1,20 @@
 /**
  * Toxoid Script Generator
- * 
+ *
  * Core logic for generating Toxoid-compatible JavaScript scripts using LLM
  * providers. Integrates with the existing GameGen LLM system to produce
  * game scripts that conform to the Toxoid ECS API.
  */
 
+import ScriptTemplates from "./script-templates";
+
 import {
   ScriptGenerationRequest,
   ScriptConstraints,
   ScriptTemplate,
-  SystemTemplate,
-  ComponentTemplate
-} from '@/types/toxoid';
-import { GenerationRequest, GenerationResponse, LLMMessage } from '@/lib/llm/types';
-import { ProviderManager } from '@/lib/llm/providers/manager';
-import ScriptTemplates from './script-templates';
+} from "@/types/toxoid";
+import { GenerationRequest } from "@/lib/llm/types";
+import { ProviderManager } from "@/lib/llm/providers/manager";
 
 interface ScriptGenerationContext {
   gameType: string;
@@ -38,35 +37,35 @@ export class ToxoidScriptGenerator {
 
   constructor(providerManager: ProviderManager) {
     this.providerManager = providerManager;
-    
+
     this.defaultConstraints = {
       maxMemoryMB: 50,
       maxStackMB: 1,
       allowedAPIs: [
-        'Toxoid.API.*',
-        'Toxoid.System.*',
-        'Toxoid.Observer.*',
-        'Toxoid.Query.*',
-        'console.log',
-        'Math.*',
-        'Date.*'
+        "Toxoid.API.*",
+        "Toxoid.System.*",
+        "Toxoid.Observer.*",
+        "Toxoid.Query.*",
+        "console.log",
+        "Math.*",
+        "Date.*",
       ],
       forbiddenPatterns: [
-        'eval(',
-        'Function(',
-        'setTimeout(',
-        'setInterval(',
-        'XMLHttpRequest',
-        'fetch(',
-        'import(',
-        'require(',
-        'process.',
-        'global.',
-        'window.',
-        'document.'
+        "eval(",
+        "Function(",
+        "setTimeout(",
+        "setInterval(",
+        "XMLHttpRequest",
+        "fetch(",
+        "import(",
+        "require(",
+        "process.",
+        "global.",
+        "window.",
+        "document.",
       ],
       maxExecutionTime: 100, // 100ms per frame
-      maxLoops: 10000
+      maxLoops: 10000,
     };
   }
 
@@ -77,17 +76,17 @@ export class ToxoidScriptGenerator {
     try {
       const context = await this.buildGenerationContext(request);
       const prompt = this.buildGenerationPrompt(context, request.prompt);
-      
+
       const llmRequest: GenerationRequest = {
         messages: [
           {
-            role: 'system',
-            content: prompt.systemPrompt
+            role: "system",
+            content: prompt.systemPrompt,
           },
           {
-            role: 'user',
-            content: prompt.userPrompt
-          }
+            role: "user",
+            content: prompt.userPrompt,
+          },
         ],
         max_tokens: 4000,
         temperature: 0.7,
@@ -96,32 +95,41 @@ export class ToxoidScriptGenerator {
         metadata: {
           gameType: request.gameType,
           complexity: request.complexity,
-          features: request.features
-        }
+          features: request.features,
+        },
       };
 
       const response = await this.providerManager.generate(llmRequest);
-      const generatedScript = this.postProcessGeneratedScript(response.content, context);
-      
+      const generatedScript = this.postProcessGeneratedScript(
+        response.content,
+        context,
+      );
+
       return generatedScript;
-      
     } catch (error) {
-      console.error('[ScriptGenerator] Generation failed:', error);
-      throw new Error(`Script generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("[ScriptGenerator] Generation failed:", error);
+      throw new Error(
+        `Script generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   /**
    * Build generation context from request
    */
-  private async buildGenerationContext(request: ScriptGenerationRequest): Promise<ScriptGenerationContext> {
+  private async buildGenerationContext(
+    request: ScriptGenerationRequest,
+  ): Promise<ScriptGenerationContext> {
     const constraints = {
       ...this.defaultConstraints,
-      ...request.constraints
+      ...request.constraints,
     };
 
     // Get relevant templates based on game type and features
-    const templates = this.selectRelevantTemplates(request.gameType, request.features);
+    const templates = this.selectRelevantTemplates(
+      request.gameType,
+      request.features,
+    );
 
     return {
       gameType: request.gameType,
@@ -129,31 +137,38 @@ export class ToxoidScriptGenerator {
       features: request.features,
       constraints,
       existingCode: request.existingCode,
-      templates
+      templates,
     };
   }
 
   /**
    * Select relevant templates based on requirements
    */
-  private selectRelevantTemplates(gameType: string, features: string[]): ScriptTemplate[] {
+  private selectRelevantTemplates(
+    gameType: string,
+    features: string[],
+  ): ScriptTemplate[] {
     const templates: ScriptTemplate[] = [];
 
     // Add game type specific templates
     const gameTypeTemplates = ScriptTemplates.getTemplatesByTags([gameType]);
+
     templates.push(...gameTypeTemplates);
 
     // Add feature specific templates
     const featureTemplates = ScriptTemplates.getTemplatesByTags(features);
+
     templates.push(...featureTemplates);
 
     // Always include basic templates for complexity levels
-    const basicTemplates = ScriptTemplates.getTemplatesByCategory('system');
+    const basicTemplates = ScriptTemplates.getTemplatesByCategory("system");
+
     templates.push(...basicTemplates.slice(0, 3)); // Limit to avoid too many examples
 
     // Remove duplicates
-    const uniqueTemplates = templates.filter((template, index, self) =>
-      self.findIndex(t => t.id === template.id) === index
+    const uniqueTemplates = templates.filter(
+      (template, index, self) =>
+        self.findIndex((t) => t.id === template.id) === index,
     );
 
     return uniqueTemplates;
@@ -162,16 +177,19 @@ export class ToxoidScriptGenerator {
   /**
    * Build the generation prompt with system instructions and examples
    */
-  private buildGenerationPrompt(context: ScriptGenerationContext, userPrompt: string): GenerationPrompt {
+  private buildGenerationPrompt(
+    context: ScriptGenerationContext,
+    userPrompt: string,
+  ): GenerationPrompt {
     const systemPrompt = this.buildSystemPrompt(context);
     const examples = this.buildExamples(context);
-    
+
     const formattedUserPrompt = this.buildUserPrompt(userPrompt, context);
 
     return {
       systemPrompt,
       userPrompt: formattedUserPrompt,
-      examples
+      examples,
     };
   }
 
@@ -214,10 +232,10 @@ You MUST use only the Toxoid global API. Available namespaces:
 
 ### Security Restrictions
 FORBIDDEN APIs/Patterns:
-${context.constraints.forbiddenPatterns.map(pattern => `- ${pattern}`).join('\n')}
+${context.constraints.forbiddenPatterns.map((pattern) => `- ${pattern}`).join("\n")}
 
 ALLOWED APIs:
-${context.constraints.allowedAPIs.map(api => `- ${api}`).join('\n')}
+${context.constraints.allowedAPIs.map((api) => `- ${api}`).join("\n")}
 
 ### Code Quality
 - Write clean, readable JavaScript
@@ -240,11 +258,14 @@ Generate production-ready JavaScript code that implements the requested function
   /**
    * Build user-specific prompt
    */
-  private buildUserPrompt(userPrompt: string, context: ScriptGenerationContext): string {
+  private buildUserPrompt(
+    userPrompt: string,
+    context: ScriptGenerationContext,
+  ): string {
     let prompt = `Create a Toxoid-compatible JavaScript script for the following requirements:\n\n${userPrompt}\n\n`;
 
     if (context.features.length > 0) {
-      prompt += `Required Features:\n${context.features.map(feature => `- ${feature}`).join('\n')}\n\n`;
+      prompt += `Required Features:\n${context.features.map((feature) => `- ${feature}`).join("\n")}\n\n`;
     }
 
     if (context.existingCode) {
@@ -270,8 +291,9 @@ Return only the JavaScript code, no explanations or markdown formatting.`;
     const examples: string[] = [];
 
     // Add relevant template examples
-    context.templates.slice(0, 2).forEach(template => {
-      if (template.code && template.code.length < 2000) { // Keep examples manageable
+    context.templates.slice(0, 2).forEach((template) => {
+      if (template.code && template.code.length < 2000) {
+        // Keep examples manageable
         examples.push(`// Example: ${template.name}\n${template.code}`);
       }
     });
@@ -335,11 +357,16 @@ if (keyboard && keyboard.space) {
   /**
    * Post-process generated script
    */
-  private postProcessGeneratedScript(script: string, context: ScriptGenerationContext): string {
+  private postProcessGeneratedScript(
+    script: string,
+    context: ScriptGenerationContext,
+  ): string {
     let processed = script;
 
     // Remove markdown code blocks if present
-    processed = processed.replace(/```javascript\n?/g, '').replace(/```\n?/g, '');
+    processed = processed
+      .replace(/```javascript\n?/g, "")
+      .replace(/```\n?/g, "");
 
     // Ensure proper formatting
     processed = processed.trim();
@@ -349,7 +376,7 @@ if (keyboard && keyboard.space) {
  * Generated Toxoid Script
  * Game Type: ${context.gameType}
  * Complexity: ${context.complexity}
- * Features: ${context.features.join(', ')}
+ * Features: ${context.features.join(", ")}
  * Generated: ${new Date().toISOString()}
  */
 
@@ -388,31 +415,31 @@ if (keyboard && keyboard.space) {
 - Collision detection between bullets and player/enemies
 - Score tracking and enemy wave systems
 - Precise movement controls with velocity-based physics`,
-      
+
       rpg: `- Character stats and progression systems
 - Turn-based or real-time combat mechanics
 - Inventory and item management
 - Dialog and quest systems with state tracking`,
-      
+
       platformer: `- Gravity and jump physics
 - Platform collision detection
 - Character movement with animation states
 - Level progression and checkpoint systems`,
-      
+
       puzzle: `- Grid-based or tile-based game logic
 - Move validation and puzzle state tracking
 - Win/lose condition checking
 - Undo/redo functionality for moves`,
-      
+
       racing: `- Vehicle physics with acceleration and steering
 - Track boundary collision detection
 - Lap timing and position tracking
 - AI opponents with pathfinding`,
-      
+
       custom: `- Flexible system design for unique mechanics
 - Modular component architecture
 - Extensible behavior patterns
-- Custom game logic implementation`
+- Custom game logic implementation`,
     };
 
     return characteristics[gameType] || characteristics.custom;
@@ -427,16 +454,16 @@ if (keyboard && keyboard.space) {
 - Minimal component complexity
 - Straightforward game loops
 - Focus on core functionality only`,
-      
+
       intermediate: `- Implement 3-8 interconnected systems
 - Use observers for event-driven behavior
 - Include basic AI or procedural elements
 - Add game state management`,
-      
+
       advanced: `- Complex system interactions and dependencies
 - Advanced AI with state machines
 - Performance optimizations and memory management
-- Sophisticated game mechanics and features`
+- Sophisticated game mechanics and features`,
     };
 
     return guidelines[complexity] || guidelines.simple;
@@ -450,12 +477,15 @@ if (keyboard && keyboard.space) {
     query: string,
     phase: string,
     description: string,
-    userId?: string
+    userId?: string,
   ): Promise<string> {
     const template = ScriptTemplates.getSystemTemplate(systemName);
-    
+
     if (template) {
-      return ScriptTemplates.processTemplateParameters(template.codeTemplate, {});
+      return ScriptTemplates.processTemplateParameters(
+        template.codeTemplate,
+        {},
+      );
     }
 
     // Generate custom system using LLM
@@ -471,26 +501,28 @@ The system should use proper Toxoid.System.create() syntax and follow ECS best p
     const llmRequest: GenerationRequest = {
       messages: [
         {
-          role: 'system',
-          content: 'You are a Toxoid ECS system generator. Create clean, efficient systems that follow proper ECS patterns.'
+          role: "system",
+          content:
+            "You are a Toxoid ECS system generator. Create clean, efficient systems that follow proper ECS patterns.",
         },
         {
-          role: 'user',
-          content: prompt
-        }
+          role: "user",
+          content: prompt,
+        },
       ],
       max_tokens: 1000,
       temperature: 0.5,
-      user_id: userId
+      user_id: userId,
     };
 
     const response = await this.providerManager.generate(llmRequest);
+
     return this.postProcessGeneratedScript(response.content, {
-      gameType: 'custom',
-      complexity: 'intermediate',
+      gameType: "custom",
+      complexity: "intermediate",
       features: [],
       constraints: this.defaultConstraints,
-      templates: []
+      templates: [],
     });
   }
 
@@ -502,13 +534,13 @@ The system should use proper Toxoid.System.create() syntax and follow ECS best p
     query: string,
     events: string[],
     description: string,
-    userId?: string
+    userId?: string,
   ): Promise<string> {
     const prompt = `Generate a Toxoid ECS observer with the following specifications:
 
 Name: ${observerName}
 Query: ${query}
-Events: ${events.join(', ')}
+Events: ${events.join(", ")}
 Description: ${description}
 
 The observer should use proper Toxoid.Observer.create() syntax and handle the specified events appropriately.`;
@@ -516,26 +548,28 @@ The observer should use proper Toxoid.Observer.create() syntax and handle the sp
     const llmRequest: GenerationRequest = {
       messages: [
         {
-          role: 'system',
-          content: 'You are a Toxoid ECS observer generator. Create reactive patterns that respond to ECS events efficiently.'
+          role: "system",
+          content:
+            "You are a Toxoid ECS observer generator. Create reactive patterns that respond to ECS events efficiently.",
         },
         {
-          role: 'user',
-          content: prompt
-        }
+          role: "user",
+          content: prompt,
+        },
       ],
       max_tokens: 800,
       temperature: 0.5,
-      user_id: userId
+      user_id: userId,
     };
 
     const response = await this.providerManager.generate(llmRequest);
+
     return this.postProcessGeneratedScript(response.content, {
-      gameType: 'custom',
-      complexity: 'intermediate',
+      gameType: "custom",
+      complexity: "intermediate",
       features: [],
       constraints: this.defaultConstraints,
-      templates: []
+      templates: [],
     });
   }
 
@@ -545,7 +579,7 @@ The observer should use proper Toxoid.Observer.create() syntax and handle the sp
   async enhanceScript(
     existingScript: string,
     enhancement: string,
-    userId?: string
+    userId?: string,
   ): Promise<string> {
     const prompt = `Enhance the following Toxoid script by adding this functionality: ${enhancement}
 
@@ -559,26 +593,28 @@ Please modify or extend the script to include the requested enhancement while ma
     const llmRequest: GenerationRequest = {
       messages: [
         {
-          role: 'system',
-          content: 'You are a Toxoid script enhancement specialist. Modify existing scripts while preserving functionality and following ECS best practices.'
+          role: "system",
+          content:
+            "You are a Toxoid script enhancement specialist. Modify existing scripts while preserving functionality and following ECS best practices.",
         },
         {
-          role: 'user',
-          content: prompt
-        }
+          role: "user",
+          content: prompt,
+        },
       ],
       max_tokens: 3000,
       temperature: 0.6,
-      user_id: userId
+      user_id: userId,
     };
 
     const response = await this.providerManager.generate(llmRequest);
+
     return this.postProcessGeneratedScript(response.content, {
-      gameType: 'custom',
-      complexity: 'intermediate',
+      gameType: "custom",
+      complexity: "intermediate",
       features: [],
       constraints: this.defaultConstraints,
-      templates: []
+      templates: [],
     });
   }
 }

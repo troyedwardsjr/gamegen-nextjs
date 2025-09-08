@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Tabs, Tab } from "@heroui/tabs";
 import { motion } from "framer-motion";
-import { User, Trophy, Activity, Settings } from "lucide-react";
+import { User, Trophy, Activity } from "lucide-react";
+
 import { UserProfile } from "@/components/social/profile/UserProfile";
 import { ActivityFeed } from "@/components/social/activity/ActivityFeed";
 import { AchievementProgress } from "@/components/social/achievements/AchievementProgress";
@@ -16,23 +17,23 @@ export default function ProfilePage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="px-0 py-8"
+      initial={{ opacity: 0, y: 20 }}
     >
       <UserProfile
-        userId={user?.id}
-        currentUserId={user?.id}
-        variant="profile"
-        showEditButton={true}
         className="mb-8"
+        currentUserId={user?.id}
+        showEditButton={true}
+        userId={user?.id}
+        variant="profile"
       />
 
       <Tabs
-        selectedKey={activeTab}
-        onSelectionChange={(key) => setActiveTab(key as string)}
-        variant="underlined"
         className="w-full"
+        selectedKey={activeTab}
+        variant="underlined"
+        onSelectionChange={(key) => setActiveTab(key as string)}
       >
         <Tab
           key="overview"
@@ -44,17 +45,17 @@ export default function ProfilePage() {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <ActivityFeed 
-              userId={user?.id}
-              variant="compact"
+            <ActivityFeed
               maxActivities={10}
               showFilters={false}
-            />
-            <AchievementProgress
               userId={user?.id}
               variant="compact"
-              showStats={true}
+            />
+            <AchievementProgress
               maxRecentAchievements={5}
+              showStats={true}
+              userId={user?.id}
+              variant="compact"
             />
           </div>
         </Tab>
@@ -71,8 +72,8 @@ export default function ProfilePage() {
           <div className="mt-8">
             <GameGrid
               currentUserId={user?.id}
-              showSearch={true}
               showFilters={true}
+              showSearch={true}
               variant="default"
             />
           </div>
@@ -89,10 +90,10 @@ export default function ProfilePage() {
         >
           <div className="mt-8">
             <AchievementProgress
-              userId={user?.id}
-              variant="dashboard"
               showFilters={true}
               showStats={true}
+              userId={user?.id}
+              variant="dashboard"
             />
           </div>
         </Tab>
@@ -107,10 +108,10 @@ export default function ProfilePage() {
           }
         >
           <div className="mt-8">
-            <ActivityFeed 
+            <ActivityFeed
+              showFilters={true}
               userId={user?.id}
               variant="default"
-              showFilters={true}
             />
           </div>
         </Tab>

@@ -2,8 +2,9 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeftIcon } from "@/components/icons";
 import { Button } from "@heroui/button";
+
+import { ChevronLeftIcon } from "@/components/icons";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
@@ -29,26 +30,26 @@ export function MobileNavMenu({
   onBackPress,
   actions,
   subtitle,
-  className = '',
+  className = "",
   children,
 }: MobileNavMenuProps) {
   // Handle escape key to close menu
   React.useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
+      if (event.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener("keydown", handleEscape);
       // Disable body scroll
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
     };
   }, [isOpen, onClose]);
 
@@ -58,25 +59,17 @@ export function MobileNavMenu({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
           />
 
           {/* Menu Container */}
           <motion.div
-            initial={{ x: "-100%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "-100%", opacity: 0 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 300, 
-              damping: 30,
-              duration: 0.3 
-            }}
             className={`
               fixed left-0 top-0 bottom-0 z-50 w-full max-w-sm
               bg-gradient-to-br from-black/80 via-purple-900/30 to-black/80
@@ -84,16 +77,25 @@ export function MobileNavMenu({
               shadow-2xl shadow-purple-500/10
               ${className}
             `}
+            exit={{ x: "-100%", opacity: 0 }}
+            initial={{ x: "-100%", opacity: 0 }}
             style={{
-              background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(132,61,255,0.2) 20%, rgba(168,85,247,0.15) 50%, rgba(132,61,255,0.2) 80%, rgba(0,0,0,0.9) 100%)',
+              background:
+                "linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(132,61,255,0.2) 20%, rgba(168,85,247,0.15) 50%, rgba(132,61,255,0.2) 80%, rgba(0,0,0,0.9) 100%)",
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.3,
             }}
           >
             {/* Header */}
             <motion.header
-              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
               className="flex items-center justify-between p-6 border-b border-purple-500/20"
+              initial={{ opacity: 0, y: -20 }}
+              transition={{ delay: 0.1 }}
             >
               {/* Left section - Back button or spacer */}
               <div className="flex items-center min-w-[44px]">
@@ -104,8 +106,8 @@ export function MobileNavMenu({
                   >
                     <Button
                       isIconOnly
-                      variant="ghost"
                       className="w-10 h-10 text-white/70 hover:text-white hover:bg-white/10"
+                      variant="ghost"
                       onPress={onBackPress}
                     >
                       <ChevronLeftIcon className="w-6 h-6" />
@@ -119,20 +121,20 @@ export function MobileNavMenu({
               {/* Center section - Title */}
               <div className="flex-1 flex flex-col items-center justify-center px-4">
                 <motion.h1
-                  initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
                   className="text-white text-lg font-semibold text-center truncate max-w-full"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: 0.2 }}
                 >
                   {title}
                 </motion.h1>
-                
+
                 {subtitle && (
                   <motion.p
-                    initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
                     className="text-white/60 text-xs text-center truncate max-w-full"
+                    initial={{ opacity: 0 }}
+                    transition={{ delay: 0.3 }}
                   >
                     {subtitle}
                   </motion.p>
@@ -143,10 +145,10 @@ export function MobileNavMenu({
               <div className="flex items-center justify-end min-w-[44px]">
                 {actions ? (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
                     className="flex items-center space-x-2"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: 0.3 }}
                   >
                     {actions}
                   </motion.div>
@@ -158,10 +160,10 @@ export function MobileNavMenu({
 
             {/* Content */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
               className="flex-1 overflow-y-auto p-6"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.2 }}
             >
               {children}
             </motion.div>
@@ -184,7 +186,7 @@ export function MobilePageHeader({
   showBackButton = true,
   onBackPress,
   rightAction,
-  className = '',
+  className = "",
 }: {
   title: string;
   subtitle?: string;
@@ -195,16 +197,16 @@ export function MobilePageHeader({
 }) {
   return (
     <motion.header
-      initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ duration: 0.3 }}
       className={`
         fixed top-0 left-0 right-0 z-40 
         bg-black/20 backdrop-blur-xl border-b border-white/10
         safe-area-pt
         ${className}
       `}
+      exit={{ opacity: 0, y: -50 }}
+      initial={{ opacity: 0, y: -50 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
@@ -217,8 +219,8 @@ export function MobilePageHeader({
               >
                 <Button
                   isIconOnly
-                  variant="ghost"
                   className="w-10 h-10 text-white/70 hover:text-white hover:bg-white/10"
+                  variant="ghost"
                   onPress={onBackPress}
                 >
                   <ChevronLeftIcon className="w-6 h-6" />
@@ -232,20 +234,20 @@ export function MobilePageHeader({
           {/* Center section - Title */}
           <div className="flex-1 flex flex-col items-center justify-center px-4">
             <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
               className="text-white text-lg font-semibold text-center truncate max-w-full"
+              initial={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: 0.1 }}
             >
               {title}
             </motion.h1>
-            
+
             {subtitle && (
               <motion.p
-                initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
                 className="text-white/60 text-xs text-center truncate max-w-full"
+                initial={{ opacity: 0 }}
+                transition={{ delay: 0.2 }}
               >
                 {subtitle}
               </motion.p>
@@ -256,10 +258,10 @@ export function MobilePageHeader({
           <div className="flex items-center justify-end min-w-[44px]">
             {rightAction ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
                 className="flex items-center space-x-2"
+                initial={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: 0.2 }}
               >
                 {rightAction}
               </motion.div>

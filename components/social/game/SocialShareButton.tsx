@@ -2,17 +2,22 @@
 
 import React from "react";
 import { Button } from "@heroui/button";
-import { 
-  Share2, 
-  Twitter, 
-  Facebook, 
+import {
+  Twitter,
+  Facebook,
   MessageCircle,
   Copy,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
-type SocialPlatform = "twitter" | "facebook" | "discord" | "linkedin" | "reddit" | "copy";
+type SocialPlatform =
+  | "twitter"
+  | "facebook"
+  | "discord"
+  | "linkedin"
+  | "reddit"
+  | "copy";
 
 interface SocialShareData {
   url: string;
@@ -45,7 +50,7 @@ const PLATFORM_CONFIG = {
     baseUrl: "https://twitter.com/intent/tweet",
   },
   facebook: {
-    name: "Facebook", 
+    name: "Facebook",
     icon: Facebook,
     color: "#1877F2",
     baseUrl: "https://www.facebook.com/sharer/sharer.php",
@@ -91,12 +96,14 @@ export function SocialShareButton({
   // Generate share data from game if not provided
   const getShareData = (): SocialShareData => {
     if (shareData) return shareData;
-    
+
     if (game) {
       return {
         url: `${window.location.origin}/games/${game.id}`,
         title: game.title,
-        text: game.description || `Check out "${game.title}" - a game I created on GameGen!`,
+        text:
+          game.description ||
+          `Check out "${game.title}" - a game I created on GameGen!`,
         hashtags: game.tags || ["GameGen", "IndieGame", "GameDev"],
       };
     }
@@ -118,6 +125,7 @@ export function SocialShareButton({
           hashtags: data.hashtags?.join(",") || "",
           via: data.via || "GameGenApp",
         });
+
         return `${config.baseUrl}?${twitterParams}`;
 
       case "facebook":
@@ -125,6 +133,7 @@ export function SocialShareButton({
           u: data.url,
           quote: `${data.title}\n\n${data.text}`,
         });
+
         return `${config.baseUrl}?${facebookParams}`;
 
       case "linkedin":
@@ -133,6 +142,7 @@ export function SocialShareButton({
           title: data.title,
           summary: data.text || "",
         });
+
         return `${config.baseUrl}?${linkedinParams}`;
 
       case "reddit":
@@ -140,6 +150,7 @@ export function SocialShareButton({
           url: data.url,
           title: data.title,
         });
+
         return `${config.baseUrl}?${redditParams}`;
 
       default:
@@ -157,18 +168,21 @@ export function SocialShareButton({
       } catch (error) {
         toast.error("Failed to copy link");
       }
+
       return;
     }
 
     if (platform === "discord") {
       // For Discord, we'll copy a formatted message
       const discordMessage = `🎮 **${data.title}**\n\n${data.text}\n\n${data.url}`;
+
       try {
         await navigator.clipboard.writeText(discordMessage);
         toast.success("Discord message copied! Paste it in your server.");
       } catch (error) {
         toast.error("Failed to copy Discord message");
       }
+
       return;
     }
 
@@ -177,11 +191,12 @@ export function SocialShareButton({
     const popup = window.open(
       shareUrl,
       "share",
-      "width=600,height=400,scrollbars=yes,resizable=yes"
+      "width=600,height=400,scrollbars=yes,resizable=yes",
     );
 
     if (!popup) {
       toast.error("Popup blocked. Please allow popups for sharing.");
+
       return;
     }
 
@@ -192,14 +207,18 @@ export function SocialShareButton({
   };
 
   // Use native Web Share API if available and on mobile
-  const useNativeShare = typeof navigator !== "undefined" && 
-    navigator.share && 
-    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const useNativeShare =
+    typeof navigator !== "undefined" &&
+    navigator.share &&
+    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
 
   const handleNativeShare = async () => {
     if (!useNativeShare) return handleShare();
 
     const data = getShareData();
+
     try {
       await navigator.share({
         title: data.title,
@@ -214,18 +233,18 @@ export function SocialShareButton({
 
   return (
     <Button
-      variant={variant}
-      size={size}
-      color="default"
       className={`hover:scale-105 transition-transform ${className}`}
-      startContent={!isIconOnly ? <IconComponent size={18} /> : undefined}
+      color="default"
       isIconOnly={isIconOnly}
-      onPress={useNativeShare ? handleNativeShare : handleShare}
+      size={size}
+      startContent={!isIconOnly ? <IconComponent size={18} /> : undefined}
       style={{
         borderColor: config.color + "40",
         color: variant === "solid" ? "white" : config.color,
         backgroundColor: variant === "solid" ? config.color : "transparent",
       }}
+      variant={variant}
+      onPress={useNativeShare ? handleNativeShare : handleShare}
     >
       {isIconOnly ? <IconComponent size={18} /> : config.name}
     </Button>
@@ -235,29 +254,33 @@ export function SocialShareButton({
 // Static method for programmatic sharing
 SocialShareButton.share = (
   platform: SocialPlatform,
-  data: SocialShareData
+  data: SocialShareData,
 ): void => {
   const config = PLATFORM_CONFIG[platform];
-  
+
   if (platform === "copy") {
     navigator.clipboard.writeText(data.url).then(
       () => toast.success("Link copied to clipboard!"),
-      () => toast.error("Failed to copy link")
+      () => toast.error("Failed to copy link"),
     );
+
     return;
   }
 
   if (platform === "discord") {
     const message = `🎮 **${data.title}**\n\n${data.text}\n\n${data.url}`;
+
     navigator.clipboard.writeText(message).then(
       () => toast.success("Discord message copied!"),
-      () => toast.error("Failed to copy Discord message")
+      () => toast.error("Failed to copy Discord message"),
     );
+
     return;
   }
 
   // Build share URL based on platform
   let shareUrl = "";
+
   switch (platform) {
     case "twitter":
       const twitterParams = new URLSearchParams({
@@ -266,6 +289,7 @@ SocialShareButton.share = (
         hashtags: data.hashtags?.join(",") || "",
         via: data.via || "GameGenApp",
       });
+
       shareUrl = `${config.baseUrl}?${twitterParams}`;
       break;
 
@@ -274,6 +298,7 @@ SocialShareButton.share = (
         u: data.url,
         quote: `${data.title}\n\n${data.text}`,
       });
+
       shareUrl = `${config.baseUrl}?${facebookParams}`;
       break;
 
@@ -283,6 +308,7 @@ SocialShareButton.share = (
         title: data.title,
         summary: data.text || "",
       });
+
       shareUrl = `${config.baseUrl}?${linkedinParams}`;
       break;
 
@@ -291,12 +317,17 @@ SocialShareButton.share = (
         url: data.url,
         title: data.title,
       });
+
       shareUrl = `${config.baseUrl}?${redditParams}`;
       break;
   }
 
   if (shareUrl) {
-    window.open(shareUrl, "share", "width=600,height=400,scrollbars=yes,resizable=yes");
+    window.open(
+      shareUrl,
+      "share",
+      "width=600,height=400,scrollbars=yes,resizable=yes",
+    );
   }
 };
 

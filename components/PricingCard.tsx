@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Button } from "@heroui/button";
 import { Badge } from "@heroui/badge";
+
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { CheckIcon } from "@/components/icons";
@@ -26,32 +26,45 @@ interface PricingCardProps {
   className?: string;
 }
 
-export function PricingCard({ tier, isYearly, index, className }: PricingCardProps) {
+export function PricingCard({
+  tier,
+  isYearly,
+  index,
+  className,
+}: PricingCardProps) {
   const price = isYearly ? tier.price.yearly : tier.price.monthly;
-  const savings = isYearly && tier.price.monthly > 0 
-    ? Math.round(((tier.price.monthly * 12 - tier.price.yearly) / (tier.price.monthly * 12)) * 100)
-    : 0;
+  const savings =
+    isYearly && tier.price.monthly > 0
+      ? Math.round(
+          ((tier.price.monthly * 12 - tier.price.yearly) /
+            (tier.price.monthly * 12)) *
+            100,
+        )
+      : 0;
 
   return (
-    <div className={`animate-slide-in-from-bottom w-full max-w-md mx-auto ${className}`} style={{ animationDelay: `${index * 100}ms` }}>
+    <div
+      className={`animate-slide-in-from-bottom w-full max-w-md mx-auto ${className}`}
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       <GlassmorphicCard
-        variant={tier.popular ? "gradient" : "default"}
         blur="lg"
-        shadow={tier.popular ? "xl" : "md"}
         border={tier.popular ? "visible" : "subtle"}
         className={`relative h-full p-6 sm:p-8 lg:p-8 xl:p-10 w-full ${
-          tier.popular 
-            ? "ring-2 ring-primary/50 bg-gradient-to-br from-primary/10 to-purple-500/10" 
+          tier.popular
+            ? "ring-2 ring-primary/50 bg-gradient-to-br from-primary/10 to-purple-500/10"
             : ""
         }`}
+        shadow={tier.popular ? "xl" : "md"}
+        variant={tier.popular ? "gradient" : "default"}
       >
         {/* Popular Badge */}
         {tier.popular && (
           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
             <Badge
+              className="bg-gradient-to-r from-primary to-purple-500 text-white font-semibold px-4 py-1"
               color="primary"
               variant="flat"
-              className="bg-gradient-to-r from-primary to-purple-500 text-white font-semibold px-4 py-1"
             >
               Most Popular
             </Badge>
@@ -79,15 +92,18 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
                 /{isYearly ? "year" : "month"}
               </span>
             </div>
-            
+
             {/* Savings Badge */}
             {isYearly && savings > 0 && (
-              <div className="animate-zoom-in" style={{ animationDelay: `${500 + index * 100}ms` }}>
-                <Badge 
-                  color="success" 
-                  variant="flat"
-                  size="sm"
+              <div
+                className="animate-zoom-in"
+                style={{ animationDelay: `${500 + index * 100}ms` }}
+              >
+                <Badge
                   className="bg-green-500/20 text-green-400 border border-green-500/30"
+                  color="success"
+                  size="sm"
+                  variant="flat"
                 >
                   Save {savings}%
                 </Badge>
@@ -103,12 +119,17 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
           </div>
 
           {/* Features List */}
-          <div className="space-y-3 animate-fade-in" style={{ animationDelay: `${300 + index * 100}ms` }}>
+          <div
+            className="space-y-3 animate-fade-in"
+            style={{ animationDelay: `${300 + index * 100}ms` }}
+          >
             {tier.features.map((feature, featureIndex) => (
               <div
                 key={featureIndex}
                 className="flex items-start space-x-3 animate-slide-in-from-left"
-                style={{ animationDelay: `${400 + index * 100 + featureIndex * 50}ms` }}
+                style={{
+                  animationDelay: `${400 + index * 100 + featureIndex * 50}ms`,
+                }}
               >
                 <div className="flex-shrink-0 mt-0.5">
                   <CheckIcon className="w-5 h-5 text-green-400" />
@@ -123,15 +144,15 @@ export function PricingCard({ tier, isYearly, index, className }: PricingCardPro
           {/* CTA Button */}
           <div className="pt-4">
             <GlassmorphicButton
-              variant={tier.popular ? "glass-filled" : "glass-bordered"}
-              intensity={tier.popular ? "strong" : "medium"}
               blur="md"
               className={`w-full py-2.5 sm:py-3 font-semibold text-sm sm:text-base ${
-                tier.popular 
-                  ? "bg-gradient-to-r from-primary to-purple-500 text-white border-0" 
+                tier.popular
+                  ? "bg-gradient-to-r from-primary to-purple-500 text-white border-0"
                   : ""
               }`}
+              intensity={tier.popular ? "strong" : "medium"}
               size="lg"
+              variant={tier.popular ? "glass-filled" : "glass-bordered"}
             >
               {tier.cta}
             </GlassmorphicButton>

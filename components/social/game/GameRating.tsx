@@ -3,12 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { motion } from "framer-motion";
 import { Star, MessageSquare, ThumbsUp, Edit3 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
+import { createClient } from "@/lib/supabase/client";
 
 interface GameRatingProps {
   gameId: string;
@@ -87,7 +97,8 @@ export function GameRating({
     try {
       const { data, error } = await supabase
         .from("game_ratings")
-        .select(`
+        .select(
+          `
           id,
           user_id,
           rating,
@@ -99,17 +110,19 @@ export function GameRating({
             display_name,
             avatar_url
           )
-        `)
+        `,
+        )
         .eq("game_id", gameId)
         .not("review", "is", null)
         .order("created_at", { ascending: false })
         .limit(10);
 
       if (data && !error) {
-        const ratingsWithProfiles = data.map(rating => ({
+        const ratingsWithProfiles = data.map((rating) => ({
           ...rating,
           user_profile: rating.profiles,
         }));
+
         setRatings(ratingsWithProfiles as Rating[]);
       }
     } catch (error) {
@@ -120,6 +133,7 @@ export function GameRating({
   const submitRating = async () => {
     if (!userRating) {
       toast.error("Please select a rating");
+
       return;
     }
 
@@ -134,6 +148,7 @@ export function GameRating({
       };
 
       let result;
+
       if (hasUserRated) {
         // Update existing rating
         result = await supabase
@@ -143,9 +158,7 @@ export function GameRating({
           .eq("user_id", currentUserId);
       } else {
         // Insert new rating
-        result = await supabase
-          .from("game_ratings")
-          .insert(ratingData);
+        result = await supabase.from("game_ratings").insert(ratingData);
       }
 
       if (result.error) throw result.error;
@@ -157,9 +170,10 @@ export function GameRating({
         .eq("game_id", gameId);
 
       if (allRatings) {
-        const newAverage = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+        const newAverage =
+          allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
         const newCount = allRatings.length;
-        
+
         setAverageRating(newAverage);
         setRatingCount(newCount);
         setHasUserRated(true);
@@ -181,7 +195,7 @@ export function GameRating({
 
       setShowRatingModal(false);
       toast.success(hasUserRated ? "Rating updated!" : "Rating submitted!");
-      
+
       if (showReviews) {
         fetchRatings();
       }
@@ -194,10 +208,10 @@ export function GameRating({
   };
 
   const renderStars = (
-    rating: number, 
-    size: number = 20, 
+    rating: number,
+    size: number = 20,
     interactive: boolean = false,
-    showValue: boolean = false
+    showValue: boolean = false,
   ) => {
     return (
       <div className="flex items-center gap-1">
@@ -205,29 +219,30 @@ export function GameRating({
           {[1, 2, 3, 4, 5].map((star) => (
             <motion.button
               key={star}
+              className={`${interactive ? "cursor-pointer hover:scale-110" : "cursor-default"} transition-all`}
+              disabled={!interactive}
               type="button"
-              className={`${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-all`}
               whileHover={interactive ? { scale: 1.1 } : {}}
               whileTap={interactive ? { scale: 0.95 } : {}}
+              onClick={() => interactive && setUserRating(star)}
               onMouseEnter={() => interactive && setHoverRating(star)}
               onMouseLeave={() => interactive && setHoverRating(0)}
-              onClick={() => interactive && setUserRating(star)}
-              disabled={!interactive}
             >
               <Star
-                size={size}
                 className={`transition-colors ${
-                  star <= (interactive ? (hoverRating || userRating) : rating)
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-400'
+                  star <= (interactive ? hoverRating || userRating : rating)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-400"
                 }`}
+                size={size}
               />
             </motion.button>
           ))}
         </div>
         {showValue && (
           <span className="text-sm text-foreground/70 ml-2">
-            {rating.toFixed(1)} ({ratingCount} {ratingCount === 1 ? 'rating' : 'ratings'})
+            {rating.toFixed(1)} ({ratingCount}{" "}
+            {ratingCount === 1 ? "rating" : "ratings"})
           </span>
         )}
       </div>
@@ -239,11 +254,11 @@ export function GameRating({
       {renderStars(averageRating, 16, false, true)}
       <Button
         size="sm"
+        startContent={hasUserRated ? <Edit3 size={14} /> : <Star size={14} />}
         variant="flat"
         onPress={() => setShowRatingModal(true)}
-        startContent={hasUserRated ? <Edit3 size={14} /> : <Star size={14} />}
       >
-        {hasUserRated ? 'Update' : 'Rate'}
+        {hasUserRated ? "Update" : "Rate"}
       </Button>
     </div>
   );
@@ -252,13 +267,13 @@ export function GameRating({
     <div className="flex items-center justify-between">
       {renderStars(averageRating, 18, false, true)}
       <Button
-        size="sm"
-        variant={hasUserRated ? "flat" : "solid"}
         color={hasUserRated ? "default" : "primary"}
-        onPress={() => setShowRatingModal(true)}
+        size="sm"
         startContent={hasUserRated ? <Edit3 size={16} /> : <Star size={16} />}
+        variant={hasUserRated ? "flat" : "solid"}
+        onPress={() => setShowRatingModal(true)}
       >
-        {hasUserRated ? 'Update Rating' : 'Rate Game'}
+        {hasUserRated ? "Update Rating" : "Rate Game"}
       </Button>
     </div>
   );
@@ -274,17 +289,17 @@ export function GameRating({
             </span>
           </div>
           <p className="text-sm text-foreground/70">
-            Based on {ratingCount} {ratingCount === 1 ? 'rating' : 'ratings'}
+            Based on {ratingCount} {ratingCount === 1 ? "rating" : "ratings"}
           </p>
         </div>
-        
+
         <Button
-          variant={hasUserRated ? "flat" : "solid"}
           color={hasUserRated ? "secondary" : "primary"}
-          onPress={() => setShowRatingModal(true)}
           startContent={hasUserRated ? <Edit3 size={18} /> : <Star size={18} />}
+          variant={hasUserRated ? "flat" : "solid"}
+          onPress={() => setShowRatingModal(true)}
         >
-          {hasUserRated ? 'Update Rating' : 'Rate This Game'}
+          {hasUserRated ? "Update Rating" : "Rate This Game"}
         </Button>
       </div>
 
@@ -295,19 +310,28 @@ export function GameRating({
             <MessageSquare size={18} />
             Reviews
           </h4>
-          
+
           <div className="space-y-3">
             {ratings.map((rating) => (
-              <GlassmorphicCard key={rating.id} {...GameGenCardPresets.chatPanel}>
+              <GlassmorphicCard
+                key={rating.id}
+                {...GameGenCardPresets.chatPanel}
+              >
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm">
-                        {(rating.user_profile?.display_name || rating.user_profile?.username)?.charAt(0).toUpperCase()}
+                        {(
+                          rating.user_profile?.display_name ||
+                          rating.user_profile?.username
+                        )
+                          ?.charAt(0)
+                          .toUpperCase()}
                       </div>
                       <div>
                         <p className="font-medium">
-                          {rating.user_profile?.display_name || rating.user_profile?.username}
+                          {rating.user_profile?.display_name ||
+                            rating.user_profile?.username}
                         </p>
                         <p className="text-xs text-foreground/60">
                           {new Date(rating.created_at).toLocaleDateString()}
@@ -316,7 +340,7 @@ export function GameRating({
                     </div>
                     {renderStars(rating.rating, 16, false)}
                   </div>
-                  
+
                   {rating.review && (
                     <p className="text-foreground/80">{rating.review}</p>
                   )}
@@ -338,22 +362,22 @@ export function GameRating({
       </div>
 
       {/* Rating Modal */}
-      <Modal 
-        isOpen={showRatingModal} 
-        onClose={() => setShowRatingModal(false)}
+      <Modal
         backdrop="blur"
-        size="lg"
         classNames={{
           base: "bg-transparent",
           backdrop: "bg-black/50",
         }}
+        isOpen={showRatingModal}
+        size="lg"
+        onClose={() => setShowRatingModal(false)}
       >
         <ModalContent>
           <GlassmorphicCard {...GameGenCardPresets.modalCard}>
             <ModalHeader className="flex flex-col gap-1">
-              {hasUserRated ? 'Update Your Rating' : 'Rate This Game'}
+              {hasUserRated ? "Update Your Rating" : "Rate This Game"}
             </ModalHeader>
-            
+
             <ModalBody>
               <div className="space-y-6">
                 <div className="text-center">
@@ -363,9 +387,9 @@ export function GameRating({
                   {renderStars(userRating, 32, true)}
                   {userRating > 0 && (
                     <motion.p
-                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 text-sm text-foreground/60"
+                      initial={{ opacity: 0, y: 10 }}
                     >
                       {userRating === 1 && "Poor"}
                       {userRating === 2 && "Fair"}
@@ -377,34 +401,31 @@ export function GameRating({
                 </div>
 
                 <Textarea
-                  label="Write a review (optional)"
-                  placeholder="Share your thoughts about this game..."
-                  value={userReview}
-                  onValueChange={setUserReview}
-                  maxRows={4}
                   classNames={{
                     base: "max-w-full",
                     input: "resize-y min-h-[80px]",
                   }}
+                  label="Write a review (optional)"
+                  maxRows={4}
+                  placeholder="Share your thoughts about this game..."
+                  value={userReview}
+                  onValueChange={setUserReview}
                 />
               </div>
             </ModalBody>
-            
+
             <ModalFooter>
-              <Button 
-                variant="flat" 
-                onPress={() => setShowRatingModal(false)}
-              >
+              <Button variant="flat" onPress={() => setShowRatingModal(false)}>
                 Cancel
               </Button>
               <Button
                 color="primary"
-                onPress={submitRating}
-                isLoading={isLoading}
                 isDisabled={!userRating}
+                isLoading={isLoading}
                 startContent={!isLoading && <ThumbsUp size={16} />}
+                onPress={submitRating}
               >
-                {hasUserRated ? 'Update Rating' : 'Submit Rating'}
+                {hasUserRated ? "Update Rating" : "Submit Rating"}
               </Button>
             </ModalFooter>
           </GlassmorphicCard>

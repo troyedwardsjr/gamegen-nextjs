@@ -16,12 +16,13 @@ export interface PasswordValidationResult extends ValidationResult {
 export interface PasswordStrength {
   score: number;
   label: string;
-  color: 'danger' | 'warning' | 'success' | 'default';
+  color: "danger" | "warning" | "success" | "default";
 }
 
 // Email validation utility
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   return emailRegex.test(email);
 };
 
@@ -31,7 +32,9 @@ export const isValidPassword = (password: string): boolean => {
 };
 
 // Enhanced password validation with rules
-export const validatePassword = (password: string): PasswordValidationResult => {
+export const validatePassword = (
+  password: string,
+): PasswordValidationResult => {
   const errors: string[] = [];
   let isValid = true;
 
@@ -100,6 +103,7 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
 export const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
+
     return true;
   } catch {
     return false;
@@ -108,7 +112,8 @@ export const isValidUrl = (url: string): boolean => {
 
 // Phone number validation (US format)
 export const isValidPhoneNumber = (phone: string): boolean => {
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = phone.replace(/\D/g, "");
+
   return cleaned.length === 10;
 };
 
@@ -129,7 +134,9 @@ export const isValidUsername = (username: string): ValidationResult => {
   }
 
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-    errors.push("Username can only contain letters, numbers, hyphens, and underscores");
+    errors.push(
+      "Username can only contain letters, numbers, hyphens, and underscores",
+    );
   }
 
   if (/^[_-]/.test(username) || /[_-]$/.test(username)) {
@@ -149,7 +156,7 @@ export const validateFile = (
     maxSize?: number; // in bytes
     allowedTypes?: string[];
     minSize?: number;
-  } = {}
+  } = {},
 ): ValidationResult => {
   const { maxSize = 10 * 1024 * 1024, allowedTypes, minSize = 0 } = options;
   const errors: string[] = [];
@@ -163,7 +170,9 @@ export const validateFile = (
   }
 
   if (allowedTypes && !allowedTypes.includes(file.type)) {
-    errors.push(`File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`);
+    errors.push(
+      `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(", ")}`,
+    );
   }
 
   return {
@@ -173,24 +182,27 @@ export const validateFile = (
 };
 
 // Image file validation
-export const validateImage = (file: File, maxSize: number = 5 * 1024 * 1024): ValidationResult => {
+export const validateImage = (
+  file: File,
+  maxSize: number = 5 * 1024 * 1024,
+): ValidationResult => {
   return validateFile(file, {
     maxSize,
-    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    allowedTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
   });
 };
 
 // Game asset validation
 export const validateGameAsset = (file: File): ValidationResult => {
   const gameAssetTypes = [
-    'image/png',
-    'image/jpeg',
-    'image/gif',
-    'audio/wav',
-    'audio/mp3',
-    'audio/ogg',
-    'application/json', // for game data/configs
-    'text/plain', // for scripts or data files
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "audio/wav",
+    "audio/mp3",
+    "audio/ogg",
+    "application/json", // for game data/configs
+    "text/plain", // for scripts or data files
   ];
 
   return validateFile(file, {
@@ -227,7 +239,9 @@ export const validateGameName = (name: string): ValidationResult => {
 };
 
 // Game description validation
-export const validateGameDescription = (description: string): ValidationResult => {
+export const validateGameDescription = (
+  description: string,
+): ValidationResult => {
   const errors: string[] = [];
 
   if (description && description.length > 500) {
@@ -246,20 +260,28 @@ export const isValidHexColor = (color: string): boolean => {
 };
 
 // Pixel art dimension validation
-export const validatePixelArtDimensions = (width: number, height: number): ValidationResult => {
+export const validatePixelArtDimensions = (
+  width: number,
+  height: number,
+): ValidationResult => {
   const errors: string[] = [];
   const maxDimension = 1024; // Maximum pixels for performance
   const minDimension = 8; // Minimum for practical pixel art
 
   if (width < minDimension || height < minDimension) {
-    errors.push(`Dimensions must be at least ${minDimension}x${minDimension} pixels`);
+    errors.push(
+      `Dimensions must be at least ${minDimension}x${minDimension} pixels`,
+    );
   }
 
   if (width > maxDimension || height > maxDimension) {
-    errors.push(`Dimensions must be no more than ${maxDimension}x${maxDimension} pixels`);
+    errors.push(
+      `Dimensions must be no more than ${maxDimension}x${maxDimension} pixels`,
+    );
   }
 
-  if (width * height > 500000) { // 500k pixels max for performance
+  if (width * height > 500000) {
+    // 500k pixels max for performance
     errors.push("Total pixel count is too large for optimal performance");
   }
 
@@ -273,6 +295,7 @@ export const validatePixelArtDimensions = (width: number, height: number): Valid
 export const isValidJSON = (str: string): boolean => {
   try {
     JSON.parse(str);
+
     return true;
   } catch {
     return false;
@@ -281,28 +304,29 @@ export const isValidJSON = (str: string): boolean => {
 
 // Required field validation
 export const isRequired = (value: any): ValidationResult => {
-  const isEmpty = value === null || 
-                  value === undefined || 
-                  value === '' || 
-                  (Array.isArray(value) && value.length === 0) ||
-                  (typeof value === 'object' && Object.keys(value).length === 0);
+  const isEmpty =
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === "object" && Object.keys(value).length === 0);
 
   return {
     isValid: !isEmpty,
-    errors: isEmpty ? ['This field is required'] : [],
+    errors: isEmpty ? ["This field is required"] : [],
   };
 };
 
 // Range validation for numbers
 export const validateNumberRange = (
-  value: number, 
-  min?: number, 
-  max?: number, 
-  fieldName: string = 'Value'
+  value: number,
+  min?: number,
+  max?: number,
+  fieldName: string = "Value",
 ): ValidationResult => {
   const errors: string[] = [];
 
-  if (typeof value !== 'number' || isNaN(value)) {
+  if (typeof value !== "number" || isNaN(value)) {
     return { isValid: false, errors: [`${fieldName} must be a valid number`] };
   }
 

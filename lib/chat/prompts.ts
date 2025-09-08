@@ -9,34 +9,35 @@ export interface PromptTemplate {
   prompt: string;
   tags: string[];
   isPopular?: boolean;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   estimatedTime?: string;
   icon?: string;
 }
 
-export type GameCategory = 
-  | 'rpg' 
-  | 'platformer' 
-  | 'puzzle' 
-  | 'shooter' 
-  | 'strategy' 
-  | 'adventure' 
-  | 'simulation' 
-  | 'custom';
+export type GameCategory =
+  | "rpg"
+  | "platformer"
+  | "puzzle"
+  | "shooter"
+  | "strategy"
+  | "adventure"
+  | "simulation"
+  | "custom";
 
 // Built-in prompt templates
 export const GAME_PROMPT_TEMPLATES: PromptTemplate[] = [
   // RPG Templates
   {
-    id: 'fantasy-rpg-starter',
-    name: 'Fantasy RPG Adventure',
-    category: 'rpg',
-    description: 'Create a classic fantasy RPG with character classes, magic system, and epic quests',
-    icon: '⚔️',
-    difficulty: 'intermediate',
-    estimatedTime: '2-3 hours',
+    id: "fantasy-rpg-starter",
+    name: "Fantasy RPG Adventure",
+    category: "rpg",
+    description:
+      "Create a classic fantasy RPG with character classes, magic system, and epic quests",
+    icon: "⚔️",
+    difficulty: "intermediate",
+    estimatedTime: "2-3 hours",
     isPopular: true,
-    tags: ['fantasy', 'characters', 'magic', 'quests', 'combat'],
+    tags: ["fantasy", "characters", "magic", "quests", "combat"],
     prompt: `I want to create a fantasy RPG game with the following elements:
 
 🏰 **Setting & World:**
@@ -63,18 +64,19 @@ export const GAME_PROMPT_TEMPLATES: PromptTemplate[] = [
 - Environmental tiles and backgrounds
 - UI elements and interface design
 
-Please help me design the core systems and suggest pixel art concepts for this RPG!`
+Please help me design the core systems and suggest pixel art concepts for this RPG!`,
   },
 
   {
-    id: 'sci-fi-rpg-space',
-    name: 'Space RPG Explorer',
-    category: 'rpg',
-    description: 'Build a sci-fi RPG with space exploration, alien races, and futuristic technology',
-    icon: '🚀',
-    difficulty: 'advanced',
-    estimatedTime: '3-4 hours',
-    tags: ['sci-fi', 'space', 'aliens', 'technology', 'exploration'],
+    id: "sci-fi-rpg-space",
+    name: "Space RPG Explorer",
+    category: "rpg",
+    description:
+      "Build a sci-fi RPG with space exploration, alien races, and futuristic technology",
+    icon: "🚀",
+    difficulty: "advanced",
+    estimatedTime: "3-4 hours",
+    tags: ["sci-fi", "space", "aliens", "technology", "exploration"],
     prompt: `I want to create a sci-fi RPG set in space with these features:
 
 🌌 **Universe & Setting:**
@@ -101,20 +103,21 @@ Please help me design the core systems and suggest pixel art concepts for this R
 - Alien creature and ship designs
 - Planet surface and space station environments
 
-Help me design this space opera RPG with engaging mechanics and stunning visuals!`
+Help me design this space opera RPG with engaging mechanics and stunning visuals!`,
   },
 
   // Platformer Templates
   {
-    id: 'retro-platformer-classic',
-    name: 'Retro Platformer Adventure',
-    category: 'platformer',
-    description: 'Design a classic 2D platformer with tight controls and creative level design',
-    icon: '🏃‍♂️',
-    difficulty: 'beginner',
-    estimatedTime: '1-2 hours',
+    id: "retro-platformer-classic",
+    name: "Retro Platformer Adventure",
+    category: "platformer",
+    description:
+      "Design a classic 2D platformer with tight controls and creative level design",
+    icon: "🏃‍♂️",
+    difficulty: "beginner",
+    estimatedTime: "1-2 hours",
     isPopular: true,
-    tags: ['retro', 'jumping', 'enemies', 'powerups', 'collectibles'],
+    tags: ["retro", "jumping", "enemies", "powerups", "collectibles"],
     prompt: `I want to create a retro-style 2D platformer game:
 
 🎮 **Core Gameplay:**
@@ -141,18 +144,25 @@ Help me design this space opera RPG with engaging mechanics and stunning visuals
 - Smooth character animations
 - Parallax scrolling backgrounds
 
-Please help me design the movement system, level concepts, and pixel art style!`
+Please help me design the movement system, level concepts, and pixel art style!`,
   },
 
   {
-    id: 'metroidvania-exploration',
-    name: 'Metroidvania Explorer',
-    category: 'platformer',
-    description: 'Create an interconnected world with ability-gated progression and secrets',
-    icon: '🗺️',
-    difficulty: 'advanced',
-    estimatedTime: '4-5 hours',
-    tags: ['metroidvania', 'exploration', 'abilities', 'secrets', 'backtracking'],
+    id: "metroidvania-exploration",
+    name: "Metroidvania Explorer",
+    category: "platformer",
+    description:
+      "Create an interconnected world with ability-gated progression and secrets",
+    icon: "🗺️",
+    difficulty: "advanced",
+    estimatedTime: "4-5 hours",
+    tags: [
+      "metroidvania",
+      "exploration",
+      "abilities",
+      "secrets",
+      "backtracking",
+    ],
     prompt: `I want to create a Metroidvania-style exploration game:
 
 🗺️ **World Design:**
@@ -179,19 +189,19 @@ Please help me design the movement system, level concepts, and pixel art style!`
 - Atmospheric lighting and particle effects
 - Clear visual language for interactive elements
 
-Help me design the world layout, ability progression, and atmospheric pixel art!`
+Help me design the world layout, ability progression, and atmospheric pixel art!`,
   },
 
   // Puzzle Templates
   {
-    id: 'logic-puzzle-mechanics',
-    name: 'Logic Puzzle Master',
-    category: 'puzzle',
-    description: 'Build engaging logic puzzles with escalating complexity',
-    icon: '🧩',
-    difficulty: 'intermediate',
-    estimatedTime: '2-3 hours',
-    tags: ['logic', 'switches', 'mechanics', 'progression'],
+    id: "logic-puzzle-mechanics",
+    name: "Logic Puzzle Master",
+    category: "puzzle",
+    description: "Build engaging logic puzzles with escalating complexity",
+    icon: "🧩",
+    difficulty: "intermediate",
+    estimatedTime: "2-3 hours",
+    tags: ["logic", "switches", "mechanics", "progression"],
     prompt: `I want to create a logic puzzle game with these elements:
 
 🧠 **Core Mechanics:**
@@ -218,20 +228,20 @@ Help me design the world layout, ability progression, and atmospheric pixel art!
 - Satisfying animations for successful solutions
 - Calming color palette that aids concentration
 
-Help me design the core mechanics and create engaging puzzle concepts!`
+Help me design the core mechanics and create engaging puzzle concepts!`,
   },
 
   // Shooter Templates
   {
-    id: 'top-down-shooter-arcade',
-    name: 'Arcade Space Shooter',
-    category: 'shooter',
-    description: 'Create an intense top-down shooter with waves of enemies',
-    icon: '🛸',
-    difficulty: 'intermediate',
-    estimatedTime: '2-3 hours',
+    id: "top-down-shooter-arcade",
+    name: "Arcade Space Shooter",
+    category: "shooter",
+    description: "Create an intense top-down shooter with waves of enemies",
+    icon: "🛸",
+    difficulty: "intermediate",
+    estimatedTime: "2-3 hours",
     isPopular: true,
-    tags: ['arcade', 'waves', 'weapons', 'powerups', 'scoring'],
+    tags: ["arcade", "waves", "weapons", "powerups", "scoring"],
     prompt: `I want to create a top-down arcade shooter:
 
 🚀 **Player Ship & Controls:**
@@ -258,19 +268,19 @@ Help me design the core mechanics and create engaging puzzle concepts!`
 - Smooth enemy and player animations
 - Dynamic background with parallax scrolling
 
-Help me design the combat feel, enemy patterns, and explosive visual effects!`
+Help me design the combat feel, enemy patterns, and explosive visual effects!`,
   },
 
   // Strategy Templates
   {
-    id: 'tower-defense-strategy',
-    name: 'Tower Defense Commander',
-    category: 'strategy',
-    description: 'Build a strategic tower defense game with upgrade paths',
-    icon: '🏰',
-    difficulty: 'intermediate',
-    estimatedTime: '3-4 hours',
-    tags: ['tower-defense', 'strategy', 'upgrades', 'waves'],
+    id: "tower-defense-strategy",
+    name: "Tower Defense Commander",
+    category: "strategy",
+    description: "Build a strategic tower defense game with upgrade paths",
+    icon: "🏰",
+    difficulty: "intermediate",
+    estimatedTime: "3-4 hours",
+    tags: ["tower-defense", "strategy", "upgrades", "waves"],
     prompt: `I want to create a tower defense strategy game:
 
 🏗️ **Tower System:**
@@ -297,19 +307,19 @@ Help me design the combat feel, enemy patterns, and explosive visual effects!`
 - Pixel art towers with detailed animations
 - Satisfying visual feedback for successful defenses
 
-Help me design the tower mechanics, enemy balance, and strategic gameplay!`
+Help me design the tower mechanics, enemy balance, and strategic gameplay!`,
   },
 
   // Adventure Templates
   {
-    id: 'point-click-adventure',
-    name: 'Mystery Adventure Game',
-    category: 'adventure',
-    description: 'Create a story-driven adventure with puzzles and dialogue',
-    icon: '🕵️',
-    difficulty: 'advanced',
-    estimatedTime: '4-6 hours',
-    tags: ['story', 'dialogue', 'investigation', 'characters'],
+    id: "point-click-adventure",
+    name: "Mystery Adventure Game",
+    category: "adventure",
+    description: "Create a story-driven adventure with puzzles and dialogue",
+    icon: "🕵️",
+    difficulty: "advanced",
+    estimatedTime: "4-6 hours",
+    tags: ["story", "dialogue", "investigation", "characters"],
     prompt: `I want to create a point-and-click adventure game:
 
 📖 **Story & Setting:**
@@ -336,19 +346,20 @@ Help me design the tower mechanics, enemy balance, and strategic gameplay!`
 - Atmospheric lighting and mood setting
 - UI design that fits the game's theme
 
-Help me develop the story structure, character interactions, and puzzle design!`
+Help me develop the story structure, character interactions, and puzzle design!`,
   },
 
   // Simulation Templates
   {
-    id: 'life-simulation-cozy',
-    name: 'Cozy Life Simulator',
-    category: 'simulation',
-    description: 'Build a relaxing life simulation with character needs and relationships',
-    icon: '🏡',
-    difficulty: 'intermediate',
-    estimatedTime: '3-4 hours',
-    tags: ['life-sim', 'relationships', 'customization', 'peaceful'],
+    id: "life-simulation-cozy",
+    name: "Cozy Life Simulator",
+    category: "simulation",
+    description:
+      "Build a relaxing life simulation with character needs and relationships",
+    icon: "🏡",
+    difficulty: "intermediate",
+    estimatedTime: "3-4 hours",
+    tags: ["life-sim", "relationships", "customization", "peaceful"],
     prompt: `I want to create a cozy life simulation game:
 
 🏠 **Home & Environment:**
@@ -375,20 +386,21 @@ Help me develop the story structure, character interactions, and puzzle design!`
 - Charming character designs and animations
 - Relaxing background music and sound effects
 
-Help me design the relationship systems, daily activities, and cozy visual style!`
+Help me design the relationship systems, daily activities, and cozy visual style!`,
   },
 
   // Custom/Specialized Templates
   {
-    id: 'game-jam-rapid-prototype',
-    name: 'Game Jam Quick Start',
-    category: 'custom',
-    description: 'Rapid prototyping template for game jams with tight deadlines',
-    icon: '⚡',
-    difficulty: 'beginner',
-    estimatedTime: '30 minutes - 2 hours',
+    id: "game-jam-rapid-prototype",
+    name: "Game Jam Quick Start",
+    category: "custom",
+    description:
+      "Rapid prototyping template for game jams with tight deadlines",
+    icon: "⚡",
+    difficulty: "beginner",
+    estimatedTime: "30 minutes - 2 hours",
     isPopular: true,
-    tags: ['game-jam', 'prototype', 'minimal', 'scope'],
+    tags: ["game-jam", "prototype", "minimal", "scope"],
     prompt: `I'm participating in a game jam and need help creating a game quickly:
 
 ⏰ **Time Constraints:**
@@ -415,18 +427,19 @@ Help me design the relationship systems, daily activities, and cozy visual style
 - Polish opportunities in remaining time
 - Submission and presentation tips
 
-Help me brainstorm and scope a realistic game concept I can complete on time!`
+Help me brainstorm and scope a realistic game concept I can complete on time!`,
   },
 
   {
-    id: 'educational-game-design',
-    name: 'Educational Game Designer',
-    category: 'custom',
-    description: 'Create engaging educational games that teach while entertaining',
-    icon: '🎓',
-    difficulty: 'advanced',
-    estimatedTime: '4-6 hours',
-    tags: ['educational', 'learning', 'engagement', 'assessment'],
+    id: "educational-game-design",
+    name: "Educational Game Designer",
+    category: "custom",
+    description:
+      "Create engaging educational games that teach while entertaining",
+    icon: "🎓",
+    difficulty: "advanced",
+    estimatedTime: "4-6 hours",
+    tags: ["educational", "learning", "engagement", "assessment"],
     prompt: `I want to create an educational game that teaches while entertaining:
 
 📚 **Learning Objectives:**
@@ -453,18 +466,18 @@ Help me brainstorm and scope a realistic game concept I can complete on time!`
 - Support for different learning styles
 - Parental/teacher dashboard features
 
-Help me design educational mechanics that make learning genuinely fun and effective!`
+Help me design educational mechanics that make learning genuinely fun and effective!`,
   },
 
   {
-    id: 'multiplayer-concept',
-    name: 'Multiplayer Game Architect',
-    category: 'custom',
-    description: 'Design multiplayer mechanics and social features',
-    icon: '👥',
-    difficulty: 'advanced',
-    estimatedTime: '5-8 hours',
-    tags: ['multiplayer', 'social', 'cooperation', 'competition'],
+    id: "multiplayer-concept",
+    name: "Multiplayer Game Architect",
+    category: "custom",
+    description: "Design multiplayer mechanics and social features",
+    icon: "👥",
+    difficulty: "advanced",
+    estimatedTime: "5-8 hours",
+    tags: ["multiplayer", "social", "cooperation", "competition"],
     prompt: `I want to design a multiplayer game with social features:
 
 🌐 **Multiplayer Scope:**
@@ -491,105 +504,126 @@ Help me design educational mechanics that make learning genuinely fun and effect
 - Server architecture and scaling
 - Security and player data protection
 
-Help me design multiplayer mechanics that create positive social experiences!`
-  }
+Help me design multiplayer mechanics that create positive social experiences!`,
+  },
 ];
 
 // Categories with metadata
 export const GAME_CATEGORIES = [
   {
-    id: 'rpg' as GameCategory,
-    name: 'RPG',
-    icon: '⚔️',
-    description: 'Role-playing games with character progression',
-    color: 'from-purple-500 to-blue-600'
+    id: "rpg" as GameCategory,
+    name: "RPG",
+    icon: "⚔️",
+    description: "Role-playing games with character progression",
+    color: "from-purple-500 to-blue-600",
   },
   {
-    id: 'platformer' as GameCategory,
-    name: 'Platformer',
-    icon: '🏃‍♂️',
-    description: 'Jump and run adventure games',
-    color: 'from-green-500 to-teal-600'
+    id: "platformer" as GameCategory,
+    name: "Platformer",
+    icon: "🏃‍♂️",
+    description: "Jump and run adventure games",
+    color: "from-green-500 to-teal-600",
   },
   {
-    id: 'puzzle' as GameCategory,
-    name: 'Puzzle',
-    icon: '🧩',
-    description: 'Logic and brain-teasing challenges',
-    color: 'from-yellow-500 to-orange-600'
+    id: "puzzle" as GameCategory,
+    name: "Puzzle",
+    icon: "🧩",
+    description: "Logic and brain-teasing challenges",
+    color: "from-yellow-500 to-orange-600",
   },
   {
-    id: 'shooter' as GameCategory,
-    name: 'Shooter',
-    icon: '🎯',
-    description: 'Action-packed combat games',
-    color: 'from-red-500 to-pink-600'
+    id: "shooter" as GameCategory,
+    name: "Shooter",
+    icon: "🎯",
+    description: "Action-packed combat games",
+    color: "from-red-500 to-pink-600",
   },
   {
-    id: 'strategy' as GameCategory,
-    name: 'Strategy',
-    icon: '♟️',
-    description: 'Tactical and strategic gameplay',
-    color: 'from-indigo-500 to-purple-600'
+    id: "strategy" as GameCategory,
+    name: "Strategy",
+    icon: "♟️",
+    description: "Tactical and strategic gameplay",
+    color: "from-indigo-500 to-purple-600",
   },
   {
-    id: 'adventure' as GameCategory,
-    name: 'Adventure',
-    icon: '🗺️',
-    description: 'Story-driven exploration games',
-    color: 'from-cyan-500 to-blue-600'
+    id: "adventure" as GameCategory,
+    name: "Adventure",
+    icon: "🗺️",
+    description: "Story-driven exploration games",
+    color: "from-cyan-500 to-blue-600",
   },
   {
-    id: 'simulation' as GameCategory,
-    name: 'Simulation',
-    icon: '🏡',
-    description: 'Life and world simulation games',
-    color: 'from-emerald-500 to-green-600'
+    id: "simulation" as GameCategory,
+    name: "Simulation",
+    icon: "🏡",
+    description: "Life and world simulation games",
+    color: "from-emerald-500 to-green-600",
   },
   {
-    id: 'custom' as GameCategory,
-    name: 'Custom',
-    icon: '⚡',
-    description: 'Specialized and unique concepts',
-    color: 'from-gray-500 to-slate-600'
-  }
+    id: "custom" as GameCategory,
+    name: "Custom",
+    icon: "⚡",
+    description: "Specialized and unique concepts",
+    color: "from-gray-500 to-slate-600",
+  },
 ] as const;
 
 // Utility functions
 export function getPromptsByCategory(category: GameCategory): PromptTemplate[] {
-  return GAME_PROMPT_TEMPLATES.filter(template => template.category === category);
+  return GAME_PROMPT_TEMPLATES.filter(
+    (template) => template.category === category,
+  );
 }
 
 export function getPopularPrompts(): PromptTemplate[] {
-  return GAME_PROMPT_TEMPLATES.filter(template => template.isPopular);
+  return GAME_PROMPT_TEMPLATES.filter((template) => template.isPopular);
 }
 
 export function searchPrompts(query: string): PromptTemplate[] {
   const searchTerm = query.toLowerCase();
-  return GAME_PROMPT_TEMPLATES.filter(template => 
-    template.name.toLowerCase().includes(searchTerm) ||
-    template.description.toLowerCase().includes(searchTerm) ||
-    template.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
-    template.prompt.toLowerCase().includes(searchTerm)
+
+  return GAME_PROMPT_TEMPLATES.filter(
+    (template) =>
+      template.name.toLowerCase().includes(searchTerm) ||
+      template.description.toLowerCase().includes(searchTerm) ||
+      template.tags.some((tag) => tag.toLowerCase().includes(searchTerm)) ||
+      template.prompt.toLowerCase().includes(searchTerm),
   );
 }
 
 export function getPromptById(id: string): PromptTemplate | undefined {
-  return GAME_PROMPT_TEMPLATES.find(template => template.id === id);
+  return GAME_PROMPT_TEMPLATES.find((template) => template.id === id);
 }
 
 export function getCategoryInfo(category: GameCategory) {
-  return GAME_CATEGORIES.find(cat => cat.id === category);
+  return GAME_CATEGORIES.find((cat) => cat.id === category);
 }
 
 // Quick start suggestions based on experience level
 export const EXPERIENCE_BASED_SUGGESTIONS = {
-  beginner: ['retro-platformer-classic', 'logic-puzzle-mechanics', 'game-jam-rapid-prototype'],
-  intermediate: ['fantasy-rpg-starter', 'top-down-shooter-arcade', 'tower-defense-strategy'],
-  advanced: ['sci-fi-rpg-space', 'metroidvania-exploration', 'multiplayer-concept']
+  beginner: [
+    "retro-platformer-classic",
+    "logic-puzzle-mechanics",
+    "game-jam-rapid-prototype",
+  ],
+  intermediate: [
+    "fantasy-rpg-starter",
+    "top-down-shooter-arcade",
+    "tower-defense-strategy",
+  ],
+  advanced: [
+    "sci-fi-rpg-space",
+    "metroidvania-exploration",
+    "multiplayer-concept",
+  ],
 } as const;
 
-export function getPromptsByExperience(level: 'beginner' | 'intermediate' | 'advanced'): PromptTemplate[] {
+export function getPromptsByExperience(
+  level: "beginner" | "intermediate" | "advanced",
+): PromptTemplate[] {
   const suggestionIds = EXPERIENCE_BASED_SUGGESTIONS[level];
-  return suggestionIds.map(id => getPromptById(id)).filter(Boolean) as PromptTemplate[];
+
+  return suggestionIds
+    .map((id) => getPromptById(id))
+    .filter(Boolean) as PromptTemplate[];
 }

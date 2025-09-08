@@ -1,15 +1,22 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Switch } from '@heroui/switch';
-import { Badge } from '@heroui/badge';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Spinner } from '@heroui/spinner';
-import { useLLMProvider } from '@/lib/hooks/use-llm-provider';
-import { ProviderConfig, ProviderHealthStatus } from '@/lib/llm/types';
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Switch } from "@heroui/switch";
+import { Badge } from "@heroui/badge";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Spinner } from "@heroui/spinner";
+
+import { useLLMProvider } from "@/lib/hooks/use-llm-provider";
+import { ProviderConfig, ProviderHealthStatus } from "@/lib/llm/types";
 
 export default function LLMProvidersPage() {
   const {
@@ -23,33 +30,38 @@ export default function LLMProvidersPage() {
     getProviderHealth,
     getProviderMetrics,
     loading,
-    error
+    error,
   } = useLLMProvider();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(null);
+  const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
+    null,
+  );
   const [formData, setFormData] = useState<Partial<ProviderConfig>>({});
   const [testResults, setTestResults] = useState<Record<string, any>>({});
-  const [healthStatuses, setHealthStatuses] = useState<Record<string, ProviderHealthStatus>>({});
+  const [healthStatuses, setHealthStatuses] = useState<
+    Record<string, ProviderHealthStatus>
+  >({});
 
   useEffect(() => {
     // Fetch health status for all providers
     providers.forEach(async (provider) => {
       const health = await getProviderHealth(provider.id);
-      setHealthStatuses(prev => ({ ...prev, [provider.id]: health }));
+
+      setHealthStatuses((prev) => ({ ...prev, [provider.id]: health }));
     });
   }, [providers, getProviderHealth]);
 
   const handleAddProvider = () => {
     setEditingProvider(null);
     setFormData({
-      id: '',
-      name: '',
-      type: 'claude',
+      id: "",
+      name: "",
+      type: "claude",
       config: {
-        api_key: '',
-        endpoint: '',
-        model: 'claude-3-5-sonnet-20241022',
+        api_key: "",
+        endpoint: "",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 4000,
         temperature: 0.7,
         timeout: 30000,
@@ -57,15 +69,15 @@ export default function LLMProvidersPage() {
           retries: 3,
           minTimeout: 1000,
           maxTimeout: 10000,
-          factor: 2
+          factor: 2,
         },
         rate_limit: {
           requests_per_minute: 20,
-          tokens_per_minute: 40000
-        }
+          tokens_per_minute: 40000,
+        },
       },
       priority: 1,
-      enabled: true
+      enabled: true,
     });
     setIsModalOpen(true);
   };
@@ -87,20 +99,21 @@ export default function LLMProvidersPage() {
 
   const handleTestProvider = async (providerId: string) => {
     const result = await testProvider(providerId);
-    setTestResults(prev => ({ ...prev, [providerId]: result }));
+
+    setTestResults((prev) => ({ ...prev, [providerId]: result }));
   };
 
   const getHealthBadge = (health?: ProviderHealthStatus) => {
     if (!health) return <Badge color="default">Unknown</Badge>;
-    
-    const colors: Record<string, 'success' | 'warning' | 'danger'> = {
-      healthy: 'success',
-      degraded: 'warning',
-      unhealthy: 'danger'
+
+    const colors: Record<string, "success" | "warning" | "danger"> = {
+      healthy: "success",
+      degraded: "warning",
+      unhealthy: "danger",
     };
 
     return (
-      <Badge color={colors[health.status] || 'default'}>
+      <Badge color={colors[health.status] || "default"}>
         {health.status.toUpperCase()}
       </Badge>
     );
@@ -144,16 +157,18 @@ export default function LLMProvidersPage() {
                 </div>
                 {getHealthBadge(healthStatuses[provider.id])}
                 {activeProvider?.id === provider.id && (
-                  <Badge color="primary" variant="flat">Active</Badge>
+                  <Badge color="primary" variant="flat">
+                    Active
+                  </Badge>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   isSelected={provider.enabled}
-                  onValueChange={(value) => 
+                  size="sm"
+                  onValueChange={(value) =>
                     updateProvider(provider.id, { ...provider, enabled: value })
                   }
-                  size="sm"
                 />
                 <Button
                   size="sm"
@@ -171,8 +186,8 @@ export default function LLMProvidersPage() {
                 </Button>
                 {activeProvider?.id !== provider.id && (
                   <Button
-                    size="sm"
                     color="primary"
+                    size="sm"
                     variant="flat"
                     onPress={() => setActiveProvider(provider.id)}
                   >
@@ -180,8 +195,8 @@ export default function LLMProvidersPage() {
                   </Button>
                 )}
                 <Button
-                  size="sm"
                   color="danger"
+                  size="sm"
                   variant="flat"
                   onPress={() => removeProvider(provider.id)}
                 >
@@ -193,7 +208,9 @@ export default function LLMProvidersPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-small text-default-500">Endpoint</p>
-                  <p className="text-small font-mono">{provider.config.endpoint}</p>
+                  <p className="text-small font-mono">
+                    {provider.config.endpoint}
+                  </p>
                 </div>
                 <div>
                   <p className="text-small text-default-500">Max Tokens</p>
@@ -213,20 +230,33 @@ export default function LLMProvidersPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
                   <div>
                     <p className="text-small text-default-500">Response Time</p>
-                    <p className="text-small">{healthStatuses[provider.id].response_time}ms</p>
+                    <p className="text-small">
+                      {healthStatuses[provider.id].response_time}ms
+                    </p>
                   </div>
                   <div>
                     <p className="text-small text-default-500">Success Rate</p>
-                    <p className="text-small">{(healthStatuses[provider.id].success_rate * 100).toFixed(2)}%</p>
+                    <p className="text-small">
+                      {(healthStatuses[provider.id].success_rate * 100).toFixed(
+                        2,
+                      )}
+                      %
+                    </p>
                   </div>
                   <div>
-                    <p className="text-small text-default-500">Total Requests</p>
-                    <p className="text-small">{healthStatuses[provider.id].total_requests}</p>
+                    <p className="text-small text-default-500">
+                      Total Requests
+                    </p>
+                    <p className="text-small">
+                      {healthStatuses[provider.id].total_requests}
+                    </p>
                   </div>
                   <div>
                     <p className="text-small text-default-500">Last Check</p>
                     <p className="text-small">
-                      {new Date(healthStatuses[provider.id].last_check).toLocaleTimeString()}
+                      {new Date(
+                        healthStatuses[provider.id].last_check,
+                      ).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
@@ -245,121 +275,153 @@ export default function LLMProvidersPage() {
         ))}
       </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+      <Modal
+        isOpen={isModalOpen}
         size="2xl"
+        onClose={() => setIsModalOpen(false)}
       >
         <ModalContent>
           <ModalHeader>
-            {editingProvider ? 'Edit Provider' : 'Add New Provider'}
+            {editingProvider ? "Edit Provider" : "Add New Provider"}
           </ModalHeader>
           <ModalBody className="space-y-4">
             <Input
-              label="Provider ID"
-              value={formData.id || ''}
-              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
               isDisabled={!!editingProvider}
+              label="Provider ID"
+              value={formData.id || ""}
+              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
             />
             <Input
               label="Provider Name"
-              value={formData.name || ''}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.name || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="API Key"
                 type="password"
-                value={formData.config?.api_key || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: { ...formData.config!, api_key: e.target.value }
-                })}
+                value={formData.config?.api_key || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: { ...formData.config!, api_key: e.target.value },
+                  })
+                }
               />
               <Input
                 label="Endpoint"
-                value={formData.config?.endpoint || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: { ...formData.config!, endpoint: e.target.value }
-                })}
+                value={formData.config?.endpoint || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: { ...formData.config!, endpoint: e.target.value },
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <Input
                 label="Model"
-                value={formData.config?.model || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: { ...formData.config!, model: e.target.value }
-                })}
+                value={formData.config?.model || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: { ...formData.config!, model: e.target.value },
+                  })
+                }
               />
               <Input
                 label="Max Tokens"
                 type="number"
-                value={formData.config?.max_tokens?.toString() || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: { ...formData.config!, max_tokens: parseInt(e.target.value) }
-                })}
+                value={formData.config?.max_tokens?.toString() || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: {
+                      ...formData.config!,
+                      max_tokens: parseInt(e.target.value),
+                    },
+                  })
+                }
               />
               <Input
                 label="Temperature"
-                type="number"
                 step="0.1"
-                value={formData.config?.temperature?.toString() || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: { ...formData.config!, temperature: parseFloat(e.target.value) }
-                })}
+                type="number"
+                value={formData.config?.temperature?.toString() || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: {
+                      ...formData.config!,
+                      temperature: parseFloat(e.target.value),
+                    },
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Requests per Minute"
                 type="number"
-                value={formData.config?.rate_limit?.requests_per_minute?.toString() || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: {
-                    ...formData.config!,
-                    rate_limit: {
-                      ...formData.config!.rate_limit!,
-                      requests_per_minute: parseInt(e.target.value)
-                    }
-                  }
-                })}
+                value={
+                  formData.config?.rate_limit?.requests_per_minute?.toString() ||
+                  ""
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: {
+                      ...formData.config!,
+                      rate_limit: {
+                        ...formData.config!.rate_limit!,
+                        requests_per_minute: parseInt(e.target.value),
+                      },
+                    },
+                  })
+                }
               />
               <Input
                 label="Tokens per Minute"
                 type="number"
-                value={formData.config?.rate_limit?.tokens_per_minute?.toString() || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  config: {
-                    ...formData.config!,
-                    rate_limit: {
-                      ...formData.config!.rate_limit!,
-                      tokens_per_minute: parseInt(e.target.value)
-                    }
-                  }
-                })}
+                value={
+                  formData.config?.rate_limit?.tokens_per_minute?.toString() ||
+                  ""
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    config: {
+                      ...formData.config!,
+                      rate_limit: {
+                        ...formData.config!.rate_limit!,
+                        tokens_per_minute: parseInt(e.target.value),
+                      },
+                    },
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Priority"
                 type="number"
-                value={formData.priority?.toString() || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  priority: parseInt(e.target.value)
-                })}
+                value={formData.priority?.toString() || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    priority: parseInt(e.target.value),
+                  })
+                }
               />
               <div className="flex items-center gap-2">
                 <Switch
                   isSelected={formData.enabled}
-                  onValueChange={(value) => setFormData({ ...formData, enabled: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, enabled: value })
+                  }
                 />
                 <span>Enabled</span>
               </div>
@@ -370,7 +432,7 @@ export default function LLMProvidersPage() {
               Cancel
             </Button>
             <Button color="primary" onPress={handleSaveProvider}>
-              {editingProvider ? 'Update' : 'Add'} Provider
+              {editingProvider ? "Update" : "Add"} Provider
             </Button>
           </ModalFooter>
         </ModalContent>

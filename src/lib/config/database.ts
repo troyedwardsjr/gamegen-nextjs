@@ -23,18 +23,14 @@ export interface Database {
           display_name: string | null;
           avatar_url: string | null;
           bio: string | null;
-          use_case: 
+          use_case:
             | "indie_developer"
-            | "student" 
+            | "student"
             | "hobbyist"
             | "game_studio"
             | "educator"
             | "streamer";
-          subscription_tier:
-            | "free"
-            | "pro"
-            | "max"
-            | null;
+          subscription_tier: "free" | "pro" | "max" | null;
           subscription_status: string | null;
           subscription_period_start: string | null;
           subscription_period_end: string | null;
@@ -64,18 +60,14 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
-          use_case?: 
+          use_case?:
             | "indie_developer"
-            | "student" 
+            | "student"
             | "hobbyist"
             | "game_studio"
             | "educator"
             | "streamer";
-          subscription_tier?:
-            | "free"
-            | "pro"
-            | "max"
-            | null;
+          subscription_tier?: "free" | "pro" | "max" | null;
           subscription_status?: string | null;
           subscription_period_start?: string | null;
           subscription_period_end?: string | null;
@@ -105,18 +97,14 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
-          use_case?: 
+          use_case?:
             | "indie_developer"
-            | "student" 
+            | "student"
             | "hobbyist"
             | "game_studio"
             | "educator"
             | "streamer";
-          subscription_tier?:
-            | "free"
-            | "pro"
-            | "max"
-            | null;
+          subscription_tier?: "free" | "pro" | "max" | null;
           subscription_status?: string | null;
           subscription_period_start?: string | null;
           subscription_period_end?: string | null;
@@ -329,7 +317,7 @@ export interface Database {
           project_id: string | null;
           name: string;
           description: string | null;
-          asset_type: 
+          asset_type:
             | "sprite"
             | "tileset"
             | "background"
@@ -350,7 +338,13 @@ export interface Database {
           download_count: number | null;
           like_count: number | null;
           thumbnail_url: string | null;
-          license_type: "public_domain" | "cc0" | "cc_by" | "custom" | "proprietary" | null;
+          license_type:
+            | "public_domain"
+            | "cc0"
+            | "cc_by"
+            | "custom"
+            | "proprietary"
+            | null;
           attribution_required: boolean | null;
           attribution_text: string | null;
           price: number | null; // Credits cost for premium assets
@@ -365,7 +359,7 @@ export interface Database {
           project_id?: string | null;
           name: string;
           description?: string | null;
-          asset_type: 
+          asset_type:
             | "sprite"
             | "tileset"
             | "background"
@@ -386,7 +380,13 @@ export interface Database {
           download_count?: number | null;
           like_count?: number | null;
           thumbnail_url?: string | null;
-          license_type?: "public_domain" | "cc0" | "cc_by" | "custom" | "proprietary" | null;
+          license_type?:
+            | "public_domain"
+            | "cc0"
+            | "cc_by"
+            | "custom"
+            | "proprietary"
+            | null;
           attribution_required?: boolean | null;
           attribution_text?: string | null;
           price?: number | null;
@@ -401,7 +401,7 @@ export interface Database {
           project_id?: string | null;
           name?: string;
           description?: string | null;
-          asset_type?: 
+          asset_type?:
             | "sprite"
             | "tileset"
             | "background"
@@ -422,7 +422,13 @@ export interface Database {
           download_count?: number | null;
           like_count?: number | null;
           thumbnail_url?: string | null;
-          license_type?: "public_domain" | "cc0" | "cc_by" | "custom" | "proprietary" | null;
+          license_type?:
+            | "public_domain"
+            | "cc0"
+            | "cc_by"
+            | "custom"
+            | "proprietary"
+            | null;
           attribution_required?: boolean | null;
           attribution_text?: string | null;
           price?: number | null;
@@ -454,7 +460,12 @@ export interface Database {
           user_id: string;
           project_id: string | null;
           title: string | null;
-          context_type: "game_creation" | "asset_generation" | "code_help" | "general" | null;
+          context_type:
+            | "game_creation"
+            | "asset_generation"
+            | "code_help"
+            | "general"
+            | null;
           model_config: Json | null;
           total_messages: number | null;
           total_tokens_used: number | null;
@@ -469,7 +480,12 @@ export interface Database {
           user_id: string;
           project_id?: string | null;
           title?: string | null;
-          context_type?: "game_creation" | "asset_generation" | "code_help" | "general" | null;
+          context_type?:
+            | "game_creation"
+            | "asset_generation"
+            | "code_help"
+            | "general"
+            | null;
           model_config?: Json | null;
           total_messages?: number | null;
           total_tokens_used?: number | null;
@@ -484,7 +500,12 @@ export interface Database {
           user_id?: string;
           project_id?: string | null;
           title?: string | null;
-          context_type?: "game_creation" | "asset_generation" | "code_help" | "general" | null;
+          context_type?:
+            | "game_creation"
+            | "asset_generation"
+            | "code_help"
+            | "general"
+            | null;
           model_config?: Json | null;
           total_messages?: number | null;
           total_tokens_used?: number | null;
@@ -561,10 +582,10 @@ export interface Database {
           user_id: string | null;
           session_id: string | null;
           event_type: string;
-          event_category: 
+          event_category:
             | "authentication"
             | "game_creation"
-            | "asset_management" 
+            | "asset_management"
             | "ai_interaction"
             | "billing"
             | "social"
@@ -581,10 +602,10 @@ export interface Database {
           user_id?: string | null;
           session_id?: string | null;
           event_type: string;
-          event_category: 
+          event_category:
             | "authentication"
             | "game_creation"
-            | "asset_management" 
+            | "asset_management"
             | "ai_interaction"
             | "billing"
             | "social"
@@ -601,10 +622,10 @@ export interface Database {
           user_id?: string | null;
           session_id?: string | null;
           event_type?: string;
-          event_category?: 
+          event_category?:
             | "authentication"
             | "game_creation"
-            | "asset_management" 
+            | "asset_management"
             | "ai_interaction"
             | "billing"
             | "social"
@@ -636,7 +657,7 @@ export interface Database {
     Enums: {
       user_use_case:
         | "indie_developer"
-        | "student" 
+        | "student"
         | "hobbyist"
         | "game_studio"
         | "educator"
@@ -653,15 +674,30 @@ export interface Database {
         | "strategy"
         | "simulation"
         | "other";
-      game_status: "draft" | "in_development" | "testing" | "published" | "archived" | "deleted";
-      asset_type: "sprite" | "tileset" | "background" | "audio" | "script" | "animation" | "font" | "shader" | "other";
+      game_status:
+        | "draft"
+        | "in_development"
+        | "testing"
+        | "published"
+        | "archived"
+        | "deleted";
+      asset_type:
+        | "sprite"
+        | "tileset"
+        | "background"
+        | "audio"
+        | "script"
+        | "animation"
+        | "font"
+        | "shader"
+        | "other";
       visibility: "private" | "unlisted" | "public";
       build_status: "pending" | "building" | "success" | "failed";
       chat_role: "user" | "assistant" | "system";
       event_category:
         | "authentication"
         | "game_creation"
-        | "asset_management" 
+        | "asset_management"
         | "ai_interaction"
         | "billing"
         | "social"
@@ -780,19 +816,19 @@ export const DB_CONFIG = {
   maxConnections: 20,
   idleTimeoutSeconds: 60,
   realtimeEnabled: true,
-  logQueries: process.env.NODE_ENV === 'development',
+  logQueries: process.env.NODE_ENV === "development",
   tables: {
-    userProfiles: 'user_profiles',
-    gameProjects: 'game_projects', 
-    gameAssets: 'game_assets',
-    chatSessions: 'chat_sessions',
-    chatMessages: 'chat_messages',
-    usageAnalytics: 'usage_analytics',
+    userProfiles: "user_profiles",
+    gameProjects: "game_projects",
+    gameAssets: "game_assets",
+    chatSessions: "chat_sessions",
+    chatMessages: "chat_messages",
+    usageAnalytics: "usage_analytics",
   },
   buckets: {
-    gameAssets: 'game-assets',
-    userAvatars: 'user-avatars',
-    gameScreenshots: 'game-screenshots',
-    gameThumbnails: 'game-thumbnails',
+    gameAssets: "game-assets",
+    userAvatars: "user-avatars",
+    gameScreenshots: "game-screenshots",
+    gameThumbnails: "game-thumbnails",
   },
 } as const;

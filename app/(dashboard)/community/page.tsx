@@ -4,19 +4,22 @@ import React, { useState } from "react";
 import { Button } from "@heroui/button";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Chip } from "@heroui/chip";
-import { Card, CardBody } from "@heroui/card";
 import { motion } from "framer-motion";
-import { 
-  Users, 
-  Trophy, 
-  Target, 
+import {
+  Users,
+  Trophy,
+  Target,
   TrendingUp,
   Star,
   Play,
   Heart,
-  Crown
+  Crown,
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 
 export default function CommunityPageMinimal() {
   const [activeTab, setActiveTab] = useState("discover");
@@ -25,31 +28,32 @@ export default function CommunityPageMinimal() {
   const getConsistentValue = (seed: number, max: number) => {
     // Simple hash-like function that produces consistent values
     const hash = ((seed * 9301 + 49297) % 233280) / 233280;
+
     return Math.floor(hash * max);
   };
 
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { 
-      opacity: 1, 
+    animate: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const sectionVariants = {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 }
+    animate: { opacity: 1, y: 0 },
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "discover":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             {/* Community Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <GlassmorphicCard {...GameGenCardPresets.chatPanel}>
@@ -57,7 +61,9 @@ export default function CommunityPageMinimal() {
                   <div className="text-2xl font-bold text-primary mb-1">
                     125
                   </div>
-                  <div className="text-sm text-foreground/60">Games Created</div>
+                  <div className="text-sm text-foreground/60">
+                    Games Created
+                  </div>
                 </div>
               </GlassmorphicCard>
               <GlassmorphicCard {...GameGenCardPresets.chatPanel}>
@@ -70,9 +76,7 @@ export default function CommunityPageMinimal() {
               </GlassmorphicCard>
               <GlassmorphicCard {...GameGenCardPresets.chatPanel}>
                 <div className="p-4 text-center">
-                  <div className="text-2xl font-bold text-success mb-1">
-                    23
-                  </div>
+                  <div className="text-2xl font-bold text-success mb-1">23</div>
                   <div className="text-sm text-foreground/60">Active Users</div>
                 </div>
               </GlassmorphicCard>
@@ -107,7 +111,11 @@ export default function CommunityPageMinimal() {
                           <Heart size={14} />
                           <span>{getConsistentValue(i * 17, 100)}</span>
                         </div>
-                        <Chip size="sm" variant="flat" startContent={<Crown size={12} />}>
+                        <Chip
+                          size="sm"
+                          startContent={<Crown size={12} />}
+                          variant="flat"
+                        >
                           Featured
                         </Chip>
                       </div>
@@ -115,7 +123,9 @@ export default function CommunityPageMinimal() {
                         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-semibold">
                           U
                         </div>
-                        <span className="text-sm text-foreground/70">Creator {i}</span>
+                        <span className="text-sm text-foreground/70">
+                          Creator {i}
+                        </span>
                       </div>
                     </div>
                   </GlassmorphicCard>
@@ -127,11 +137,12 @@ export default function CommunityPageMinimal() {
 
       case "challenges":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Community Challenges</h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                Participate in exciting challenges and compete with other creators!
+                Participate in exciting challenges and compete with other
+                creators!
               </p>
             </div>
 
@@ -142,10 +153,13 @@ export default function CommunityPageMinimal() {
                     <Star className="w-6 h-6 text-warning" />
                     Winter Game Jam 2024
                   </h3>
-                  <Chip color="success" variant="solid">Active</Chip>
+                  <Chip color="success" variant="solid">
+                    Active
+                  </Chip>
                 </div>
                 <p className="text-foreground/70 mb-4">
-                  Create a cozy winter-themed game using pixel art. Show us your creativity!
+                  Create a cozy winter-themed game using pixel art. Show us your
+                  creativity!
                 </p>
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-foreground/60">
@@ -155,7 +169,7 @@ export default function CommunityPageMinimal() {
                     5 days remaining
                   </div>
                 </div>
-                <Button color="primary" className="w-full">
+                <Button className="w-full" color="primary">
                   Join Challenge
                 </Button>
               </div>
@@ -165,9 +179,11 @@ export default function CommunityPageMinimal() {
 
       case "achievements":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Community Achievements</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                Community Achievements
+              </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
                 Track your progress and unlock achievements!
               </p>
@@ -175,10 +191,26 @@ export default function CommunityPageMinimal() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { title: "First Game", description: "Create your first game", progress: 100 },
-                { title: "Popular Creator", description: "Get 100+ plays", progress: 65 },
-                { title: "Community Star", description: "Get 50+ likes", progress: 30 },
-                { title: "Pixel Artist", description: "Create 5 games", progress: 80 },
+                {
+                  title: "First Game",
+                  description: "Create your first game",
+                  progress: 100,
+                },
+                {
+                  title: "Popular Creator",
+                  description: "Get 100+ plays",
+                  progress: 65,
+                },
+                {
+                  title: "Community Star",
+                  description: "Get 50+ likes",
+                  progress: 30,
+                },
+                {
+                  title: "Pixel Artist",
+                  description: "Create 5 games",
+                  progress: 80,
+                },
               ].map((achievement, i) => (
                 <GlassmorphicCard key={i} {...GameGenCardPresets.chatPanel}>
                   <div className="p-4">
@@ -188,7 +220,9 @@ export default function CommunityPageMinimal() {
                       </div>
                       <div>
                         <h4 className="font-semibold">{achievement.title}</h4>
-                        <p className="text-sm text-foreground/60">{achievement.description}</p>
+                        <p className="text-sm text-foreground/60">
+                          {achievement.description}
+                        </p>
                       </div>
                     </div>
                     <div className="w-full bg-foreground/10 rounded-full h-2">
@@ -209,9 +243,11 @@ export default function CommunityPageMinimal() {
 
       case "leaderboards":
         return (
-          <motion.div variants={sectionVariants} className="space-y-6">
+          <motion.div className="space-y-6" variants={sectionVariants}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Community Leaderboards</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                Community Leaderboards
+              </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
                 See who's leading the way in different categories!
               </p>
@@ -227,17 +263,26 @@ export default function CommunityPageMinimal() {
                   </h3>
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((rank) => (
-                      <div key={rank} className="flex items-center gap-3 p-2 rounded-lg bg-background/30">
+                      <div
+                        key={rank}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-background/30"
+                      >
                         <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center font-bold">
                           #{rank}
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Creator {rank}</div>
-                          <div className="text-sm text-foreground/60">{getConsistentValue(rank * 19, 10)} games</div>
+                          <div className="text-sm text-foreground/60">
+                            {getConsistentValue(rank * 19, 10)} games
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{(1000 - rank * 100).toLocaleString()}</div>
-                          <div className="text-xs text-foreground/60">points</div>
+                          <div className="font-bold">
+                            {(1000 - rank * 100).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-foreground/60">
+                            points
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -254,17 +299,26 @@ export default function CommunityPageMinimal() {
                   </h3>
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((rank) => (
-                      <div key={rank} className="flex items-center gap-3 p-2 rounded-lg bg-background/30">
+                      <div
+                        key={rank}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-background/30"
+                      >
                         <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center font-bold">
                           #{rank}
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">Player {rank}</div>
-                          <div className="text-sm text-foreground/60">{getConsistentValue(rank * 23, 50)} hours</div>
+                          <div className="text-sm text-foreground/60">
+                            {getConsistentValue(rank * 23, 50)} hours
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">{(500 - rank * 50).toLocaleString()}</div>
-                          <div className="text-xs text-foreground/60">activities</div>
+                          <div className="font-bold">
+                            {(500 - rank * 50).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-foreground/60">
+                            activities
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -282,19 +336,19 @@ export default function CommunityPageMinimal() {
 
   return (
     <motion.div
-      variants={pageVariants}
-      initial="initial"
       animate="animate"
       className="px-0 py-8"
+      initial="initial"
+      variants={pageVariants}
     >
       {/* Header */}
-      <motion.div variants={sectionVariants} className="text-center mb-8">
+      <motion.div className="text-center mb-8" variants={sectionVariants}>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
           GameGen Community
         </h1>
         <p className="text-lg text-foreground/70 max-w-3xl mx-auto">
-          Connect with fellow creators, discover amazing games, participate in challenges, 
-          and be part of our thriving game development community.
+          Connect with fellow creators, discover amazing games, participate in
+          challenges, and be part of our thriving game development community.
         </p>
       </motion.div>
 
@@ -303,15 +357,16 @@ export default function CommunityPageMinimal() {
         <GlassmorphicCard {...GameGenCardPresets.gameCard}>
           <div className="p-6">
             <Tabs
-              selectedKey={activeTab}
-              onSelectionChange={(key) => setActiveTab(key as string)}
-              variant="underlined"
               classNames={{
-                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                tabList:
+                  "gap-6 w-full relative rounded-none p-0 border-b border-divider",
                 cursor: "w-full bg-primary",
                 tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary"
+                tabContent: "group-data-[selected=true]:text-primary",
               }}
+              selectedKey={activeTab}
+              variant="underlined"
+              onSelectionChange={(key) => setActiveTab(key as string)}
             >
               <Tab
                 key="discover"
@@ -351,9 +406,7 @@ export default function CommunityPageMinimal() {
               />
             </Tabs>
 
-            <div className="mt-8">
-              {renderTabContent()}
-            </div>
+            <div className="mt-8">{renderTabContent()}</div>
           </div>
         </GlassmorphicCard>
       </motion.div>

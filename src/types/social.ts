@@ -1,11 +1,11 @@
 /**
  * GameGen Social Features Types
- * 
+ *
  * TypeScript type definitions for social features extending the main database types.
  * This includes achievements, activities, notifications, challenges, and community features.
  */
 
-import { Database, Json } from './database';
+import { Database, Json } from "./database";
 
 // Social Features Database Table Extensions
 export interface SocialTables {
@@ -59,7 +59,7 @@ export interface SocialTables {
       updated_at?: string;
     };
   };
-  
+
   user_achievements: {
     Row: {
       id: string;
@@ -536,42 +536,67 @@ export interface SocialTables {
 }
 
 // Social Feature Enums
-export type AchievementCategory = "creator" | "social" | "milestone" | "special" | "community";
+export type AchievementCategory =
+  | "creator"
+  | "social"
+  | "milestone"
+  | "special"
+  | "community";
 export type AchievementRarity = "common" | "rare" | "epic" | "legendary";
 
-export type ActivityType = 
-  | "game_created" 
-  | "game_published" 
-  | "game_liked" 
-  | "game_commented" 
-  | "user_followed" 
-  | "achievement_unlocked" 
-  | "collection_created" 
-  | "template_shared" 
-  | "asset_uploaded" 
-  | "challenge_completed" 
-  | "game_featured" 
-  | "milestone_reached" 
+export type ActivityType =
+  | "game_created"
+  | "game_published"
+  | "game_liked"
+  | "game_commented"
+  | "user_followed"
+  | "achievement_unlocked"
+  | "collection_created"
+  | "template_shared"
+  | "asset_uploaded"
+  | "challenge_completed"
+  | "game_featured"
+  | "milestone_reached"
   | "collaboration_joined";
 
 export type ActivityVisibility = "public" | "followers" | "private";
 
-export type NotificationType = 
-  | "follow" 
-  | "game_like" 
-  | "game_comment" 
-  | "game_featured" 
-  | "achievement_unlocked" 
-  | "challenge_invite" 
-  | "mention" 
-  | "collaboration_invite" 
-  | "collection_add" 
+export type NotificationType =
+  | "follow"
+  | "game_like"
+  | "game_comment"
+  | "game_featured"
+  | "achievement_unlocked"
+  | "challenge_invite"
+  | "mention"
+  | "collaboration_invite"
+  | "collection_add"
   | "system_announcement";
 
-export type ChallengeType = "game_jam" | "weekly" | "themed" | "skill" | "community";
-export type ChallengeDifficulty = "beginner" | "intermediate" | "advanced" | "all";
-export type ChallengeStatus = "draft" | "upcoming" | "active" | "voting" | "completed" | "cancelled";
-export type ParticipantStatus = "registered" | "active" | "submitted" | "disqualified" | "withdrawn";
+export type ChallengeType =
+  | "game_jam"
+  | "weekly"
+  | "themed"
+  | "skill"
+  | "community";
+export type ChallengeDifficulty =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "all";
+export type ChallengeStatus =
+  | "draft"
+  | "upcoming"
+  | "active"
+  | "voting"
+  | "completed"
+  | "cancelled";
+export type ParticipantStatus =
+  | "registered"
+  | "active"
+  | "submitted"
+  | "disqualified"
+  | "withdrawn";
 
 // Extended Database interface with social features
 export interface SocialDatabase extends Database {
@@ -604,7 +629,7 @@ export interface SocialDatabase extends Database {
         Returns: undefined;
       };
       get_user_activity_feed: {
-        Args: { 
+        Args: {
           user_id: string;
           limit_count?: number;
           offset_count?: number;
@@ -630,7 +655,8 @@ export type UserAchievement = SocialTables["user_achievements"]["Row"];
 export type Activity = SocialTables["activities"]["Row"];
 export type Notification = SocialTables["notifications"]["Row"];
 export type Challenge = SocialTables["challenges"]["Row"];
-export type ChallengeParticipant = SocialTables["challenge_participants"]["Row"];
+export type ChallengeParticipant =
+  SocialTables["challenge_participants"]["Row"];
 export type GameRating = SocialTables["game_ratings"]["Row"];
 export type UserFollow = SocialTables["user_follows"]["Row"];
 export type GameLike = SocialTables["game_likes"]["Row"];
@@ -644,7 +670,8 @@ export type UserAchievementInsert = SocialTables["user_achievements"]["Insert"];
 export type ActivityInsert = SocialTables["activities"]["Insert"];
 export type NotificationInsert = SocialTables["notifications"]["Insert"];
 export type ChallengeInsert = SocialTables["challenges"]["Insert"];
-export type ChallengeParticipantInsert = SocialTables["challenge_participants"]["Insert"];
+export type ChallengeParticipantInsert =
+  SocialTables["challenge_participants"]["Insert"];
 export type GameRatingInsert = SocialTables["game_ratings"]["Insert"];
 export type UserFollowInsert = SocialTables["user_follows"]["Insert"];
 export type GameLikeInsert = SocialTables["game_likes"]["Insert"];
@@ -658,7 +685,8 @@ export type UserAchievementUpdate = SocialTables["user_achievements"]["Update"];
 export type ActivityUpdate = SocialTables["activities"]["Update"];
 export type NotificationUpdate = SocialTables["notifications"]["Update"];
 export type ChallengeUpdate = SocialTables["challenges"]["Update"];
-export type ChallengeParticipantUpdate = SocialTables["challenge_participants"]["Update"];
+export type ChallengeParticipantUpdate =
+  SocialTables["challenge_participants"]["Update"];
 export type GameRatingUpdate = SocialTables["game_ratings"]["Update"];
 export type UserFollowUpdate = SocialTables["user_follows"]["Update"];
 export type GameLikeUpdate = SocialTables["game_likes"]["Update"];
@@ -667,7 +695,8 @@ export type CollectionUpdate = SocialTables["collections"]["Update"];
 export type CollectionGameUpdate = SocialTables["collection_games"]["Update"];
 
 // Trending Games View Type
-export type TrendingGame = SocialDatabase["public"]["Views"]["trending_games"]["Row"];
+export type TrendingGame =
+  SocialDatabase["public"]["Views"]["trending_games"]["Row"];
 
 // Activity Feed Response Type
 export type ActivityFeedItem = {
@@ -702,14 +731,20 @@ export interface GameSocialStats {
 
 // Challenge Prize Interface
 export interface ChallengePrize {
-  place: number | 'community_choice' | 'participation';
+  place: number | "community_choice" | "participation";
   prize: string;
   value: number;
 }
 
 // Achievement Condition Interface
 export interface AchievementCondition {
-  type: 'games_created' | 'followers' | 'likes_received' | 'challenges_won' | 'days_active' | 'manual';
+  type:
+    | "games_created"
+    | "followers"
+    | "likes_received"
+    | "challenges_won"
+    | "days_active"
+    | "manual";
   threshold?: number;
   description?: string;
 }

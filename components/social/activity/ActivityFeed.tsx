@@ -6,13 +6,22 @@ import { Spinner } from "@heroui/spinner";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { RefreshCw, Filter } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import { toast } from "sonner";
+
 import { ActivityItem } from "./ActivityItem";
 import { ActivityFilters } from "./ActivityFilters";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { createClient } from "@/lib/supabase/client";
-import { ActivityFeedItem, ActivityType, ActivityVisibility } from "@/src/types/social";
+import {
+  ActivityFeedItem,
+  ActivityType,
+  ActivityVisibility,
+} from "@/src/types/social";
 import { useInfiniteScroll } from "@/src/hooks/useInfiniteScroll";
-import { toast } from "sonner";
 
 interface ActivityFeedProps {
   userId: string;
@@ -53,42 +62,47 @@ export function ActivityFeed({
 
   const supabase = createClient();
 
-  const fetchActivities = useCallback(async (offset = 0, reset = false) => {
-    try {
-      if (offset === 0 && reset) {
-        setLoading(true);
-        setError(null);
+  const fetchActivities = useCallback(
+    async (offset = 0, reset = false) => {
+      try {
+        if (offset === 0 && reset) {
+          setLoading(true);
+          setError(null);
+        }
+
+        let query = supabase.rpc("get_user_activity_feed", {
+          user_id: userId,
+          limit_count: ITEMS_PER_PAGE,
+          offset_count: offset,
+        });
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const newActivities = data || [];
+
+        if (reset || offset === 0) {
+          setActivities(newActivities);
+        } else {
+          setActivities((prev) => [...prev, ...newActivities]);
+        }
+
+        setHasMore(
+          newActivities.length === ITEMS_PER_PAGE &&
+            activities.length + newActivities.length < maxItems,
+        );
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+        setError("Failed to load activities");
+        toast.error("Failed to load activities");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      let query = supabase.rpc("get_user_activity_feed", {
-        user_id: userId,
-        limit_count: ITEMS_PER_PAGE,
-        offset_count: offset,
-      });
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const newActivities = data || [];
-
-      if (reset || offset === 0) {
-        setActivities(newActivities);
-      } else {
-        setActivities(prev => [...prev, ...newActivities]);
-      }
-
-      setHasMore(newActivities.length === ITEMS_PER_PAGE && activities.length + newActivities.length < maxItems);
-
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-      setError("Failed to load activities");
-      toast.error("Failed to load activities");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [userId, supabase, maxItems, activities.length]);
+    },
+    [userId, supabase, maxItems, activities.length],
+  );
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -160,7 +174,10 @@ export function ActivityFeed({
 
   if (error) {
     return (
-      <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className={className}>
+      <GlassmorphicCard
+        {...GameGenCardPresets.floatingPanel}
+        className={className}
+      >
         <div className="p-8 text-center">
           <p className="text-danger-500 mb-4">{error}</p>
           <Button color="secondary" variant="flat" onPress={refresh}>
@@ -178,52 +195,59 @@ export function ActivityFeed({
         <div className="p-6">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-xl font-bold text-foreground">{getFeedTitle()}</h2>
-              <p className="text-sm text-foreground/70">{getFeedDescription()}</p>
+              <h2 className="text-xl font-bold text-foreground">
+                {getFeedTitle()}
+              </h2>
+              <p className="text-sm text-foreground/70">
+                {getFeedDescription()}
+              </p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {showFilters && (
                 <Button
-                  size="sm"
-                  variant="flat"
                   color="secondary"
+                  size="sm"
                   startContent={<Filter size={16} />}
+                  variant="flat"
                   onPress={() => setShowFiltersPanel(!showFiltersPanel)}
                 >
                   Filters
                 </Button>
               )}
-              
+
               {showRefresh && (
                 <Button
+                  isIconOnly
+                  color="secondary"
+                  isLoading={refreshing}
                   size="sm"
                   variant="flat"
-                  color="secondary"
-                  isIconOnly
                   onPress={refresh}
-                  isLoading={refreshing}
                 >
-                  <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                  <RefreshCw
+                    className={refreshing ? "animate-spin" : ""}
+                    size={16}
+                  />
                 </Button>
               )}
             </div>
           </div>
-          
+
           {/* Filters Panel */}
           <AnimatePresence>
             {showFiltersPanel && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
                 className="overflow-hidden"
+                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
               >
                 <Divider className="my-4" />
                 <ActivityFilters
-                  onFiltersChange={applyFilters}
                   initialFilters={activeFilters}
+                  onFiltersChange={applyFilters}
                 />
               </motion.div>
             )}
@@ -236,7 +260,7 @@ export function ActivityFeed({
         <div ref={scrollRef} className="max-h-screen overflow-y-auto">
           {loading && activities.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <Spinner size="lg" color="secondary" />
+              <Spinner color="secondary" size="lg" />
               <p className="ml-3 text-foreground/70">Loading activities...</p>
             </div>
           ) : activities.length === 0 ? (
@@ -246,15 +270,21 @@ export function ActivityFeed({
                   <Filter size={24} />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Activities Found</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Activities Found
+              </h3>
               <p className="text-foreground/60 mb-4">
-                {feedType === "following" 
+                {feedType === "following"
                   ? "Follow some creators to see their activities here"
-                  : "Start creating games and interacting with the community!"
-                }
+                  : "Start creating games and interacting with the community!"}
               </p>
               {feedType === "following" && (
-                <Button as="a" href="/discover" color="secondary" variant="flat">
+                <Button
+                  as="a"
+                  color="secondary"
+                  href="/discover"
+                  variant="flat"
+                >
                   Discover Creators
                 </Button>
               )}
@@ -265,9 +295,9 @@ export function ActivityFeed({
                 {activities.map((activity, index) => (
                   <motion.div
                     key={`${activity.id}-${index}`}
-                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: 20 }}
                     transition={{ delay: index * 0.02, duration: 0.3 }}
                   >
                     <ActivityItem
@@ -286,15 +316,11 @@ export function ActivityFeed({
             <div className="p-6 text-center">
               {loading ? (
                 <div className="flex items-center justify-center">
-                  <Spinner size="md" color="secondary" />
+                  <Spinner color="secondary" size="md" />
                   <p className="ml-3 text-foreground/70">Loading more...</p>
                 </div>
               ) : (
-                <Button
-                  variant="flat"
-                  color="secondary"
-                  onPress={loadMore}
-                >
+                <Button color="secondary" variant="flat" onPress={loadMore}>
                   Load More
                 </Button>
               )}
@@ -362,11 +388,11 @@ export function CompactActivityFeed({
           <h3 className="font-semibold text-foreground">Recent Activity</h3>
         </div>
       )}
-      
+
       <div className="divide-y divide-divider">
         {loading ? (
           <div className="p-4 text-center">
-            <Spinner size="sm" color="secondary" />
+            <Spinner color="secondary" size="sm" />
           </div>
         ) : activities.length === 0 ? (
           <div className="p-4 text-center text-sm text-foreground/60">
@@ -378,22 +404,22 @@ export function CompactActivityFeed({
               key={activity.id}
               activity={activity}
               currentUserId={userId}
-              variant="compact"
               showInteractions={false}
+              variant="compact"
             />
           ))
         )}
       </div>
-      
+
       {activities.length > 0 && (
         <div className="p-4 border-t border-divider">
           <Button
             as="a"
+            className="w-full"
+            color="secondary"
             href="/dashboard/activity"
             size="sm"
             variant="flat"
-            color="secondary"
-            className="w-full"
           >
             View All Activity
           </Button>

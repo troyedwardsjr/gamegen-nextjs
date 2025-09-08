@@ -4,10 +4,15 @@ import React from "react";
 import { Avatar, Button, Chip } from "@heroui/react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import { MapPin, ExternalLink, Crown, Star, Verified } from "lucide-react";
+
 import { CompactFollowButton } from "./FollowButton";
 import { UserStats } from "./UserStats";
-import { MapPin, ExternalLink, Crown, Star, Verified } from "lucide-react";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { Database } from "@/lib/supabase/database.types";
 import { UserSocialStats } from "@/src/types/social";
 
@@ -48,7 +53,7 @@ export function UserProfileCard({
   badges = [],
 }: UserProfileCardProps) {
   const isOwnProfile = currentUserId === profile.id;
-  
+
   const getBadgeConfig = (type: string) => {
     const configs = {
       featured: { color: "secondary", icon: Star, label: "Featured" },
@@ -57,6 +62,7 @@ export function UserProfileCard({
       early_adopter: { color: "primary", icon: Star, label: "Early Adopter" },
       staff: { color: "danger", icon: Crown, label: "Staff" },
     };
+
     return configs[type as keyof typeof configs] || configs.featured;
   };
 
@@ -106,49 +112,51 @@ export function UserProfileCard({
   const variantProps = getVariantProps();
 
   const cardContent = (
-    <GlassmorphicCard
-      {...variantProps}
-      className={`relative ${className}`}
-    >
+    <GlassmorphicCard {...variantProps} className={`relative ${className}`}>
       <div className={`${sizeClasses.container}`}>
         {/* Header with Avatar and Basic Info */}
         <div className={`flex items-start ${sizeClasses.spacing}`}>
           <Avatar
-            src={profile.avatar_url || undefined}
+            isBordered
+            className="flex-shrink-0"
+            color="secondary"
             name={profile.display_name || profile.username || "User"}
             size={sizeClasses.avatar}
-            isBordered
-            color="secondary"
-            className="flex-shrink-0"
+            src={profile.avatar_url || undefined}
           />
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="min-w-0 flex-1">
-                <h3 className={`font-semibold text-foreground truncate ${sizeClasses.title}`}>
+                <h3
+                  className={`font-semibold text-foreground truncate ${sizeClasses.title}`}
+                >
                   {profile.display_name || profile.username}
                 </h3>
                 {profile.display_name && (
-                  <p className={`text-foreground/60 truncate ${sizeClasses.subtitle}`}>
+                  <p
+                    className={`text-foreground/60 truncate ${sizeClasses.subtitle}`}
+                  >
                     @{profile.username}
                   </p>
                 )}
               </div>
-              
+
               {/* Badges */}
               {badges.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {badges.slice(0, 2).map((badge, index) => {
                     const config = getBadgeConfig(badge.type);
                     const Icon = config.icon;
+
                     return (
                       <Chip
                         key={index}
-                        size="sm"
-                        variant="flat"
-                        color={config.color as any}
-                        startContent={<Icon size={12} />}
                         className="text-xs"
+                        color={config.color as any}
+                        size="sm"
+                        startContent={<Icon size={12} />}
+                        variant="flat"
                       >
                         {badge.label || config.label}
                       </Chip>
@@ -157,7 +165,7 @@ export function UserProfileCard({
                 </div>
               )}
             </div>
-            
+
             {/* Location */}
             {profile.location && (
               <div className="flex items-center gap-1 text-foreground/60 mb-2">
@@ -167,41 +175,43 @@ export function UserProfileCard({
                 </span>
               </div>
             )}
-            
+
             {/* Bio */}
             {showBio && profile.bio && size !== "sm" && (
-              <p className={`text-foreground/70 line-clamp-2 mb-3 ${sizeClasses.subtitle}`}>
+              <p
+                className={`text-foreground/70 line-clamp-2 mb-3 ${sizeClasses.subtitle}`}
+              >
                 {profile.bio}
               </p>
             )}
-            
+
             {/* Stats */}
             {showStats && socialStats && size !== "sm" && (
               <div className="mb-3">
                 <UserStats stats={socialStats} variant="compact" />
               </div>
             )}
-            
+
             {/* Actions */}
             <div className="flex items-center justify-between gap-2 mt-3">
               {interactive && (
                 <Button
                   as={Link}
+                  color="secondary"
+                  endContent={<ExternalLink size={14} />}
                   href={`/profile/${profile.id}`}
                   size="sm"
                   variant="flat"
-                  color="secondary"
-                  endContent={<ExternalLink size={14} />}
                 >
                   View Profile
                 </Button>
               )}
-              
+
               {showFollowButton && !isOwnProfile && currentUserId && (
                 <CompactFollowButton
-                  targetUserId={profile.id}
                   currentUserId={currentUserId}
                   isFollowing={isFollowing}
+                  targetUserId={profile.id}
                   onFollowChange={onFollowChange}
                 />
               )}
@@ -218,10 +228,10 @@ export function UserProfileCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
+      initial={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2 }}
+      whileHover={{ y: -2 }}
     >
       {cardContent}
     </motion.div>
@@ -280,13 +290,15 @@ export function UserProfileGrid({
       {profiles.map((item, index) => (
         <UserProfileCard
           key={item.profile.id}
-          profile={item.profile}
-          currentUserId={currentUserId}
-          socialStats={item.socialStats}
-          isFollowing={item.isFollowing}
-          onFollowChange={(isFollowing) => onFollowChange?.(item.profile.id, isFollowing)}
-          variant={variant}
           badges={item.badges}
+          currentUserId={currentUserId}
+          isFollowing={item.isFollowing}
+          profile={item.profile}
+          socialStats={item.socialStats}
+          variant={variant}
+          onFollowChange={(isFollowing) =>
+            onFollowChange?.(item.profile.id, isFollowing)
+          }
         />
       ))}
     </div>
@@ -294,12 +306,12 @@ export function UserProfileGrid({
 }
 
 // Skeleton loader
-export function UserProfileCardSkeleton({ 
-  size = "md", 
-  className 
-}: { 
+export function UserProfileCardSkeleton({
+  size = "md",
+  className,
+}: {
   size?: "sm" | "md" | "lg";
-  className?: string; 
+  className?: string;
 }) {
   const sizeClasses = {
     sm: { container: "p-4", avatar: "w-12 h-12", spacing: "gap-3" },
@@ -311,7 +323,9 @@ export function UserProfileCardSkeleton({
     <GlassmorphicCard {...GameGenCardPresets.gameCard} className={className}>
       <div className={sizeClasses.container}>
         <div className={`flex items-start ${sizeClasses.spacing}`}>
-          <div className={`${sizeClasses.avatar} rounded-full bg-white/10 dark:bg-black/10 animate-pulse flex-shrink-0`} />
+          <div
+            className={`${sizeClasses.avatar} rounded-full bg-white/10 dark:bg-black/10 animate-pulse flex-shrink-0`}
+          />
           <div className="flex-1 space-y-2">
             <div className="h-5 bg-white/10 dark:bg-black/10 rounded animate-pulse" />
             <div className="h-4 bg-white/10 dark:bg-black/10 rounded animate-pulse w-3/4" />

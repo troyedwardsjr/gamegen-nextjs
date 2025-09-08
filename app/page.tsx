@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import PricingSection from "@/components/PricingSection";
@@ -8,7 +9,8 @@ import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} - Create Pixel Art Games with AI`,
-  description: "Transform your game ideas into reality with GameGen's AI-powered game creation platform. Create bullet hell, RPG, action-adventure games and more with vibe coding and visual scripting tools.",
+  description:
+    "Transform your game ideas into reality with GameGen's AI-powered game creation platform. Create bullet hell, RPG, action-adventure games and more with vibe coding and visual scripting tools.",
   keywords: [
     "game development",
     "pixel art games",
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
     "bullet hell games",
     "RPG maker",
     "action games",
-    "game templates"
+    "game templates",
   ],
   authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
   creator: siteConfig.author.name,

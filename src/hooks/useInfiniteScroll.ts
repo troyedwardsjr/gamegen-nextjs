@@ -22,11 +22,12 @@ export function useInfiniteScroll({
   const handleIntersection = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
+
       if (entry.isIntersecting && hasMore) {
         onLoadMore();
       }
     },
-    [onLoadMore, hasMore]
+    [onLoadMore, hasMore],
   );
 
   useEffect(() => {
@@ -83,6 +84,7 @@ export function useInfiniteScroll({
 
   useEffect(() => {
     const scrollElement = scrollRef.current;
+
     if (!scrollElement) return;
 
     scrollElement.addEventListener("scroll", handleScroll, { passive: true });
@@ -114,6 +116,7 @@ export function useScrollToBottom(callback: () => void, threshold = 100) {
     };
 
     const scrollElement = scrollRef.current;
+
     if (!scrollElement) return;
 
     scrollElement.addEventListener("scroll", handleScroll, { passive: true });
@@ -137,17 +140,18 @@ export function useScrollDirection() {
       if (!scrollRef.current) return;
 
       const scrollTop = scrollRef.current.scrollTop;
-      
+
       if (scrollTop > lastScrollTop.current) {
         scrollDirection.current = "down";
       } else if (scrollTop < lastScrollTop.current) {
         scrollDirection.current = "up";
       }
-      
+
       lastScrollTop.current = scrollTop;
     };
 
     const scrollElement = scrollRef.current;
+
     if (!scrollElement) return;
 
     scrollElement.addEventListener("scroll", handleScroll, { passive: true });

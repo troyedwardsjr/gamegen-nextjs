@@ -1,11 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button, Input, Textarea, Select, SelectItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import {
+  Button,
+  Input,
+  Textarea,
+  Select,
+  SelectItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/react";
 import { motion } from "framer-motion";
 import { Upload, Send, FileText, Link, Check } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
 import { toast } from "sonner";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 
 interface ChallengeSubmissionProps {
   challengeId: string;
@@ -48,6 +63,7 @@ export function ChallengeSubmission({
   const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.description.trim()) {
       toast.error("Please fill in all required fields");
+
       return;
     }
 
@@ -75,22 +91,26 @@ export function ChallengeSubmission({
     <div className="space-y-6">
       <div>
         <Input
+          isRequired
           label="Submission Title"
           placeholder="Enter a catchy title for your submission"
           value={formData.title}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, title: value }))}
-          isRequired
+          onValueChange={(value) =>
+            setFormData((prev) => ({ ...prev, title: value }))
+          }
         />
       </div>
 
       <div>
         <Textarea
+          isRequired
           label="Description"
+          minRows={4}
           placeholder="Describe your submission and how it meets the challenge requirements"
           value={formData.description}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
-          minRows={4}
-          isRequired
+          onValueChange={(value) =>
+            setFormData((prev) => ({ ...prev, description: value }))
+          }
         />
       </div>
 
@@ -98,10 +118,12 @@ export function ChallengeSubmission({
         <Select
           label="Submission Type"
           selectedKeys={[formData.type]}
-          onSelectionChange={(keys) => setFormData(prev => ({ 
-            ...prev, 
-            type: Array.from(keys)[0] as any 
-          }))}
+          onSelectionChange={(keys) =>
+            setFormData((prev) => ({
+              ...prev,
+              type: Array.from(keys)[0] as any,
+            }))
+          }
         >
           <SelectItem key="game">Game Project</SelectItem>
           <SelectItem key="url">External Link</SelectItem>
@@ -131,9 +153,11 @@ export function ChallengeSubmission({
           <Input
             label="Submission URL"
             placeholder="https://..."
-            value={formData.url || ""}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, url: value }))}
             startContent={<Link size={18} />}
+            value={formData.url || ""}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, url: value }))
+            }
           />
         </div>
       )}
@@ -142,7 +166,9 @@ export function ChallengeSubmission({
         <div>
           <div className="border-2 border-dashed border-foreground/20 rounded-lg p-8 text-center hover:border-foreground/40 transition-colors cursor-pointer">
             <Upload className="w-12 h-12 text-foreground/40 mx-auto mb-4" />
-            <p className="text-foreground/70 mb-2">Drop files here or click to browse</p>
+            <p className="text-foreground/70 mb-2">
+              Drop files here or click to browse
+            </p>
             <p className="text-sm text-foreground/50">Max file size: 100MB</p>
           </div>
         </div>
@@ -152,10 +178,12 @@ export function ChallengeSubmission({
         <div>
           <Textarea
             label="Text Submission"
+            minRows={6}
             placeholder="Enter your text submission here..."
             value={formData.content}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
-            minRows={6}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, content: value }))
+            }
           />
         </div>
       )}
@@ -169,7 +197,10 @@ export function ChallengeSubmission({
           <ul className="space-y-1 text-sm text-foreground/70">
             {requirements.map((req, index) => (
               <li key={index} className="flex items-start gap-2">
-                <Check size={14} className="text-success mt-0.5 flex-shrink-0" />
+                <Check
+                  className="text-success mt-0.5 flex-shrink-0"
+                  size={14}
+                />
                 {req}
               </li>
             ))}
@@ -180,14 +211,14 @@ export function ChallengeSubmission({
   );
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose}
-      size="2xl"
+    <Modal
       backdrop="blur"
       classNames={{
         base: "bg-transparent",
       }}
+      isOpen={isOpen}
+      size="2xl"
+      onClose={onClose}
     >
       <ModalContent>
         <GlassmorphicCard {...GameGenCardPresets.modalCard}>
@@ -197,7 +228,8 @@ export function ChallengeSubmission({
               <div>
                 <h2 className="text-xl font-bold">Submit to Challenge</h2>
                 <p className="text-sm text-foreground/60">
-                  Step {step} of 2: {step === 1 ? "Basic Information" : "Submission Content"}
+                  Step {step} of 2:{" "}
+                  {step === 1 ? "Basic Information" : "Submission Content"}
                 </p>
               </div>
             </div>
@@ -206,9 +238,9 @@ export function ChallengeSubmission({
           <ModalBody>
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
             >
               {step === 1 && renderStep1()}
@@ -220,10 +252,7 @@ export function ChallengeSubmission({
             <div className="flex justify-between w-full">
               <div>
                 {step > 1 && (
-                  <Button
-                    variant="flat"
-                    onPress={() => setStep(step - 1)}
-                  >
+                  <Button variant="flat" onPress={() => setStep(step - 1)}>
                     Back
                   </Button>
                 )}
@@ -233,21 +262,23 @@ export function ChallengeSubmission({
                 <Button variant="flat" onPress={onClose}>
                   Cancel
                 </Button>
-                
+
                 {step < 2 ? (
                   <Button
                     color="primary"
+                    isDisabled={
+                      !formData.title.trim() || !formData.description.trim()
+                    }
                     onPress={() => setStep(step + 1)}
-                    isDisabled={!formData.title.trim() || !formData.description.trim()}
                   >
                     Next
                   </Button>
                 ) : (
                   <Button
                     color="primary"
-                    onPress={handleSubmit}
                     isLoading={loading}
                     startContent={!loading && <Send size={16} />}
+                    onPress={handleSubmit}
                   >
                     Submit Entry
                   </Button>

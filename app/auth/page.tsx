@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { motion } from "framer-motion";
 
 import { useAuth } from "@/lib/auth/context";
 import {
@@ -35,6 +34,7 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         const result = await signIn(email, password);
+
         if (result.success) {
           router.push("/dashboard");
         } else {
@@ -44,10 +44,12 @@ export default function AuthPage() {
         if (password !== confirmPassword) {
           setError("Passwords do not match");
           setIsLoading(false);
+
           return;
         }
-        
+
         const result = await signUp(email, password);
+
         if (result.success) {
           if (result.requiresEmailVerification) {
             setError("Please check your email to verify your account");
@@ -70,7 +72,10 @@ export default function AuthPage() {
       {/* Animated Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse opacity-60" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-l from-blue-400/15 to-purple-400/15 rounded-full blur-3xl animate-pulse opacity-70" style={{animationDelay: '1s', animationDuration: '4s'}} />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-l from-blue-400/15 to-purple-400/15 rounded-full blur-3xl animate-pulse opacity-70"
+          style={{ animationDelay: "1s", animationDuration: "4s" }}
+        />
         <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-gradient-to-r from-pink-400/25 to-purple-400/25 rounded-full blur-2xl animate-bounce opacity-50" />
       </div>
 
@@ -92,33 +97,38 @@ export default function AuthPage() {
                 {isLogin ? "Welcome Back" : "Join GameGen"}
               </h2>
               <p className="text-gray-300">
-                {isLogin 
-                  ? "Sign in to your account" 
-                  : "Create your account to get started"
-                }
+                {isLogin
+                  ? "Sign in to your account"
+                  : "Create your account to get started"}
               </p>
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6" data-testid={isLogin ? "login-form" : "register-form"}>
+          <form
+            className="space-y-6"
+            data-testid={isLogin ? "login-form" : "register-form"}
+            onSubmit={handleSubmit}
+          >
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Email
                 </label>
                 <Input
+                  required
+                  className="w-full"
+                  classNames={{
+                    input:
+                      "bg-transparent text-white placeholder:text-gray-400",
+                    inputWrapper:
+                      "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15",
+                  }}
+                  data-testid="email-input"
+                  placeholder="your@email.com"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full"
-                  classNames={{
-                    input: "bg-transparent text-white placeholder:text-gray-400",
-                    inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
-                  }}
-                  data-testid="email-input"
-                  required
                 />
               </div>
 
@@ -127,22 +137,21 @@ export default function AuthPage() {
                   Password
                 </label>
                 <Input
-                  type={isVisible ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isLogin ? "Enter password" : "Create a password"}
+                  required
                   className="w-full"
                   classNames={{
-                    input: "bg-transparent text-white placeholder:text-gray-400",
-                    inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
+                    input:
+                      "bg-transparent text-white placeholder:text-gray-400",
+                    inputWrapper:
+                      "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15",
                   }}
                   data-testid="password-input"
                   endContent={
                     <button
-                      type="button"
-                      onClick={() => setIsVisible(!isVisible)}
                       className="text-gray-400 hover:text-white transition-colors"
                       data-testid="password-toggle"
+                      type="button"
+                      onClick={() => setIsVisible(!isVisible)}
                     >
                       {isVisible ? (
                         <EyeOffIcon className="w-5 h-5" />
@@ -151,7 +160,10 @@ export default function AuthPage() {
                       )}
                     </button>
                   }
-                  required
+                  placeholder={isLogin ? "Enter password" : "Create a password"}
+                  type={isVisible ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -161,39 +173,48 @@ export default function AuthPage() {
                     Confirm Password
                   </label>
                   <Input
+                    required
+                    className="w-full"
+                    classNames={{
+                      input:
+                        "bg-transparent text-white placeholder:text-gray-400",
+                      inputWrapper:
+                        "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15",
+                    }}
+                    data-testid="confirm-password-input"
+                    placeholder="Confirm your password"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    className="w-full"
-                    classNames={{
-                      input: "bg-transparent text-white placeholder:text-gray-400",
-                      inputWrapper: "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15"
-                    }}
-                    data-testid="confirm-password-input"
-                    required
                   />
                 </div>
               )}
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm text-center backdrop-blur-xl" data-testid={isLogin ? "login-error" : "registration-error"} role="alert">
+              <div
+                className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm text-center backdrop-blur-xl"
+                data-testid={isLogin ? "login-error" : "registration-error"}
+                role="alert"
+              >
                 {error}
               </div>
             )}
 
             <Button
-              type="submit"
-              isLoading={isLoading}
-              disabled={!email || !password || (!isLogin && !confirmPassword)}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50"
               data-testid={isLogin ? "login-button" : "register-button"}
+              disabled={!email || !password || (!isLogin && !confirmPassword)}
+              isLoading={isLoading}
+              type="submit"
             >
-              {isLoading 
-                ? (isLogin ? 'Signing In...' : 'Creating Account...') 
-                : (isLogin ? 'Sign In' : 'Create Account')
-              }
+              {isLoading
+                ? isLogin
+                  ? "Signing In..."
+                  : "Creating Account..."
+                : isLogin
+                  ? "Sign In"
+                  : "Create Account"}
             </Button>
           </form>
 
@@ -201,14 +222,18 @@ export default function AuthPage() {
           <div className="text-center mt-8">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
               <span className="text-gray-300">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                {isLogin
+                  ? "Don't have an account? "
+                  : "Already have an account? "}
                 <button
+                  className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                  data-testid={
+                    isLogin ? "switch-to-register" : "switch-to-login"
+                  }
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setError("");
                   }}
-                  className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
-                  data-testid={isLogin ? "switch-to-register" : "switch-to-login"}
                 >
                   {isLogin ? "Sign up" : "Sign in"}
                 </button>
@@ -219,8 +244,8 @@ export default function AuthPage() {
           {/* Back to Home */}
           <div className="text-center mt-4">
             <Link
-              href="/"
               className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
+              href="/"
             >
               ← Back to Home
             </Link>

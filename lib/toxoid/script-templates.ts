@@ -1,6 +1,6 @@
 /**
  * Toxoid Script Template Library
- * 
+ *
  * Comprehensive collection of ECS patterns, game systems, and behavioral
  * templates for the GameGen platform. These templates serve as the foundation
  * for AI-generated scripts and provide proven patterns for game development.
@@ -11,93 +11,156 @@ import {
   SystemTemplate,
   ComponentTemplate,
   ToxoidPhases,
-  TemplateParameter,
-  ComponentField
-} from '@/types/toxoid';
+} from "@/types/toxoid";
 
 // Component Templates
 export const COMPONENT_TEMPLATES: ComponentTemplate[] = [
   {
-    name: 'Position',
-    description: 'World position with X and Y coordinates',
+    name: "Position",
+    description: "World position with X and Y coordinates",
     fields: [
-      { name: 'x', type: 'number', default: 0, description: 'X coordinate' },
-      { name: 'y', type: 'number', default: 0, description: 'Y coordinate' }
+      { name: "x", type: "number", default: 0, description: "X coordinate" },
+      { name: "y", type: "number", default: 0, description: "Y coordinate" },
     ],
-    defaultValues: { x: 0, y: 0 }
+    defaultValues: { x: 0, y: 0 },
   },
-  
+
   {
-    name: 'Velocity',
-    description: 'Movement velocity for physics-based motion',
+    name: "Velocity",
+    description: "Movement velocity for physics-based motion",
     fields: [
-      { name: 'x', type: 'number', default: 0, description: 'X velocity' },
-      { name: 'y', type: 'number', default: 0, description: 'Y velocity' },
-      { name: 'maxSpeed', type: 'number', default: 300, description: 'Maximum speed limit' }
+      { name: "x", type: "number", default: 0, description: "X velocity" },
+      { name: "y", type: "number", default: 0, description: "Y velocity" },
+      {
+        name: "maxSpeed",
+        type: "number",
+        default: 300,
+        description: "Maximum speed limit",
+      },
     ],
-    defaultValues: { x: 0, y: 0, maxSpeed: 300 }
+    defaultValues: { x: 0, y: 0, maxSpeed: 300 },
   },
-  
+
   {
-    name: 'Health',
-    description: 'Entity health system with current and maximum values',
+    name: "Health",
+    description: "Entity health system with current and maximum values",
     fields: [
-      { name: 'value', type: 'number', default: 100, description: 'Current health' },
-      { name: 'maxValue', type: 'number', default: 100, description: 'Maximum health' }
+      {
+        name: "value",
+        type: "number",
+        default: 100,
+        description: "Current health",
+      },
+      {
+        name: "maxValue",
+        type: "number",
+        default: 100,
+        description: "Maximum health",
+      },
     ],
-    defaultValues: { value: 100, maxValue: 100 }
+    defaultValues: { value: 100, maxValue: 100 },
   },
-  
+
   {
-    name: 'Damage',
-    description: 'Damage dealing component for projectiles and attacks',
+    name: "Damage",
+    description: "Damage dealing component for projectiles and attacks",
     fields: [
-      { name: 'amount', type: 'number', default: 10, description: 'Damage amount' },
-      { name: 'type', type: 'string', default: 'physical', description: 'Damage type' }
+      {
+        name: "amount",
+        type: "number",
+        default: 10,
+        description: "Damage amount",
+      },
+      {
+        name: "type",
+        type: "string",
+        default: "physical",
+        description: "Damage type",
+      },
     ],
-    defaultValues: { amount: 10, type: 'physical' }
+    defaultValues: { amount: 10, type: "physical" },
   },
-  
+
   {
-    name: 'Collider',
-    description: 'Collision detection with bounding box',
+    name: "Collider",
+    description: "Collision detection with bounding box",
     fields: [
-      { name: 'width', type: 'number', default: 32, description: 'Collision width' },
-      { name: 'height', type: 'number', default: 32, description: 'Collision height' },
-      { name: 'isTrigger', type: 'boolean', default: false, description: 'Is trigger collider' }
+      {
+        name: "width",
+        type: "number",
+        default: 32,
+        description: "Collision width",
+      },
+      {
+        name: "height",
+        type: "number",
+        default: 32,
+        description: "Collision height",
+      },
+      {
+        name: "isTrigger",
+        type: "boolean",
+        default: false,
+        description: "Is trigger collider",
+      },
     ],
-    defaultValues: { width: 32, height: 32, isTrigger: false }
+    defaultValues: { width: 32, height: 32, isTrigger: false },
   },
-  
+
   {
-    name: 'Lifetime',
-    description: 'Entity with limited lifespan',
+    name: "Lifetime",
+    description: "Entity with limited lifespan",
     fields: [
-      { name: 'timeLeft', type: 'number', default: 5.0, description: 'Remaining lifetime in seconds' },
-      { name: 'destroyOnExpire', type: 'boolean', default: true, description: 'Auto-destroy when expired' }
+      {
+        name: "timeLeft",
+        type: "number",
+        default: 5.0,
+        description: "Remaining lifetime in seconds",
+      },
+      {
+        name: "destroyOnExpire",
+        type: "boolean",
+        default: true,
+        description: "Auto-destroy when expired",
+      },
     ],
-    defaultValues: { timeLeft: 5.0, destroyOnExpire: true }
+    defaultValues: { timeLeft: 5.0, destroyOnExpire: true },
   },
-  
+
   {
-    name: 'AI',
-    description: 'Basic AI behavior component',
+    name: "AI",
+    description: "Basic AI behavior component",
     fields: [
-      { name: 'state', type: 'string', default: 'idle', description: 'Current AI state' },
-      { name: 'target', type: 'number', default: 0, description: 'Target entity ID' },
-      { name: 'alertDistance', type: 'number', default: 100, description: 'Detection range' }
+      {
+        name: "state",
+        type: "string",
+        default: "idle",
+        description: "Current AI state",
+      },
+      {
+        name: "target",
+        type: "number",
+        default: 0,
+        description: "Target entity ID",
+      },
+      {
+        name: "alertDistance",
+        type: "number",
+        default: 100,
+        description: "Detection range",
+      },
     ],
-    defaultValues: { state: 'idle', target: 0, alertDistance: 100 }
-  }
+    defaultValues: { state: "idle", target: 0, alertDistance: 100 },
+  },
 ];
 
-// System Templates  
+// System Templates
 export const SYSTEM_TEMPLATES: SystemTemplate[] = [
   {
-    name: 'Movement System',
-    query: 'Position, Velocity',
+    name: "Movement System",
+    query: "Position, Velocity",
     phase: ToxoidPhases.ON_UPDATE,
-    description: 'Updates entity positions based on velocity',
+    description: "Updates entity positions based on velocity",
     codeTemplate: `
 Toxoid.System.create("MovementSystem", "Position, Velocity", Toxoid.Phases.ON_UPDATE,
   function(iter) {
@@ -123,14 +186,14 @@ Toxoid.System.create("MovementSystem", "Position, Velocity", Toxoid.Phases.ON_UP
     });
   }
 );`,
-    parameters: []
+    parameters: [],
   },
-  
+
   {
-    name: 'Input System',
-    query: 'Position, Player',
+    name: "Input System",
+    query: "Position, Player",
     phase: ToxoidPhases.PRE_UPDATE,
-    description: 'Handles player input for movement and actions',
+    description: "Handles player input for movement and actions",
     codeTemplate: `
 Toxoid.System.create("InputSystem", "Position, Player", Toxoid.Phases.PRE_UPDATE,
   function(iter) {
@@ -168,19 +231,19 @@ Toxoid.System.create("InputSystem", "Position, Player", Toxoid.Phases.PRE_UPDATE
 );`,
     parameters: [
       {
-        name: 'MOVE_SPEED',
-        type: 'number',
-        description: 'Player movement speed',
-        default: 200
-      }
-    ]
+        name: "MOVE_SPEED",
+        type: "number",
+        description: "Player movement speed",
+        default: 200,
+      },
+    ],
   },
-  
+
   {
-    name: 'Collision System',
-    query: 'Position, Collider',
+    name: "Collision System",
+    query: "Position, Collider",
     phase: ToxoidPhases.ON_UPDATE,
-    description: 'AABB collision detection between entities',
+    description: "AABB collision detection between entities",
     codeTemplate: `
 Toxoid.System.create("CollisionSystem", "Position, Collider", Toxoid.Phases.ON_UPDATE,
   function(iter) {
@@ -227,14 +290,14 @@ function handleCollision(entityA, entityB) {
     dealDamage(entityB, entityA);
   }
 }`,
-    parameters: []
+    parameters: [],
   },
-  
+
   {
-    name: 'Lifetime System',
-    query: 'Lifetime',
+    name: "Lifetime System",
+    query: "Lifetime",
     phase: ToxoidPhases.ON_UPDATE,
-    description: 'Manages entity lifetime and destruction',
+    description: "Manages entity lifetime and destruction",
     codeTemplate: `
 Toxoid.System.create("LifetimeSystem", "Lifetime", Toxoid.Phases.ON_UPDATE,
   function(iter) {
@@ -264,14 +327,14 @@ Toxoid.System.create("LifetimeSystem", "Lifetime", Toxoid.Phases.ON_UPDATE,
     });
   }
 );`,
-    parameters: []
+    parameters: [],
   },
-  
+
   {
-    name: 'AI System',
-    query: 'Position, AI',
+    name: "AI System",
+    query: "Position, AI",
     phase: ToxoidPhases.ON_UPDATE,
-    description: 'Basic AI behavior system with state machine',
+    description: "Basic AI behavior system with state machine",
     codeTemplate: `
 Toxoid.System.create("AISystem", "Position, AI", Toxoid.Phases.ON_UPDATE,
   function(iter) {
@@ -362,27 +425,36 @@ function handleChaseState(entity, position, ai) {
 }`,
     parameters: [
       {
-        name: 'CHASE_SPEED',
-        type: 'number',
-        description: 'AI chase speed',
-        default: 150
-      }
-    ]
-  }
+        name: "CHASE_SPEED",
+        type: "number",
+        description: "AI chase speed",
+        default: 150,
+      },
+    ],
+  },
 ];
 
 // Complete Game Templates
 export const COMPLETE_GAME_TEMPLATES: ScriptTemplate[] = [
   {
-    id: 'bullet-hell-basic',
-    name: 'Basic Bullet Hell Game',
-    description: 'Simple bullet hell game with player, enemies, and projectiles',
-    category: 'complete_game',
-    difficulty: 'intermediate',
-    tags: ['bullet-hell', 'shooting', 'arcade'],
+    id: "bullet-hell-basic",
+    name: "Basic Bullet Hell Game",
+    description:
+      "Simple bullet hell game with player, enemies, and projectiles",
+    category: "complete_game",
+    difficulty: "intermediate",
+    tags: ["bullet-hell", "shooting", "arcade"],
     dependencies: [],
-    requiredComponents: ['Position', 'Velocity', 'Health', 'Player', 'Enemy', 'Projectile'],
-    documentation: 'Creates a basic bullet hell game with player movement, enemy spawning, and projectile mechanics',
+    requiredComponents: [
+      "Position",
+      "Velocity",
+      "Health",
+      "Player",
+      "Enemy",
+      "Projectile",
+    ],
+    documentation:
+      "Creates a basic bullet hell game with player movement, enemy spawning, and projectile mechanics",
     examples: [],
     code: `
 // Bullet Hell Game Template
@@ -604,19 +676,26 @@ class BulletHellGame {
 
 // Initialize the game
 const bulletHellGame = new BulletHellGame();
-`
+`,
   },
-  
+
   {
-    id: 'simple-platformer',
-    name: 'Simple Platformer',
-    description: 'Basic platformer with player, platforms, and gravity',
-    category: 'complete_game',
-    difficulty: 'beginner',
-    tags: ['platformer', '2d', 'physics'],
+    id: "simple-platformer",
+    name: "Simple Platformer",
+    description: "Basic platformer with player, platforms, and gravity",
+    category: "complete_game",
+    difficulty: "beginner",
+    tags: ["platformer", "2d", "physics"],
     dependencies: [],
-    requiredComponents: ['Position', 'Velocity', 'Player', 'Platform', 'Gravity'],
-    documentation: 'Creates a simple platformer with gravity, jumping, and collision with platforms',
+    requiredComponents: [
+      "Position",
+      "Velocity",
+      "Player",
+      "Platform",
+      "Gravity",
+    ],
+    documentation:
+      "Creates a simple platformer with gravity, jumping, and collision with platforms",
     examples: [],
     code: `
 // Simple Platformer Template
@@ -797,28 +876,29 @@ class SimplePlatformer {
 
 // Initialize the platformer
 const platformer = new SimplePlatformer();
-`
-  }
+`,
+  },
 ];
 
 // Behavior Templates
 export const BEHAVIOR_TEMPLATES: ScriptTemplate[] = [
   {
-    id: 'follow-behavior',
-    name: 'Follow Behavior',
-    description: 'Makes an entity follow a target entity',
-    category: 'behavior',
-    difficulty: 'beginner',
-    tags: ['ai', 'movement', 'follow'],
-    dependencies: ['Position', 'Velocity'],
-    requiredComponents: ['Position', 'Velocity'],
-    documentation: 'Behavior that makes an entity smoothly follow another entity',
+    id: "follow-behavior",
+    name: "Follow Behavior",
+    description: "Makes an entity follow a target entity",
+    category: "behavior",
+    difficulty: "beginner",
+    tags: ["ai", "movement", "follow"],
+    dependencies: ["Position", "Velocity"],
+    requiredComponents: ["Position", "Velocity"],
+    documentation:
+      "Behavior that makes an entity smoothly follow another entity",
     examples: [
       {
-        name: 'Pet Following Player',
-        description: 'A pet entity that follows the player around',
-        code: 'applyFollowBehavior(pet, player, 50, 150);'
-      }
+        name: "Pet Following Player",
+        description: "A pet entity that follows the player around",
+        code: "applyFollowBehavior(pet, player, 50, 150);",
+      },
     ],
     code: `
 function applyFollowBehavior(follower, target, followDistance, moveSpeed) {
@@ -869,25 +949,26 @@ function applyFollowBehavior(follower, target, followDistance, moveSpeed) {
     );
     globalThis.followSystemCreated = true;
   }
-}`
+}`,
   },
-  
+
   {
-    id: 'patrol-behavior',
-    name: 'Patrol Behavior',
-    description: 'Makes an entity patrol between waypoints',
-    category: 'behavior',
-    difficulty: 'intermediate',
-    tags: ['ai', 'movement', 'patrol'],
-    dependencies: ['Position', 'Velocity'],
-    requiredComponents: ['Position', 'Velocity'],
-    documentation: 'Behavior that makes an entity patrol along a set of waypoints',
+    id: "patrol-behavior",
+    name: "Patrol Behavior",
+    description: "Makes an entity patrol between waypoints",
+    category: "behavior",
+    difficulty: "intermediate",
+    tags: ["ai", "movement", "patrol"],
+    dependencies: ["Position", "Velocity"],
+    requiredComponents: ["Position", "Velocity"],
+    documentation:
+      "Behavior that makes an entity patrol along a set of waypoints",
     examples: [
       {
-        name: 'Guard Patrolling',
-        description: 'A guard entity that patrols between multiple points',
-        code: 'applyPatrolBehavior(guard, [{x: 100, y: 200}, {x: 300, y: 200}, {x: 300, y: 400}], 80);'
-      }
+        name: "Guard Patrolling",
+        description: "A guard entity that patrols between multiple points",
+        code: "applyPatrolBehavior(guard, [{x: 100, y: 200}, {x: 300, y: 200}, {x: 300, y: 400}], 80);",
+      },
     ],
     code: `
 function applyPatrolBehavior(entity, waypoints, moveSpeed) {
@@ -940,35 +1021,39 @@ function applyPatrolBehavior(entity, waypoints, moveSpeed) {
     );
     globalThis.patrolSystemCreated = true;
   }
-}`
-  }
+}`,
+  },
 ];
 
 // Template retrieval functions
-export function getTemplatesByCategory(category: ScriptTemplate['category']): ScriptTemplate[] {
+export function getTemplatesByCategory(
+  category: ScriptTemplate["category"],
+): ScriptTemplate[] {
   return [...COMPLETE_GAME_TEMPLATES, ...BEHAVIOR_TEMPLATES].filter(
-    template => template.category === category
+    (template) => template.category === category,
   );
 }
 
 export function getTemplatesByTags(tags: string[]): ScriptTemplate[] {
   return [...COMPLETE_GAME_TEMPLATES, ...BEHAVIOR_TEMPLATES].filter(
-    template => template.tags.some(tag => tags.includes(tag))
+    (template) => template.tags.some((tag) => tags.includes(tag)),
   );
 }
 
 export function getTemplateById(id: string): ScriptTemplate | null {
-  return [...COMPLETE_GAME_TEMPLATES, ...BEHAVIOR_TEMPLATES].find(
-    template => template.id === id
-  ) || null;
+  return (
+    [...COMPLETE_GAME_TEMPLATES, ...BEHAVIOR_TEMPLATES].find(
+      (template) => template.id === id,
+    ) || null
+  );
 }
 
 export function getSystemTemplate(name: string): SystemTemplate | null {
-  return SYSTEM_TEMPLATES.find(template => template.name === name) || null;
+  return SYSTEM_TEMPLATES.find((template) => template.name === name) || null;
 }
 
 export function getComponentTemplate(name: string): ComponentTemplate | null {
-  return COMPONENT_TEMPLATES.find(template => template.name === name) || null;
+  return COMPONENT_TEMPLATES.find((template) => template.name === name) || null;
 }
 
 export function getAllTemplates(): ScriptTemplate[] {
@@ -984,20 +1069,25 @@ export function getAllComponentTemplates(): ComponentTemplate[] {
 }
 
 // Template processing utilities
-export function processTemplateParameters(template: string, parameters: Record<string, any>): string {
+export function processTemplateParameters(
+  template: string,
+  parameters: Record<string, any>,
+): string {
   let processed = template;
-  
+
   for (const [key, value] of Object.entries(parameters)) {
     const placeholder = `{{${key}}}`;
-    processed = processed.replace(new RegExp(placeholder, 'g'), String(value));
+
+    processed = processed.replace(new RegExp(placeholder, "g"), String(value));
   }
-  
+
   return processed;
 }
 
 export function extractTemplateParameters(template: string): string[] {
   const matches = template.match(/\{\{([^}]+)\}\}/g);
-  return matches ? matches.map(match => match.slice(2, -2)) : [];
+
+  return matches ? matches.map((match) => match.slice(2, -2)) : [];
 }
 
 export default {
@@ -1014,5 +1104,5 @@ export default {
   getAllSystemTemplates,
   getAllComponentTemplates,
   processTemplateParameters,
-  extractTemplateParameters
+  extractTemplateParameters,
 };

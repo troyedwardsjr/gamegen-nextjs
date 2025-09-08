@@ -1,16 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
 import { Tabs, Tab } from "@heroui/tabs";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
 import { useDisclosure } from "@heroui/modal";
 import Link from "next/link";
+
 import {
   GameIcon,
   SparklesIcon,
@@ -19,7 +25,6 @@ import {
   DocumentTextIcon,
   PhotoIcon,
   MusicalNoteIcon,
-  CogIcon,
   ArrowRightIcon,
   RocketLaunchIcon,
   PaintBrushIcon,
@@ -47,7 +52,9 @@ interface RecentProject {
 
 export default function CreatorStudioPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [selectedTemplate, setSelectedTemplate] = useState<GameTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<GameTemplate | null>(
+    null,
+  );
   const [projectTitle, setProjectTitle] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
 
@@ -55,11 +62,17 @@ export default function CreatorStudioPage() {
     {
       id: "platformer",
       title: "2D Platformer",
-      description: "Classic side-scrolling adventure with pixel-perfect physics",
+      description:
+        "Classic side-scrolling adventure with pixel-perfect physics",
       category: "Action",
       complexity: "intermediate",
       icon: GameIcon,
-      features: ["Physics Engine", "Character Movement", "Level Editor", "Collectibles"],
+      features: [
+        "Physics Engine",
+        "Character Movement",
+        "Level Editor",
+        "Collectibles",
+      ],
     },
     {
       id: "puzzle",
@@ -68,7 +81,12 @@ export default function CreatorStudioPage() {
       category: "Puzzle",
       complexity: "beginner",
       icon: SparklesIcon,
-      features: ["Grid System", "Move Counter", "Hint System", "Level Progression"],
+      features: [
+        "Grid System",
+        "Move Counter",
+        "Hint System",
+        "Level Progression",
+      ],
     },
     {
       id: "shooter",
@@ -86,7 +104,12 @@ export default function CreatorStudioPage() {
       category: "RPG",
       complexity: "advanced",
       icon: DocumentTextIcon,
-      features: ["Character Stats", "Inventory", "Quest System", "Dialogue Trees"],
+      features: [
+        "Character Stats",
+        "Inventory",
+        "Quest System",
+        "Dialogue Trees",
+      ],
     },
     {
       id: "racing",
@@ -95,7 +118,12 @@ export default function CreatorStudioPage() {
       category: "Racing",
       complexity: "intermediate",
       icon: PlayIcon,
-      features: ["Track Editor", "Car Customization", "Time Trials", "Multiplayer"],
+      features: [
+        "Track Editor",
+        "Car Customization",
+        "Time Trials",
+        "Multiplayer",
+      ],
     },
     {
       id: "custom",
@@ -104,7 +132,12 @@ export default function CreatorStudioPage() {
       category: "Custom",
       complexity: "advanced",
       icon: CodeBracketIcon,
-      features: ["Full Creative Control", "Custom Assets", "Scripting", "Advanced Tools"],
+      features: [
+        "Full Creative Control",
+        "Custom Assets",
+        "Scripting",
+        "Advanced Tools",
+      ],
     },
   ];
 
@@ -117,7 +150,7 @@ export default function CreatorStudioPage() {
       progress: 100,
     },
     {
-      id: "2", 
+      id: "2",
       title: "Space Invaders Remix",
       lastModified: "1 day ago",
       status: "draft",
@@ -140,7 +173,7 @@ export default function CreatorStudioPage() {
         title: projectTitle,
         description: projectDescription,
       });
-      
+
       // Redirect to game-creator with template
       window.location.href = `/game-creator?template=${selectedTemplate.id}&title=${encodeURIComponent(projectTitle)}`;
     }
@@ -148,19 +181,27 @@ export default function CreatorStudioPage() {
 
   const getComplexityColor = (complexity: string) => {
     switch (complexity) {
-      case "beginner": return "text-green-400";
-      case "intermediate": return "text-yellow-400";
-      case "advanced": return "text-red-400";
-      default: return "text-gray-400";
+      case "beginner":
+        return "text-green-400";
+      case "intermediate":
+        return "text-yellow-400";
+      case "advanced":
+        return "text-red-400";
+      default:
+        return "text-gray-400";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "published": return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "in_review": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "draft": return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      case "published":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "in_review":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "draft":
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
@@ -169,10 +210,10 @@ export default function CreatorStudioPage() {
       <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
           className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.5 }}
         >
           <div className="flex justify-between items-start">
             <div>
@@ -187,8 +228,8 @@ export default function CreatorStudioPage() {
               </p>
             </div>
             <Button
-              size="lg"
               className="bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold hover:from-purple-400 hover:to-purple-500 shadow-lg shadow-purple-500/25"
+              size="lg"
               startContent={<PlusIcon className="w-5 h-5" />}
               onPress={onOpen}
             >
@@ -197,28 +238,32 @@ export default function CreatorStudioPage() {
           </div>
         </motion.div>
 
-        <Tabs defaultSelectedKey="templates" className="w-full">
+        <Tabs className="w-full" defaultSelectedKey="templates">
           <Tab key="templates" title="Templates">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Choose a Template</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Choose a Template
+                </h2>
                 <p className="text-gray-400">
-                  Start with a pre-built template or create something entirely new
+                  Start with a pre-built template or create something entirely
+                  new
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {gameTemplates.map((template, index) => {
                   const Icon = template.icon;
+
                   return (
                     <motion.div
                       key={template.id}
-                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
                     >
                       <Card
@@ -235,11 +280,19 @@ export default function CreatorStudioPage() {
                               <Icon className="w-6 h-6 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-lg font-bold text-white">{template.title}</h3>
+                              <h3 className="text-lg font-bold text-white">
+                                {template.title}
+                              </h3>
                               <div className="flex items-center gap-2 text-sm">
-                                <span className="text-gray-400">{template.category}</span>
+                                <span className="text-gray-400">
+                                  {template.category}
+                                </span>
                                 <span className="text-gray-600">•</span>
-                                <span className={getComplexityColor(template.complexity)}>
+                                <span
+                                  className={getComplexityColor(
+                                    template.complexity,
+                                  )}
+                                >
                                   {template.complexity}
                                 </span>
                               </div>
@@ -247,7 +300,9 @@ export default function CreatorStudioPage() {
                           </div>
                         </CardHeader>
                         <CardBody className="pt-0">
-                          <p className="text-gray-300 text-sm mb-4">{template.description}</p>
+                          <p className="text-gray-300 text-sm mb-4">
+                            {template.description}
+                          </p>
                           <div className="space-y-2">
                             <p className="text-xs font-semibold text-purple-400 uppercase tracking-wide">
                               Includes:
@@ -274,12 +329,14 @@ export default function CreatorStudioPage() {
 
           <Tab key="recent" title="Recent Projects">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Recent Projects</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Recent Projects
+                </h2>
                 <p className="text-gray-400">
                   Continue working on your existing games
                 </p>
@@ -289,8 +346,8 @@ export default function CreatorStudioPage() {
                 {recentProjects.map((project, index) => (
                   <motion.div
                     key={project.id}
-                    initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                   >
                     <Card className="bg-gradient-to-r from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl">
@@ -301,10 +358,16 @@ export default function CreatorStudioPage() {
                               <GameIcon className="w-8 h-8 text-white" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-white mb-1">{project.title}</h3>
-                              <p className="text-gray-400 text-sm mb-2">Last modified: {project.lastModified}</p>
+                              <h3 className="text-xl font-bold text-white mb-1">
+                                {project.title}
+                              </h3>
+                              <p className="text-gray-400 text-sm mb-2">
+                                Last modified: {project.lastModified}
+                              </p>
                               <div className="flex items-center gap-4">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.status)}`}>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.status)}`}
+                                >
                                   {project.status}
                                 </span>
                                 <span className="text-sm text-gray-400">
@@ -316,18 +379,20 @@ export default function CreatorStudioPage() {
                           <div className="flex gap-2">
                             <Link href={`/game-creator?project=${project.id}`}>
                               <Button
-                                variant="bordered"
                                 className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
-                                startContent={<PaintBrushIcon className="w-4 h-4" />}
+                                startContent={
+                                  <PaintBrushIcon className="w-4 h-4" />
+                                }
+                                variant="bordered"
                               >
                                 Edit
                               </Button>
                             </Link>
                             {project.status === "published" && (
                               <Button
-                                variant="ghost"
                                 className="text-green-400 hover:text-green-300"
                                 startContent={<PlayIcon className="w-4 h-4" />}
+                                variant="ghost"
                               >
                                 Play
                               </Button>
@@ -344,10 +409,10 @@ export default function CreatorStudioPage() {
 
           <Tab key="tools" title="Tools & Resources">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
             >
               <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl">
                 <CardHeader>
@@ -361,9 +426,9 @@ export default function CreatorStudioPage() {
                     Create and edit pixel art sprites for your games
                   </p>
                   <Button
-                    variant="bordered"
                     className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
                     startContent={<ArrowRightIcon className="w-4 h-4" />}
+                    variant="bordered"
                   >
                     Open Editor
                   </Button>
@@ -382,9 +447,9 @@ export default function CreatorStudioPage() {
                     Generate and edit sound effects and music
                   </p>
                   <Button
-                    variant="bordered"
                     className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
                     startContent={<ArrowRightIcon className="w-4 h-4" />}
+                    variant="bordered"
                   >
                     Open Studio
                   </Button>
@@ -403,9 +468,9 @@ export default function CreatorStudioPage() {
                     Learn game development with step-by-step guides
                   </p>
                   <Button
-                    variant="bordered"
                     className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
                     startContent={<ArrowRightIcon className="w-4 h-4" />}
+                    variant="bordered"
                   >
                     Browse Tutorials
                   </Button>
@@ -416,7 +481,7 @@ export default function CreatorStudioPage() {
         </Tabs>
 
         {/* Create Project Modal */}
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+        <Modal isOpen={isOpen} size="2xl" onOpenChange={onOpenChange}>
           <ModalContent>
             {(onClose) => (
               <>
@@ -429,32 +494,36 @@ export default function CreatorStudioPage() {
                 <ModalBody>
                   <div className="space-y-4">
                     <Input
+                      classNames={{
+                        input: "text-white",
+                        label: "text-gray-400",
+                        inputWrapper:
+                          "border-purple-500/30 hover:border-purple-500/50",
+                      }}
                       label="Project Title"
                       placeholder="Enter your game title"
                       value={projectTitle}
-                      onValueChange={setProjectTitle}
                       variant="bordered"
+                      onValueChange={setProjectTitle}
+                    />
+                    <Textarea
                       classNames={{
                         input: "text-white",
                         label: "text-gray-400",
-                        inputWrapper: "border-purple-500/30 hover:border-purple-500/50",
+                        inputWrapper:
+                          "border-purple-500/30 hover:border-purple-500/50",
                       }}
-                    />
-                    <Textarea
                       label="Description (Optional)"
                       placeholder="Describe your game..."
                       value={projectDescription}
-                      onValueChange={setProjectDescription}
                       variant="bordered"
-                      classNames={{
-                        input: "text-white",
-                        label: "text-gray-400",
-                        inputWrapper: "border-purple-500/30 hover:border-purple-500/50",
-                      }}
+                      onValueChange={setProjectDescription}
                     />
                     {selectedTemplate && (
                       <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/30">
-                        <h3 className="font-semibold text-purple-400 mb-2">Template Features:</h3>
+                        <h3 className="font-semibold text-purple-400 mb-2">
+                          Template Features:
+                        </h3>
                         <div className="flex flex-wrap gap-2">
                           {selectedTemplate.features.map((feature) => (
                             <span
@@ -475,11 +544,11 @@ export default function CreatorStudioPage() {
                   </Button>
                   <Button
                     className="bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                    isDisabled={!projectTitle.trim()}
                     onPress={() => {
                       handleCreateProject();
                       onClose();
                     }}
-                    isDisabled={!projectTitle.trim()}
                   >
                     Create Project
                   </Button>

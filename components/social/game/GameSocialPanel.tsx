@@ -1,28 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, Chip, Divider, Tooltip } from "@heroui/react";
+import { Button, Divider } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  Bookmark, 
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Bookmark,
   MoreHorizontal,
   Flag,
   Copy,
-  ExternalLink,
-  Download,
-  Code
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import { toast } from "sonner";
+
 import { SocialShareButton } from "./SocialShareButton";
 import { GameRating } from "./GameRating";
 import { GameComments } from "./GameComments";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
 import { GameSocialStats } from "@/src/types/social";
-import { toast } from "sonner";
 
 type Game = Database["public"]["Tables"]["games"]["Row"];
 
@@ -84,13 +86,13 @@ export function GameSocialPanel({
           .eq("game_id", game.id)
           .eq("user_id", currentUserId)
           .single(),
-        
+
         supabase
           .from("collection_games")
           .select("id")
           .eq("game_id", game.id)
           .eq("added_by", currentUserId)
-          .single()
+          .single(),
       ]);
 
       setIsLiked(!!likeResult.data);
@@ -108,20 +110,18 @@ export function GameSocialPanel({
           .select("id", { count: "exact" })
           .eq("game_id", game.id)
           .eq("is_deleted", false),
-        
-        supabase
-          .from("game_ratings")
-          .select("rating")
-          .eq("game_id", game.id)
+
+        supabase.from("game_ratings").select("rating").eq("game_id", game.id),
       ]);
 
       const commentCount = commentsResult.count || 0;
       const ratings = ratingsResult.data || [];
-      const avgRating = ratings.length > 0 
-        ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length 
-        : 0;
+      const avgRating =
+        ratings.length > 0
+          ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+          : 0;
 
-      setSocialStats(prev => ({
+      setSocialStats((prev) => ({
         ...prev,
         comment_count: commentCount,
         rating_average: avgRating,
@@ -137,26 +137,25 @@ export function GameSocialPanel({
   const handleLike = async () => {
     if (!currentUserId) {
       toast.error("Please log in to like games");
+
       return;
     }
 
     const newLikedState = !isLiked;
     const optimisticCount = socialStats.like_count + (newLikedState ? 1 : -1);
-    
+
     // Optimistic update
     setIsLiked(newLikedState);
-    setSocialStats(prev => ({ ...prev, like_count: optimisticCount }));
+    setSocialStats((prev) => ({ ...prev, like_count: optimisticCount }));
     onLike?.(newLikedState, optimisticCount);
 
     try {
       if (newLikedState) {
         // Add like
-        const { error } = await supabase
-          .from("game_likes")
-          .insert({
-            game_id: game.id,
-            user_id: currentUserId,
-          });
+        const { error } = await supabase.from("game_likes").insert({
+          game_id: game.id,
+          user_id: currentUserId,
+        });
 
         if (error) throw error;
 
@@ -193,7 +192,7 @@ export function GameSocialPanel({
                 game_title: game.title,
                 liker_username: userProfile.username,
                 liker_display_name: userProfile.display_name,
-              }
+              },
             });
           }
         }
@@ -213,7 +212,10 @@ export function GameSocialPanel({
     } catch (error) {
       // Revert optimistic update
       setIsLiked(!newLikedState);
-      setSocialStats(prev => ({ ...prev, like_count: prev.like_count - (newLikedState ? 1 : -1) }));
+      setSocialStats((prev) => ({
+        ...prev,
+        like_count: prev.like_count - (newLikedState ? 1 : -1),
+      }));
       onLike?.(!newLikedState, socialStats.like_count);
       console.error("Error updating like:", error);
       toast.error("Failed to update like");
@@ -223,6 +225,7 @@ export function GameSocialPanel({
   const handleBookmark = async () => {
     if (!currentUserId) {
       toast.error("Please log in to bookmark games");
+
       return;
     }
 
@@ -235,8 +238,8 @@ export function GameSocialPanel({
     if (platform) {
       // Handle social media sharing
       const gameUrl = `${window.location.origin}/games/${game.id}`;
-      const text = `Check out "${game.title}" on GameGen! ${game.description || ''}`;
-      
+      const text = `Check out "${game.title}" on GameGen! ${game.description || ""}`;
+
       SocialShareButton.share(platform as any, {
         url: gameUrl,
         title: game.title,
@@ -250,6 +253,7 @@ export function GameSocialPanel({
 
   const handleCopyLink = async () => {
     const gameUrl = `${window.location.origin}/games/${game.id}`;
+
     try {
       await navigator.clipboard.writeText(gameUrl);
       toast.success("Game link copied to clipboard!");
@@ -261,28 +265,30 @@ export function GameSocialPanel({
   const renderCompactView = () => (
     <div className="flex items-center gap-2">
       <Button
-        size="sm"
-        variant="flat"
         color={isLiked ? "danger" : "default"}
-        startContent={<Heart size={16} fill={isLiked ? "currentColor" : "none"} />}
+        size="sm"
+        startContent={
+          <Heart fill={isLiked ? "currentColor" : "none"} size={16} />
+        }
+        variant="flat"
         onPress={handleLike}
       >
         {socialStats.like_count}
       </Button>
-      
+
       <Button
         size="sm"
-        variant="flat"
         startContent={<MessageCircle size={16} />}
+        variant="flat"
         onPress={() => setShowCommentsPanel(!showCommentsPanel)}
       >
         {socialStats.comment_count}
       </Button>
-      
+
       <Button
         size="sm"
-        variant="flat"
         startContent={<Share2 size={16} />}
+        variant="flat"
         onPress={() => handleShare()}
       />
     </div>
@@ -296,35 +302,41 @@ export function GameSocialPanel({
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button
               color={isLiked ? "danger" : "default"}
-              variant={isLiked ? "solid" : "flat"}
+              isLoading={loading}
               startContent={
                 <motion.div
                   animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+                  <Heart fill={isLiked ? "currentColor" : "none"} size={18} />
                 </motion.div>
               }
+              variant={isLiked ? "solid" : "flat"}
               onPress={handleLike}
-              isLoading={loading}
             >
-              {socialStats.like_count} {socialStats.like_count === 1 ? 'Like' : 'Likes'}
+              {socialStats.like_count}{" "}
+              {socialStats.like_count === 1 ? "Like" : "Likes"}
             </Button>
           </motion.div>
 
           <Button
-            variant="flat"
             startContent={<MessageCircle size={18} />}
+            variant="flat"
             onPress={() => setShowCommentsPanel(!showCommentsPanel)}
           >
             {socialStats.comment_count} Comments
           </Button>
 
           <Button
-            variant="flat"
-            startContent={<Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />}
-            onPress={handleBookmark}
             color={isBookmarked ? "secondary" : "default"}
+            startContent={
+              <Bookmark
+                fill={isBookmarked ? "currentColor" : "none"}
+                size={18}
+              />
+            }
+            variant="flat"
+            onPress={handleBookmark}
           >
             Save
           </Button>
@@ -334,41 +346,41 @@ export function GameSocialPanel({
           {showSharing && (
             <div className="relative">
               <Button
-                variant="flat"
                 startContent={<Share2 size={18} />}
+                variant="flat"
                 onPress={() => setShowShareMenu(!showShareMenu)}
               >
                 Share
               </Button>
-              
+
               <AnimatePresence>
                 {showShareMenu && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
                     className="absolute right-0 top-full mt-2 z-50"
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                   >
                     <GlassmorphicCard {...GameGenCardPresets.modalCard}>
                       <div className="p-4 space-y-2 min-w-48">
                         <Button
-                          variant="flat"
-                          startContent={<Copy size={16} />}
-                          onPress={handleCopyLink}
                           className="w-full justify-start"
+                          startContent={<Copy size={16} />}
+                          variant="flat"
+                          onPress={handleCopyLink}
                         >
                           Copy Link
                         </Button>
-                        <SocialShareButton platform="twitter" game={game} />
-                        <SocialShareButton platform="facebook" game={game} />
-                        <SocialShareButton platform="discord" game={game} />
+                        <SocialShareButton game={game} platform="twitter" />
+                        <SocialShareButton game={game} platform="facebook" />
+                        <SocialShareButton game={game} platform="discord" />
                         <Divider />
                         <Button
-                          variant="flat"
-                          color="warning"
-                          startContent={<Flag size={16} />}
                           className="w-full justify-start"
+                          color="warning"
                           size="sm"
+                          startContent={<Flag size={16} />}
+                          variant="flat"
                         >
                           Report Content
                         </Button>
@@ -381,9 +393,9 @@ export function GameSocialPanel({
           )}
 
           <Button
-            variant="flat"
             isIconOnly
             startContent={<MoreHorizontal size={18} />}
+            variant="flat"
           />
         </div>
       </div>
@@ -392,21 +404,29 @@ export function GameSocialPanel({
       <div className="flex items-center gap-4 text-sm text-foreground/70">
         <div className="flex items-center gap-1">
           <span>Plays:</span>
-          <span className="font-semibold">{game.play_count?.toLocaleString() || 0}</span>
+          <span className="font-semibold">
+            {game.play_count?.toLocaleString() || 0}
+          </span>
         </div>
-        
+
         {socialStats.fork_count > 0 && (
           <div className="flex items-center gap-1">
             <span>Remixes:</span>
-            <span className="font-semibold">{socialStats.fork_count.toLocaleString()}</span>
+            <span className="font-semibold">
+              {socialStats.fork_count.toLocaleString()}
+            </span>
           </div>
         )}
-        
+
         {showRating && socialStats.rating_count > 0 && (
           <div className="flex items-center gap-1">
             <span>Rating:</span>
-            <span className="font-semibold">{socialStats.rating_average.toFixed(1)}/5</span>
-            <span className="text-foreground/50">({socialStats.rating_count})</span>
+            <span className="font-semibold">
+              {socialStats.rating_average.toFixed(1)}/5
+            </span>
+            <span className="text-foreground/50">
+              ({socialStats.rating_count})
+            </span>
           </div>
         )}
       </div>
@@ -414,12 +434,12 @@ export function GameSocialPanel({
       {/* Rating Component */}
       {showRating && currentUserId && !isOwnGame && (
         <GameRating
-          gameId={game.id}
-          currentUserId={currentUserId}
           currentRating={socialStats.rating_average}
+          currentUserId={currentUserId}
+          gameId={game.id}
           totalRatings={socialStats.rating_count}
           onRatingChange={(newAvg, newCount) => {
-            setSocialStats(prev => ({
+            setSocialStats((prev) => ({
               ...prev,
               rating_average: newAvg,
               rating_count: newCount,
@@ -455,17 +475,17 @@ export function GameSocialPanel({
       <AnimatePresence>
         {showCommentsPanel && showComments && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
             className="overflow-hidden mt-4"
+            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <GameComments
-              gameId={game.id}
               currentUserId={currentUserId}
+              gameId={game.id}
               onCommentCount={(count) => {
-                setSocialStats(prev => ({ ...prev, comment_count: count }));
+                setSocialStats((prev) => ({ ...prev, comment_count: count }));
                 onComment?.(count);
               }}
             />

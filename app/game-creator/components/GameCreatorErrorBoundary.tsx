@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { GlassmorphicAlert } from "@/components/ui/GlassmorphicAlert";
 
@@ -28,8 +32,12 @@ export class GameCreatorErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("GameCreator Error Boundary caught an error:", error, errorInfo);
-    
+    console.error(
+      "GameCreator Error Boundary caught an error:",
+      error,
+      errorInfo,
+    );
+
     this.setState({
       error,
       errorInfo,
@@ -63,29 +71,33 @@ export class GameCreatorErrorBoundary extends React.Component<
           {/* Background Elements */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,_#3b0764_0%,_transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_#312e81_0%,_transparent_50%)]" />
-          
-          <GlassmorphicCard {...GameGenCardPresets.modalCard} className="max-w-2xl w-full relative z-10">
+
+          <GlassmorphicCard
+            {...GameGenCardPresets.modalCard}
+            className="max-w-2xl w-full relative z-10"
+          >
             <div className="p-8 text-center">
               {/* Error Icon */}
               <div className="text-6xl mb-6">⚠️</div>
-              
+
               <h1 className="text-2xl font-bold text-white mb-4">
                 Oops! Something went wrong
               </h1>
-              
+
               <p className="text-white/70 mb-6">
-                The GameGen creator encountered an unexpected error. Don't worry - your work is automatically saved.
+                The GameGen creator encountered an unexpected error. Don't worry
+                - your work is automatically saved.
               </p>
 
               {/* Error Details (Development) */}
               {process.env.NODE_ENV === "development" && this.state.error && (
                 <div className="mb-6 text-left">
                   <GlassmorphicAlert
-                    variant="danger"
-                    title="Error Details"
                     description={this.state.error.message}
+                    title="Error Details"
+                    variant="danger"
                   />
-                  
+
                   {this.state.error.stack && (
                     <details className="mt-4">
                       <summary className="cursor-pointer text-sm text-white/60 hover:text-white/80">
@@ -102,34 +114,64 @@ export class GameCreatorErrorBoundary extends React.Component<
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <GlassmorphicButton
+                  className="flex items-center space-x-2"
                   variant="gaming"
                   onClick={this.handleReset}
-                  className="flex items-center space-x-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                    />
                   </svg>
                   <span>Try Again</span>
                 </GlassmorphicButton>
-                
+
                 <GlassmorphicButton
+                  className="flex items-center space-x-2"
                   variant="glass"
                   onClick={this.handleReload}
-                  className="flex items-center space-x-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                    />
                   </svg>
                   <span>Reload Page</span>
                 </GlassmorphicButton>
-                
+
                 <GlassmorphicButton
-                  variant="glass-ghost"
-                  onClick={() => window.location.href = "/"}
                   className="flex items-center space-x-2"
+                  variant="glass-ghost"
+                  onClick={() => (window.location.href = "/")}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                    />
                   </svg>
                   <span>Go Home</span>
                 </GlassmorphicButton>
@@ -139,7 +181,8 @@ export class GameCreatorErrorBoundary extends React.Component<
               <div className="mt-8 text-sm text-white/50">
                 <p>If this error persists, please contact our support team.</p>
                 <p className="mt-1">
-                  Error ID: <code className="bg-white/10 px-2 py-1 rounded font-mono text-xs">
+                  Error ID:{" "}
+                  <code className="bg-white/10 px-2 py-1 rounded font-mono text-xs">
                     {Date.now().toString(36)}
                   </code>
                 </p>

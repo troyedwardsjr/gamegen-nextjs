@@ -7,23 +7,26 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Spinner } from "@heroui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  Filter, 
-  Grid3X3, 
-  List, 
-  TrendingUp, 
-  Clock, 
-  Star, 
+import {
+  Search,
+  Grid3X3,
+  List,
+  TrendingUp,
+  Clock,
+  Star,
   Play,
   Heart,
   Eye,
-  Calendar
+  Calendar,
 } from "lucide-react";
-import { GlassmorphicCard, GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import Image from "next/image";
+
+import {
+  GlassmorphicCard,
+  GameGenCardPresets,
+} from "@/components/ui/GlassmorphicCard";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
-import Image from "next/image";
 
 type Game = Database["public"]["Tables"]["games"]["Row"] & {
   creator_profile?: {
@@ -40,8 +43,21 @@ type Game = Database["public"]["Tables"]["games"]["Row"] & {
 };
 
 type ViewMode = "grid" | "list";
-type SortBy = "trending" | "newest" | "oldest" | "most_liked" | "most_played" | "highest_rated";
-type FilterBy = "all" | "featured" | "educational" | "arcade" | "puzzle" | "rpg" | "strategy";
+type SortBy =
+  | "trending"
+  | "newest"
+  | "oldest"
+  | "most_liked"
+  | "most_played"
+  | "highest_rated";
+type FilterBy =
+  | "all"
+  | "featured"
+  | "educational"
+  | "arcade"
+  | "puzzle"
+  | "rpg"
+  | "strategy";
 
 interface GameGridProps {
   initialGames?: Game[];
@@ -95,21 +111,23 @@ export function GameGrid({
 
   const fetchGames = async (reset: boolean = false) => {
     setLoading(true);
-    
+
     try {
       const start = reset ? 0 : games.length;
       const end = start + gamesPerPage - 1;
 
       let query = supabase
         .from("games")
-        .select(`
+        .select(
+          `
           *,
           profiles!games_creator_id_fkey (
             username,
             display_name,
             avatar_url
           )
-        `)
+        `,
+        )
         .eq("is_public", true)
         .eq("status", "published")
         .range(start, end);
@@ -139,7 +157,7 @@ export function GameGrid({
 
       if (error) throw error;
 
-      const gamesWithStats: Game[] = (data || []).map(game => ({
+      const gamesWithStats: Game[] = (data || []).map((game) => ({
         ...game,
         creator_profile: game.profiles,
         game_stats: {
@@ -153,7 +171,7 @@ export function GameGrid({
       if (reset) {
         setGames(gamesWithStats);
       } else {
-        setGames(prev => [...prev, ...gamesWithStats]);
+        setGames((prev) => [...prev, ...gamesWithStats]);
       }
 
       setHasMore(gamesWithStats.length === gamesPerPage);
@@ -170,23 +188,28 @@ export function GameGrid({
     // Apply text search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(game =>
-        game.title.toLowerCase().includes(query) ||
-        game.description?.toLowerCase().includes(query) ||
-        game.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-        game.creator_profile?.username.toLowerCase().includes(query) ||
-        game.creator_profile?.display_name?.toLowerCase().includes(query)
+
+      filtered = filtered.filter(
+        (game) =>
+          game.title.toLowerCase().includes(query) ||
+          game.description?.toLowerCase().includes(query) ||
+          game.tags?.some((tag) => tag.toLowerCase().includes(query)) ||
+          game.creator_profile?.username.toLowerCase().includes(query) ||
+          game.creator_profile?.display_name?.toLowerCase().includes(query),
       );
     }
 
     // Apply category filter
     if (filterBy !== "all") {
-      filtered = filtered.filter(game => {
+      filtered = filtered.filter((game) => {
         switch (filterBy) {
           case "featured":
             return game.is_featured;
           case "educational":
-            return game.category === "educational" || game.tags?.includes("educational");
+            return (
+              game.category === "educational" ||
+              game.tags?.includes("educational")
+            );
           case "arcade":
             return game.category === "arcade" || game.tags?.includes("arcade");
           case "puzzle":
@@ -194,7 +217,9 @@ export function GameGrid({
           case "rpg":
             return game.category === "rpg" || game.tags?.includes("rpg");
           case "strategy":
-            return game.category === "strategy" || game.tags?.includes("strategy");
+            return (
+              game.category === "strategy" || game.tags?.includes("strategy")
+            );
           default:
             return true;
         }
@@ -205,22 +230,34 @@ export function GameGrid({
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         case "most_played":
           return (b.play_count || 0) - (a.play_count || 0);
         case "most_liked":
           return (b.like_count || 0) - (a.like_count || 0);
         case "highest_rated":
-          return (b.game_stats?.rating_average || 0) - (a.game_stats?.rating_average || 0);
+          return (
+            (b.game_stats?.rating_average || 0) -
+            (a.game_stats?.rating_average || 0)
+          );
         case "trending":
         default:
           // Simple trending algorithm based on recent activity
-          const aScore = ((a.like_count || 0) * 2) + (a.play_count || 0) + 
-            (new Date(a.updated_at).getTime() / 1000000);
-          const bScore = ((b.like_count || 0) * 2) + (b.play_count || 0) + 
-            (new Date(b.updated_at).getTime() / 1000000);
+          const aScore =
+            (a.like_count || 0) * 2 +
+            (a.play_count || 0) +
+            new Date(a.updated_at).getTime() / 1000000;
+          const bScore =
+            (b.like_count || 0) * 2 +
+            (b.play_count || 0) +
+            new Date(b.updated_at).getTime() / 1000000;
+
           return bScore - aScore;
       }
     });
@@ -240,24 +277,24 @@ export function GameGrid({
   const renderGameCard = (game: Game, index: number) => {
     const cardVariants = {
       hidden: { opacity: 0, y: 20 },
-      visible: { 
-        opacity: 1, 
+      visible: {
+        opacity: 1,
         y: 0,
-        transition: { delay: index * 0.05 }
+        transition: { delay: index * 0.05 },
       },
-      hover: { scale: 1.02, transition: { duration: 0.2 } }
+      hover: { scale: 1.02, transition: { duration: 0.2 } },
     };
 
     if (viewMode === "list") {
       return (
         <motion.div
           key={game.id}
-          variants={cardVariants}
-          initial="hidden"
           animate="visible"
+          initial="hidden"
+          variants={cardVariants}
           whileHover="hover"
         >
-          <GlassmorphicCard 
+          <GlassmorphicCard
             {...GameGenCardPresets.gameCard}
             className="cursor-pointer"
             onClick={() => handleGameClick(game)}
@@ -268,11 +305,11 @@ export function GameGrid({
                 <div className="w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 flex-shrink-0">
                   {game.thumbnail_url ? (
                     <Image
-                      src={game.thumbnail_url}
                       alt={game.title}
-                      width={80}
-                      height={80}
                       className="w-full h-full object-cover"
+                      height={80}
+                      src={game.thumbnail_url}
+                      width={80}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -283,13 +320,19 @@ export function GameGrid({
 
                 {/* Game Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold truncate mb-1">{game.title}</h3>
+                  <h3 className="text-lg font-semibold truncate mb-1">
+                    {game.title}
+                  </h3>
                   <p className="text-sm text-foreground/70 line-clamp-2 mb-2">
                     {game.description || "No description available."}
                   </p>
-                  
+
                   <div className="flex items-center gap-4 text-xs text-foreground/60">
-                    <span>by {game.creator_profile?.display_name || game.creator_profile?.username}</span>
+                    <span>
+                      by{" "}
+                      {game.creator_profile?.display_name ||
+                        game.creator_profile?.username}
+                    </span>
                     <div className="flex items-center gap-1">
                       <Play size={12} />
                       {(game.play_count || 0).toLocaleString()}
@@ -304,7 +347,12 @@ export function GameGrid({
                 {/* Game Tags */}
                 <div className="flex flex-wrap gap-1 max-w-40">
                   {game.tags?.slice(0, 2).map((tag) => (
-                    <Chip key={tag} size="sm" variant="flat" className="text-xs">
+                    <Chip
+                      key={tag}
+                      className="text-xs"
+                      size="sm"
+                      variant="flat"
+                    >
                       {tag}
                     </Chip>
                   ))}
@@ -313,9 +361,9 @@ export function GameGrid({
                 {/* Play Button */}
                 <Button
                   color="primary"
-                  variant="solid"
-                  startContent={<Play size={16} />}
                   size="sm"
+                  startContent={<Play size={16} />}
+                  variant="solid"
                 >
                   Play
                 </Button>
@@ -330,13 +378,13 @@ export function GameGrid({
     return (
       <motion.div
         key={game.id}
-        variants={cardVariants}
-        initial="hidden"
         animate="visible"
-        whileHover="hover"
         className="group"
+        initial="hidden"
+        variants={cardVariants}
+        whileHover="hover"
       >
-        <GlassmorphicCard 
+        <GlassmorphicCard
           {...GameGenCardPresets.gameCard}
           className="cursor-pointer h-full"
           onClick={() => handleGameClick(game)}
@@ -346,23 +394,23 @@ export function GameGrid({
             <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
               {game.thumbnail_url ? (
                 <Image
-                  src={game.thumbnail_url}
-                  alt={game.title}
                   fill
+                  alt={game.title}
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  src={game.thumbnail_url}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Play className="w-12 h-12 text-foreground/40" />
                 </div>
               )}
-              
+
               {/* Overlay Play Button */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                 <motion.div
+                  className="w-16 h-16 bg-primary/90 rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   whileHover={{ scale: 1 }}
-                  className="w-16 h-16 bg-primary/90 rounded-full flex items-center justify-center"
                 >
                   <Play className="w-6 h-6 text-white ml-1" />
                 </motion.div>
@@ -371,7 +419,12 @@ export function GameGrid({
               {/* Featured Badge */}
               {game.is_featured && (
                 <div className="absolute top-2 left-2">
-                  <Chip color="warning" variant="solid" size="sm" startContent={<Star size={12} />}>
+                  <Chip
+                    color="warning"
+                    size="sm"
+                    startContent={<Star size={12} />}
+                    variant="solid"
+                  >
                     Featured
                   </Chip>
                 </div>
@@ -380,7 +433,9 @@ export function GameGrid({
 
             {/* Game Info */}
             <div className="p-4">
-              <h3 className="font-semibold text-lg truncate mb-2">{game.title}</h3>
+              <h3 className="font-semibold text-lg truncate mb-2">
+                {game.title}
+              </h3>
               <p className="text-sm text-foreground/70 line-clamp-2 mb-3">
                 {game.description || "No description available."}
               </p>
@@ -413,10 +468,16 @@ export function GameGrid({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-semibold">
-                    {(game.creator_profile?.display_name || game.creator_profile?.username)?.charAt(0).toUpperCase()}
+                    {(
+                      game.creator_profile?.display_name ||
+                      game.creator_profile?.username
+                    )
+                      ?.charAt(0)
+                      .toUpperCase()}
                   </div>
                   <span className="text-sm text-foreground/70 truncate">
-                    {game.creator_profile?.display_name || game.creator_profile?.username}
+                    {game.creator_profile?.display_name ||
+                      game.creator_profile?.username}
                   </span>
                 </div>
               </div>
@@ -425,12 +486,17 @@ export function GameGrid({
               {game.tags && game.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-3">
                   {game.tags.slice(0, 3).map((tag) => (
-                    <Chip key={tag} size="sm" variant="flat" className="text-xs">
+                    <Chip
+                      key={tag}
+                      className="text-xs"
+                      size="sm"
+                      variant="flat"
+                    >
                       {tag}
                     </Chip>
                   ))}
                   {game.tags.length > 3 && (
-                    <Chip size="sm" variant="flat" className="text-xs">
+                    <Chip className="text-xs" size="sm" variant="flat">
                       +{game.tags.length - 3}
                     </Chip>
                   )}
@@ -449,31 +515,31 @@ export function GameGrid({
       <div className="flex items-center gap-3">
         {showSearch && (
           <Input
-            placeholder="Search games..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            startContent={<Search size={18} />}
             className="flex-1"
             classNames={{
               input: "bg-transparent",
             }}
+            placeholder="Search games..."
+            startContent={<Search size={18} />}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
           />
         )}
-        
+
         {showViewToggle && (
           <div className="flex">
             <Button
+              isIconOnly
               size="sm"
               variant={viewMode === "grid" ? "solid" : "flat"}
-              isIconOnly
               onPress={() => setViewMode("grid")}
             >
               <Grid3X3 size={16} />
             </Button>
             <Button
+              isIconOnly
               size="sm"
               variant={viewMode === "list" ? "solid" : "flat"}
-              isIconOnly
               onPress={() => setViewMode("list")}
             >
               <List size={16} />
@@ -486,11 +552,13 @@ export function GameGrid({
       {showFilters && (
         <div className="flex items-center gap-3 flex-wrap">
           <Select
+            className="w-40"
             label="Sort by"
             selectedKeys={[sortBy]}
-            onSelectionChange={(keys) => setSortBy(Array.from(keys)[0] as SortBy)}
-            className="w-40"
             size="sm"
+            onSelectionChange={(keys) =>
+              setSortBy(Array.from(keys)[0] as SortBy)
+            }
           >
             <SelectItem key="trending" startContent={<TrendingUp size={14} />}>
               Trending
@@ -510,11 +578,13 @@ export function GameGrid({
           </Select>
 
           <Select
+            className="w-40"
             label="Category"
             selectedKeys={[filterBy]}
-            onSelectionChange={(keys) => setFilterBy(Array.from(keys)[0] as FilterBy)}
-            className="w-40"
             size="sm"
+            onSelectionChange={(keys) =>
+              setFilterBy(Array.from(keys)[0] as FilterBy)
+            }
           >
             <SelectItem key="all">All Games</SelectItem>
             <SelectItem key="featured">Featured</SelectItem>
@@ -547,13 +617,15 @@ export function GameGrid({
       );
     }
 
-    const gridCols = variant === "compact" ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+    const gridCols =
+      variant === "compact"
+        ? "grid-cols-2 lg:grid-cols-3"
+        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
     return (
-      <div className={viewMode === "grid" 
-        ? `grid ${gridCols} gap-4` 
-        : "space-y-3"
-      }>
+      <div
+        className={viewMode === "grid" ? `grid ${gridCols} gap-4` : "space-y-3"}
+      >
         <AnimatePresence>
           {filteredGames.map((game, index) => renderGameCard(game, index))}
         </AnimatePresence>
@@ -565,14 +637,14 @@ export function GameGrid({
     <div className={className}>
       {variant !== "compact" && renderControls()}
       {renderGames()}
-      
+
       {/* Load More Button */}
       {hasMore && !maxGames && filteredGames.length >= gamesPerPage && (
         <div className="flex justify-center mt-8">
           <Button
+            isLoading={loading}
             variant="flat"
             onPress={() => fetchGames()}
-            isLoading={loading}
           >
             Load More Games
           </Button>

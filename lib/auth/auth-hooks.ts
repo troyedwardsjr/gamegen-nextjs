@@ -5,9 +5,10 @@
  * Provides specialized hooks for auth state management and error handling
  */
 
+import type { AuthError } from "@supabase/supabase-js";
+
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { AuthError } from "@supabase/supabase-js";
 
 import { useAuth } from "./context";
 import { getAuthErrorMessage } from "./auth-utils";
@@ -74,14 +75,17 @@ export function useProtectedRoute(redirectTo: string = "/auth/login") {
 export function useFormLoading() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const withLoading = useCallback(async <T>(asyncFn: () => Promise<T>): Promise<T> => {
-    setIsLoading(true);
-    try {
-      return await asyncFn();
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const withLoading = useCallback(
+    async <T>(asyncFn: () => Promise<T>): Promise<T> => {
+      setIsLoading(true);
+      try {
+        return await asyncFn();
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   return { isLoading, withLoading, setIsLoading };
 }
@@ -90,16 +94,22 @@ export function useFormLoading() {
 export function useAuthRedirect() {
   const router = useRouter();
 
-  const redirectAfterAuth = useCallback((path: string = "/dashboard") => {
-    // Small delay to ensure auth state is updated
-    setTimeout(() => {
-      router.push(path);
-    }, 100);
-  }, [router]);
+  const redirectAfterAuth = useCallback(
+    (path: string = "/dashboard") => {
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        router.push(path);
+      }, 100);
+    },
+    [router],
+  );
 
-  const redirectAfterLogout = useCallback((path: string = "/") => {
-    router.push(path);
-  }, [router]);
+  const redirectAfterLogout = useCallback(
+    (path: string = "/") => {
+      router.push(path);
+    },
+    [router],
+  );
 
   return { redirectAfterAuth, redirectAfterLogout };
 }
@@ -114,11 +124,16 @@ export function useAuthState() {
     setError(null);
   }, []);
 
-  const handleError = useCallback((authError: any) => {
-    const message = handleAuthError(authError);
-    setError(message);
-    return message;
-  }, [handleAuthError]);
+  const handleError = useCallback(
+    (authError: any) => {
+      const message = handleAuthError(authError);
+
+      setError(message);
+
+      return message;
+    },
+    [handleAuthError],
+  );
 
   return {
     ...auth,
@@ -132,20 +147,34 @@ export function useAuthState() {
 export function usePermissions() {
   const { user, hasPermission, getUserTier, getSubscriptionStatus } = useAuth();
 
-  const checkPermissions = useCallback((requiredPermissions: string[]) => {
-    if (!user) return false;
-    return requiredPermissions.every(permission => hasPermission(permission));
-  }, [user, hasPermission]);
+  const checkPermissions = useCallback(
+    (requiredPermissions: string[]) => {
+      if (!user) return false;
 
-  const checkTier = useCallback((requiredTier: 'free' | 'pro' | 'max' | 'educational') => {
-    const currentTier = getUserTier();
-    const tierHierarchy = { free: 0, educational: 1, pro: 2, max: 3 };
-    return tierHierarchy[currentTier as keyof typeof tierHierarchy] >= tierHierarchy[requiredTier];
-  }, [getUserTier]);
+      return requiredPermissions.every((permission) =>
+        hasPermission(permission),
+      );
+    },
+    [user, hasPermission],
+  );
+
+  const checkTier = useCallback(
+    (requiredTier: "free" | "pro" | "max" | "educational") => {
+      const currentTier = getUserTier();
+      const tierHierarchy = { free: 0, educational: 1, pro: 2, max: 3 };
+
+      return (
+        tierHierarchy[currentTier as keyof typeof tierHierarchy] >=
+        tierHierarchy[requiredTier]
+      );
+    },
+    [getUserTier],
+  );
 
   const hasActiveSubscription = useCallback(() => {
     const status = getSubscriptionStatus();
-    return status === 'active';
+
+    return status === "active";
   }, [getSubscriptionStatus]);
 
   return {
@@ -171,67 +200,79 @@ export function useAuthFlow() {
     setSuccess(null);
   }, []);
 
-  const signIn = useCallback(async (
-    email: string, 
-    password: string, 
-    rememberMe = false
-  ) => {
-    return withLoading(async () => {
-      clearMessages();
-      try {
-        const result = await auth.signIn(email, password, rememberMe);
-        
-        if (!result.success) {
-          if (result.requiresMFA) {
-            setSuccess("Please complete MFA verification to continue.");
-            return { success: false, requiresMFA: true };
-          }
-          
-          const errorMessage = result.error || "Sign in failed";
-          setError(errorMessage);
-          return { success: false, error: errorMessage };
-        }
-        
-        setSuccess("Successfully signed in!");
-        return { success: true };
-      } catch (error) {
-        const errorMessage = handleAuthError(error);
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
-    });
-  }, [auth, withLoading, clearMessages, handleAuthError]);
+  const signIn = useCallback(
+    async (email: string, password: string, rememberMe = false) => {
+      return withLoading(async () => {
+        clearMessages();
+        try {
+          const result = await auth.signIn(email, password, rememberMe);
 
-  const signUp = useCallback(async (
-    email: string, 
-    password: string, 
-    metadata?: Record<string, any>
-  ) => {
-    return withLoading(async () => {
-      clearMessages();
-      try {
-        const result = await auth.signUp(email, password, metadata);
-        
-        if (!result.success) {
-          const errorMessage = result.error || "Sign up failed";
+          if (!result.success) {
+            if (result.requiresMFA) {
+              setSuccess("Please complete MFA verification to continue.");
+
+              return { success: false, requiresMFA: true };
+            }
+
+            const errorMessage = result.error || "Sign in failed";
+
+            setError(errorMessage);
+
+            return { success: false, error: errorMessage };
+          }
+
+          setSuccess("Successfully signed in!");
+
+          return { success: true };
+        } catch (error) {
+          const errorMessage = handleAuthError(error);
+
           setError(errorMessage);
+
           return { success: false, error: errorMessage };
         }
-        
-        if (result.requiresEmailVerification) {
-          setSuccess("Please check your email and verify your account before signing in.");
-          return { success: true, requiresEmailVerification: true };
+      });
+    },
+    [auth, withLoading, clearMessages, handleAuthError],
+  );
+
+  const signUp = useCallback(
+    async (email: string, password: string, metadata?: Record<string, any>) => {
+      return withLoading(async () => {
+        clearMessages();
+        try {
+          const result = await auth.signUp(email, password, metadata);
+
+          if (!result.success) {
+            const errorMessage = result.error || "Sign up failed";
+
+            setError(errorMessage);
+
+            return { success: false, error: errorMessage };
+          }
+
+          if (result.requiresEmailVerification) {
+            setSuccess(
+              "Please check your email and verify your account before signing in.",
+            );
+
+            return { success: true, requiresEmailVerification: true };
+          }
+
+          setSuccess("Account created successfully!");
+
+          return { success: true };
+        } catch (error) {
+          const errorMessage = handleAuthError(error);
+
+          setError(errorMessage);
+
+          return { success: false, error: errorMessage };
         }
-        
-        setSuccess("Account created successfully!");
-        return { success: true };
-      } catch (error) {
-        const errorMessage = handleAuthError(error);
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
-    });
-  }, [auth, withLoading, clearMessages, handleAuthError]);
+      });
+    },
+    [auth, withLoading, clearMessages, handleAuthError],
+  );
 
   const signOut = useCallback(async () => {
     return withLoading(async () => {
@@ -239,36 +280,49 @@ export function useAuthFlow() {
       try {
         await auth.signOut();
         setSuccess("Successfully signed out!");
+
         return { success: true };
       } catch (error) {
         const errorMessage = handleAuthError(error);
+
         setError(errorMessage);
+
         return { success: false, error: errorMessage };
       }
     });
   }, [auth, withLoading, clearMessages, handleAuthError]);
 
-  const resetPassword = useCallback(async (email: string) => {
-    return withLoading(async () => {
-      clearMessages();
-      try {
-        const result = await auth.resetPassword(email);
-        
-        if (!result.success) {
-          const errorMessage = result.error || "Password reset failed";
+  const resetPassword = useCallback(
+    async (email: string) => {
+      return withLoading(async () => {
+        clearMessages();
+        try {
+          const result = await auth.resetPassword(email);
+
+          if (!result.success) {
+            const errorMessage = result.error || "Password reset failed";
+
+            setError(errorMessage);
+
+            return { success: false, error: errorMessage };
+          }
+
+          setSuccess(
+            "Password reset email sent! Check your inbox for instructions.",
+          );
+
+          return { success: true };
+        } catch (error) {
+          const errorMessage = handleAuthError(error);
+
           setError(errorMessage);
+
           return { success: false, error: errorMessage };
         }
-        
-        setSuccess("Password reset email sent! Check your inbox for instructions.");
-        return { success: true };
-      } catch (error) {
-        const errorMessage = handleAuthError(error);
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
-    });
-  }, [auth, withLoading, clearMessages, handleAuthError]);
+      });
+    },
+    [auth, withLoading, clearMessages, handleAuthError],
+  );
 
   return {
     signIn,
@@ -292,7 +346,7 @@ export function useSession() {
     try {
       await refreshSession();
     } catch (error) {
-      console.error('Session refresh failed:', error);
+      console.error("Session refresh failed:", error);
     } finally {
       setRefreshing(false);
     }
@@ -300,6 +354,7 @@ export function useSession() {
 
   const isExpired = useCallback(() => {
     if (!session?.expires_at) return false;
+
     return new Date(session.expires_at * 1000) <= new Date();
   }, [session]);
 
@@ -307,6 +362,7 @@ export function useSession() {
     if (!session?.expires_at) return null;
     const expiryTime = new Date(session.expires_at * 1000);
     const now = new Date();
+
     return Math.max(0, expiryTime.getTime() - now.getTime());
   }, [session]);
 

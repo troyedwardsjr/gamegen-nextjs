@@ -1,28 +1,31 @@
-'use client'
+"use client";
 
 /**
  * Development Mode Authentication Provider
- * 
+ *
  * This provider bypasses normal authentication in development mode,
  * providing mock user data for testing purposes.
- * 
+ *
  * WARNING: This should ONLY be used in development environments
  */
 
-import React, { useEffect, useState } from 'react'
-import type { User, Session } from '@supabase/supabase-js'
-import { 
-  createMockDevUser, 
-  createMockDevSession, 
+import type { AuthContextType, AuthResult } from "./context";
+
+import React, { useEffect, useState } from "react";
+
+import {
+  createMockDevUser,
+  createMockDevSession,
   createMockDevProfile,
-  logDevModeActivation 
-} from '../dev-mode'
-import type { AuthContextType, AuthResult } from './context'
-import { AuthContext } from './context'
+  logDevModeActivation,
+} from "../dev-mode";
+
+import { AuthContext } from "./context";
 
 // Mock auth functions that always succeed
 const mockAuthFunction = async (): Promise<AuthResult> => {
   logDevModeActivation("Mock auth function called");
+
   return { success: true };
 };
 
@@ -35,17 +38,25 @@ const mockPermissionFunction = (permission: string): boolean => {
   return true;
 };
 
-const mockStringFunction = (): string => 'max';
+const mockStringFunction = (): string => "max";
 
-const mockSubscriptionFunction = (): 'active' | 'canceled' | 'past_due' | 'none' => 'active';
+const mockSubscriptionFunction = ():
+  | "active"
+  | "canceled"
+  | "past_due"
+  | "none" => "active";
 
-const mockProviderFunction = async (provider: string, options?: any): Promise<AuthResult> => {
+const mockProviderFunction = async (
+  provider: string,
+  options?: any,
+): Promise<AuthResult> => {
   logDevModeActivation(`Mock ${provider} provider auth called`);
+
   return { success: true };
 };
 
 const mockBooleanFunction = async (): Promise<boolean> => true;
-const mockStringArrayFunction = async (): Promise<string[]> => ['dev-mode'];
+const mockStringArrayFunction = async (): Promise<string[]> => ["dev-mode"];
 const mockMFAFunction = async (): Promise<any> => ({ success: true });
 
 // Development mode banner component
@@ -63,9 +74,9 @@ function DevModeBanner() {
         <div className="flex items-center space-x-3">
           <span className="text-lg font-bold">🚧 GAMEGEN DEV MODE</span>
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
             className="p-1 hover:bg-orange-600 rounded"
             title="Toggle details"
+            onClick={() => setIsExpanded(!isExpanded)}
           >
             ⚙️
           </button>
@@ -75,15 +86,15 @@ function DevModeBanner() {
             Logged in as: {mockProfile.display_name}
           </span>
           <button
-            onClick={() => setIsDismissed(true)}
             className="p-1 hover:bg-orange-600 rounded text-lg"
             title="Dismiss banner"
+            onClick={() => setIsDismissed(true)}
           >
             ×
           </button>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="px-4 py-3 bg-orange-600 border-t border-orange-400">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -117,7 +128,7 @@ function DevModeBanner() {
 
 export function DevAuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  
+
   // Mock user and session data
   const user = createMockDevUser();
   const session = createMockDevSession();
@@ -125,7 +136,7 @@ export function DevAuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     logDevModeActivation("DevAuthProvider initialized");
-    
+
     // Simulate initial loading
     const timer = setTimeout(() => {
       setLoading(false);
@@ -177,9 +188,7 @@ export function DevAuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={value}>
       {/* Dev Mode Banner */}
       <DevModeBanner />
-      <div style={{ marginTop: '60px' }}>
-        {children}
-      </div>
+      <div style={{ marginTop: "60px" }}>{children}</div>
     </AuthContext.Provider>
   );
 }

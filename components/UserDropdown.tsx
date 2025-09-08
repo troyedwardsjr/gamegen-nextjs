@@ -12,7 +12,9 @@ import {
 } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
-import { 
+import { useRouter } from "next/navigation";
+
+import {
   HomeIcon,
   GameIcon,
   UserIcon,
@@ -22,7 +24,6 @@ import {
   SparklesIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth/context";
-import { useRouter } from "next/navigation";
 
 interface UserDropdownProps {
   placement?: "bottom-start" | "bottom-end" | "top-start" | "top-end";
@@ -30,10 +31,10 @@ interface UserDropdownProps {
   showCompactView?: boolean;
 }
 
-export function UserDropdown({ 
-  placement = "bottom-end", 
+export function UserDropdown({
+  placement = "bottom-end",
   className = "",
-  showCompactView = false 
+  showCompactView = false,
 }: UserDropdownProps) {
   const { user, session, signOut, getUserTier } = useAuth();
   const router = useRouter();
@@ -54,6 +55,7 @@ export function UserDropdown({
     if (user?.email) {
       return user.email.split("@")[0];
     }
+
     return "User";
   };
 
@@ -65,21 +67,23 @@ export function UserDropdown({
   // Get user subscription status
   const getSubscriptionTier = () => {
     const tier = getUserTier();
+
     return tier.charAt(0).toUpperCase() + tier.slice(1);
   };
 
   // Get tier color
   const getTierColor = () => {
     const tier = getUserTier();
+
     switch (tier) {
-      case 'pro':
-        return 'text-blue-400';
-      case 'max':
-        return 'text-purple-400';
-      case 'educational':
-        return 'text-green-400';
+      case "pro":
+        return "text-blue-400";
+      case "max":
+        return "text-purple-400";
+      case "educational":
+        return "text-green-400";
       default:
-        return 'text-gray-400';
+        return "text-gray-400";
     }
   };
 
@@ -88,12 +92,13 @@ export function UserDropdown({
   }
 
   return (
-    <Dropdown 
-      placement={placement}
-      classNames={{
-        content: "glass backdrop-blur-xl border border-purple-500/20 shadow-2xl shadow-purple-500/10 min-w-[280px]",
-      }}
+    <Dropdown
       className={className}
+      classNames={{
+        content:
+          "glass backdrop-blur-xl border border-purple-500/20 shadow-2xl shadow-purple-500/10 min-w-[280px]",
+      }}
+      placement={placement}
     >
       <DropdownTrigger>
         <motion.button
@@ -102,12 +107,12 @@ export function UserDropdown({
           whileTap={{ scale: 0.95 }}
         >
           <Avatar
-            name={getDisplayName()}
-            size={showCompactView ? "sm" : "md"}
-            src={getAvatarUrl()}
             classNames={{
               base: "ring-2 ring-purple-500/30 ring-offset-2 ring-offset-black/20",
             }}
+            name={getDisplayName()}
+            size={showCompactView ? "sm" : "md"}
+            src={getAvatarUrl()}
           />
           {!showCompactView && (
             <div className="hidden md:flex flex-col items-start text-left">
@@ -121,43 +126,42 @@ export function UserDropdown({
           )}
         </motion.button>
       </DropdownTrigger>
-      
-      <DropdownMenu 
-        aria-label="User menu" 
+
+      <DropdownMenu
+        aria-label="User menu"
         className="w-full"
         itemClasses={{
           base: "glass-nav-item rounded-lg data-[hover=true]:bg-purple-500/20 data-[hover=true]:text-white transition-colors",
         }}
       >
         {/* User Info Section */}
-        <DropdownSection 
-          title="Account" 
+        <DropdownSection
           classNames={{
-            heading: "text-xs text-purple-400 font-semibold uppercase tracking-wide",
+            heading:
+              "text-xs text-purple-400 font-semibold uppercase tracking-wide",
           }}
+          title="Account"
         >
           <DropdownItem
             key="user-info"
-            textValue="User Info"
-            className="opacity-100 cursor-default"
             isReadOnly
+            className="opacity-100 cursor-default"
+            textValue="User Info"
           >
             <div className="flex items-center space-x-3 py-2">
               <Avatar
-                name={getDisplayName()}
-                size="md"
-                src={getAvatarUrl()}
                 classNames={{
                   base: "ring-2 ring-purple-500/30",
                 }}
+                name={getDisplayName()}
+                size="md"
+                src={getAvatarUrl()}
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-white text-sm truncate">
                   {getDisplayName()}
                 </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {user.email}
-                </p>
+                <p className="text-xs text-gray-400 truncate">{user.email}</p>
                 <p className={`text-xs font-medium ${getTierColor()}`}>
                   {getSubscriptionTier()} Plan
                 </p>
@@ -167,18 +171,19 @@ export function UserDropdown({
         </DropdownSection>
 
         {/* Navigation Section */}
-        <DropdownSection 
-          title="Navigation" 
+        <DropdownSection
           classNames={{
-            heading: "text-xs text-purple-400 font-semibold uppercase tracking-wide",
+            heading:
+              "text-xs text-purple-400 font-semibold uppercase tracking-wide",
           }}
+          title="Navigation"
         >
           <DropdownItem
             key="dashboard"
             startContent={<HomeIcon className="w-4 h-4" />}
             textValue="Dashboard"
           >
-            <Link href="/dashboard" className="w-full block">
+            <Link className="w-full block" href="/dashboard">
               Dashboard
             </Link>
           </DropdownItem>
@@ -188,7 +193,7 @@ export function UserDropdown({
             startContent={<GameIcon className="w-4 h-4" />}
             textValue="Creator Studio"
           >
-            <Link href="/creator" className="w-full block">
+            <Link className="w-full block" href="/creator">
               Creator Studio
             </Link>
           </DropdownItem>
@@ -198,25 +203,26 @@ export function UserDropdown({
             startContent={<SparklesIcon className="w-4 h-4" />}
             textValue="Explore Games"
           >
-            <Link href="/explore" className="w-full block">
+            <Link className="w-full block" href="/explore">
               Explore Games
             </Link>
           </DropdownItem>
         </DropdownSection>
 
         {/* Account Management Section */}
-        <DropdownSection 
-          title="Account" 
+        <DropdownSection
           classNames={{
-            heading: "text-xs text-purple-400 font-semibold uppercase tracking-wide",
+            heading:
+              "text-xs text-purple-400 font-semibold uppercase tracking-wide",
           }}
+          title="Account"
         >
           <DropdownItem
             key="profile"
             startContent={<UserIcon className="w-4 h-4" />}
             textValue="Profile"
           >
-            <Link href="/profile" className="w-full block">
+            <Link className="w-full block" href="/profile">
               Profile & Preferences
             </Link>
           </DropdownItem>
@@ -226,7 +232,7 @@ export function UserDropdown({
             startContent={<CreditCardIcon className="w-4 h-4" />}
             textValue="Billing"
           >
-            <Link href="/billing" className="w-full block">
+            <Link className="w-full block" href="/billing">
               Billing & Subscription
             </Link>
           </DropdownItem>
@@ -236,7 +242,7 @@ export function UserDropdown({
             startContent={<CogIcon className="w-4 h-4" />}
             textValue="Settings"
           >
-            <Link href="/settings" className="w-full block">
+            <Link className="w-full block" href="/settings">
               Settings
             </Link>
           </DropdownItem>
@@ -246,13 +252,11 @@ export function UserDropdown({
         <DropdownSection classNames={{ group: "pt-2" }}>
           <DropdownItem
             key="logout"
+            className="text-danger hover:bg-red-500/20"
             color="danger"
-            startContent={
-              <ArrowRightOnRectangleIcon className="w-4 h-4" />
-            }
+            startContent={<ArrowRightOnRectangleIcon className="w-4 h-4" />}
             textValue="Sign out"
             onPress={handleSignOut}
-            className="text-danger hover:bg-red-500/20"
           >
             Sign Out
           </DropdownItem>
@@ -266,21 +270,16 @@ export function UserDropdown({
  * Compact user avatar button for minimal layouts
  */
 export function CompactUserButton({ className = "" }: { className?: string }) {
-  return (
-    <UserDropdown 
-      showCompactView={true}
-      className={className}
-    />
-  );
+  return <UserDropdown className={className} showCompactView={true} />;
 }
 
 /**
  * User menu specifically designed for mobile layouts
  */
-export function MobileUserMenu({ 
-  onNavigate 
-}: { 
-  onNavigate?: (href: string) => void 
+export function MobileUserMenu({
+  onNavigate,
+}: {
+  onNavigate?: (href: string) => void;
 }) {
   const { user, signOut, getUserTier } = useAuth();
   const router = useRouter();
@@ -309,6 +308,7 @@ export function MobileUserMenu({
     if (user?.email) {
       return user.email.split("@")[0];
     }
+
     return "User";
   };
 
@@ -320,21 +320,23 @@ export function MobileUserMenu({
   // Get user subscription status
   const getSubscriptionTier = () => {
     const tier = getUserTier();
+
     return tier.charAt(0).toUpperCase() + tier.slice(1);
   };
 
   // Get tier color
   const getTierColor = () => {
     const tier = getUserTier();
+
     switch (tier) {
-      case 'pro':
-        return 'text-blue-400';
-      case 'max':
-        return 'text-purple-400';
-      case 'educational':
-        return 'text-green-400';
+      case "pro":
+        return "text-blue-400";
+      case "max":
+        return "text-purple-400";
+      case "educational":
+        return "text-green-400";
       default:
-        return 'text-gray-400';
+        return "text-gray-400";
     }
   };
 
@@ -385,25 +387,23 @@ export function MobileUserMenu({
     <div className="space-y-4">
       {/* User Info */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass p-4 rounded-xl flex items-center space-x-3"
+        initial={{ opacity: 0, y: 20 }}
       >
         <Avatar
-          name={getDisplayName()}
-          size="lg"
-          src={getAvatarUrl()}
           classNames={{
             base: "ring-2 ring-purple-500/30",
           }}
+          name={getDisplayName()}
+          size="lg"
+          src={getAvatarUrl()}
         />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-white text-base">
             {getDisplayName()}
           </p>
-          <p className="text-sm text-gray-400 truncate">
-            {user.email}
-          </p>
+          <p className="text-sm text-gray-400 truncate">{user.email}</p>
           <p className={`text-sm font-medium ${getTierColor()}`}>
             {getSubscriptionTier()} Plan
           </p>
@@ -414,18 +414,19 @@ export function MobileUserMenu({
       <div className="space-y-2">
         {menuItems.map((item, index) => {
           const Icon = item.icon;
+
           return (
             <motion.div
               key={item.key}
-              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: -20 }}
               transition={{ delay: index * 0.1 }}
             >
               <Button
-                variant="ghost"
                 className="w-full justify-start p-4 h-auto glass hover:bg-white/10 transition-all duration-300"
-                onPress={() => handleNavigate(item.href)}
                 startContent={<Icon className="w-5 h-5 text-purple-400" />}
+                variant="ghost"
+                onPress={() => handleNavigate(item.href)}
               >
                 <span className="text-white font-medium">{item.label}</span>
               </Button>
@@ -436,16 +437,16 @@ export function MobileUserMenu({
 
       {/* Sign Out Button */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.4 }}
       >
         <Button
-          variant="ghost"
-          color="danger"
           className="w-full justify-start p-4 h-auto glass hover:bg-red-500/20 transition-all duration-300"
-          onPress={handleSignOut}
+          color="danger"
           startContent={<ArrowRightOnRectangleIcon className="w-5 h-5" />}
+          variant="ghost"
+          onPress={handleSignOut}
         >
           <span className="font-medium">Sign Out</span>
         </Button>

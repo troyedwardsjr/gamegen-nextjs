@@ -11,12 +11,12 @@ async function globalSetup(config: FullConfig) {
     try {
       await page.goto(process.env.PLAYWRIGHT_TEST_BASE_URL);
       console.log("✅ GameGen app is accessible for E2E tests");
-      
+
       // Verify the app loads properly
-      await page.waitForSelector('body', { timeout: 10000 });
+      await page.waitForSelector("body", { timeout: 10000 });
       const title = await page.title();
+
       console.log(`📱 GameGen app title: ${title}`);
-      
     } catch (error) {
       console.error("❌ GameGen app is not accessible:", error);
       throw error;

@@ -11,7 +11,6 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { clsx } from "clsx";
-import { motion, AnimatePresence } from "framer-motion";
 
 export interface GlassmorphicModalProps extends Omit<ModalProps, "classNames"> {
   variant?: "default" | "gaming" | "accent" | "danger" | "success";
@@ -42,7 +41,7 @@ export function GlassmorphicModal({
 }: GlassmorphicModalProps) {
   const getVariantClasses = () => {
     const blurClass = `backdrop-blur-${blur}`;
-    
+
     switch (variant) {
       case "gaming":
         return {
@@ -52,7 +51,7 @@ export function GlassmorphicModal({
           body: "text-purple-50",
           footer: "border-t border-purple-400/30",
         };
-      
+
       case "accent":
         return {
           base: `bg-gradient-to-br from-cyan-900/30 to-purple-900/40 ${blurClass} backdrop-saturate-150 border border-cyan-400/40`,
@@ -61,7 +60,7 @@ export function GlassmorphicModal({
           body: "text-cyan-50",
           footer: "border-t border-cyan-400/30",
         };
-      
+
       case "danger":
         return {
           base: `bg-gradient-to-br from-rose-900/30 to-red-900/40 ${blurClass} backdrop-saturate-150 border border-rose-400/40`,
@@ -70,7 +69,7 @@ export function GlassmorphicModal({
           body: "text-rose-50",
           footer: "border-t border-rose-400/30",
         };
-      
+
       case "success":
         return {
           base: `bg-gradient-to-br from-emerald-900/30 to-green-900/40 ${blurClass} backdrop-saturate-150 border border-emerald-400/40`,
@@ -79,12 +78,13 @@ export function GlassmorphicModal({
           body: "text-emerald-50",
           footer: "border-t border-emerald-400/30",
         };
-      
+
       default:
         return {
           base: `bg-white/20 dark:bg-black/30 ${blurClass} backdrop-saturate-150 border border-white/30 dark:border-white/20`,
           backdrop: "bg-black/20",
-          header: "text-foreground border-b border-white/20 dark:border-white/10",
+          header:
+            "text-foreground border-b border-white/20 dark:border-white/10",
           body: "text-foreground",
           footer: "border-t border-white/20 dark:border-white/10",
         };
@@ -113,14 +113,8 @@ export function GlassmorphicModal({
       "font-semibold text-lg",
       classNames?.header,
     ),
-    body: clsx(
-      variantClasses.body,
-      classNames?.body,
-    ),
-    footer: clsx(
-      variantClasses.footer,
-      classNames?.footer,
-    ),
+    body: clsx(variantClasses.body, classNames?.body),
+    footer: clsx(variantClasses.footer, classNames?.footer),
     closeButton: clsx(
       "text-foreground/50 hover:text-foreground transition-colors",
       "hover:bg-white/10 rounded-full",
@@ -129,14 +123,14 @@ export function GlassmorphicModal({
   };
 
   const modalVariants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.8, 
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
       y: 50,
     },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
+    visible: {
+      opacity: 1,
+      scale: 1,
       y: 0,
       transition: {
         type: "spring",
@@ -144,9 +138,9 @@ export function GlassmorphicModal({
         damping: 30,
       },
     },
-    exit: { 
-      opacity: 0, 
-      scale: 0.8, 
+    exit: {
+      opacity: 0,
+      scale: 0.8,
       y: 50,
       transition: {
         duration: 0.2,
@@ -156,7 +150,7 @@ export function GlassmorphicModal({
 
   if (!animated) {
     return (
-      <Modal 
+      <Modal
         classNames={mergedClassNames}
         motionProps={{
           variants: modalVariants,
@@ -175,7 +169,7 @@ export function GlassmorphicModal({
   }
 
   return (
-    <Modal 
+    <Modal
       classNames={mergedClassNames}
       motionProps={{
         variants: modalVariants,

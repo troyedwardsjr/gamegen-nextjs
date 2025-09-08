@@ -1,45 +1,46 @@
-'use client'
+"use client";
 
 /**
  * Protected Route component for GameGen platform
  * Provides flexible route protection with role-based access control
  */
 
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from './context'
-import { Spinner } from '@nextui-org/react'
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@nextui-org/react";
+
+import { useAuth } from "./context";
 
 export interface ProtectedRouteProps {
-  children: React.ReactNode
-  
+  children: React.ReactNode;
+
   // Authentication requirements
-  requireAuth?: boolean
-  requireEmailVerified?: boolean
-  requireMFA?: boolean
-  
+  requireAuth?: boolean;
+  requireEmailVerified?: boolean;
+  requireMFA?: boolean;
+
   // Permission requirements
-  requiredPermissions?: string[]
-  requiredTier?: 'free' | 'pro' | 'max' | 'educational'
-  requiredRole?: string[]
-  
+  requiredPermissions?: string[];
+  requiredTier?: "free" | "pro" | "max" | "educational";
+  requiredRole?: string[];
+
   // Redirect settings
-  redirectTo?: string
-  unauthorizedRedirect?: string
-  
+  redirectTo?: string;
+  unauthorizedRedirect?: string;
+
   // Loading and error components
-  loadingComponent?: React.ReactNode
-  unauthorizedComponent?: React.ReactNode
-  
+  loadingComponent?: React.ReactNode;
+  unauthorizedComponent?: React.ReactNode;
+
   // Callback functions
-  onUnauthorized?: () => void
-  onAuthRequired?: () => void
+  onUnauthorized?: () => void;
+  onAuthRequired?: () => void;
 }
 
 interface RouteGuardState {
-  loading: boolean
-  authorized: boolean
-  reason?: string
+  loading: boolean;
+  authorized: boolean;
+  reason?: string;
 }
 
 export function ProtectedRoute({
@@ -50,117 +51,125 @@ export function ProtectedRoute({
   requiredPermissions = [],
   requiredTier,
   requiredRole = [],
-  redirectTo = '/auth/login',
-  unauthorizedRedirect = '/unauthorized',
+  redirectTo = "/auth/login",
+  unauthorizedRedirect = "/unauthorized",
   loadingComponent,
   unauthorizedComponent,
   onUnauthorized,
   onAuthRequired,
 }: ProtectedRouteProps) {
-  const router = useRouter()
-  const { 
-    user, 
-    loading, 
-    initialized, 
-    hasPermission, 
+  const router = useRouter();
+  const {
+    user,
+    loading,
+    initialized,
+    hasPermission,
     getUserTier,
-    isMFARequired 
-  } = useAuth()
-  
+    isMFARequired,
+  } = useAuth();
+
   const [guardState, setGuardState] = useState<RouteGuardState>({
     loading: true,
     authorized: false,
-  })
+  });
 
   useEffect(() => {
     async function checkAccess() {
       if (!initialized || loading) {
-        setGuardState({ loading: true, authorized: false })
-        return
+        setGuardState({ loading: true, authorized: false });
+
+        return;
       }
 
       try {
         // Check authentication requirement
         if (requireAuth && !user) {
-          setGuardState({ 
-            loading: false, 
-            authorized: false, 
-            reason: 'Authentication required' 
-          })
-          
-          onAuthRequired?.()
-          router.push(redirectTo)
-          return
+          setGuardState({
+            loading: false,
+            authorized: false,
+            reason: "Authentication required",
+          });
+
+          onAuthRequired?.();
+          router.push(redirectTo);
+
+          return;
         }
 
         // If not requiring auth and no user, allow access
         if (!requireAuth && !user) {
-          setGuardState({ loading: false, authorized: true })
-          return
+          setGuardState({ loading: false, authorized: true });
+
+          return;
         }
 
         // If we reach here, user exists
         if (user) {
           // Check email verification requirement
           if (requireEmailVerified && !user.email_confirmed_at) {
-            setGuardState({ 
-              loading: false, 
-              authorized: false, 
-              reason: 'Email verification required' 
-            })
-            
-            router.push('/auth/verify-email')
-            return
+            setGuardState({
+              loading: false,
+              authorized: false,
+              reason: "Email verification required",
+            });
+
+            router.push("/auth/verify-email");
+
+            return;
           }
 
           // Check MFA requirement
-          const mfaRequired = await isMFARequired()
+          const mfaRequired = await isMFARequired();
+
           if ((requireMFA || mfaRequired) && !user.aud) {
             // This is a simplified MFA check - in reality you'd check MFA verification status
-            setGuardState({ 
-              loading: false, 
-              authorized: false, 
-              reason: 'Multi-factor authentication required' 
-            })
-            
-            router.push('/auth/mfa')
-            return
+            setGuardState({
+              loading: false,
+              authorized: false,
+              reason: "Multi-factor authentication required",
+            });
+
+            router.push("/auth/mfa");
+
+            return;
           }
 
           // Check subscription tier requirement
           if (requiredTier) {
-            const userTier = getUserTier()
-            const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 }
-            
+            const userTier = getUserTier();
+            const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 };
+
             if (tierHierarchy[userTier] < tierHierarchy[requiredTier]) {
-              setGuardState({ 
-                loading: false, 
-                authorized: false, 
-                reason: `${requiredTier} subscription required` 
-              })
-              
-              onUnauthorized?.()
-              router.push(unauthorizedRedirect)
-              return
+              setGuardState({
+                loading: false,
+                authorized: false,
+                reason: `${requiredTier} subscription required`,
+              });
+
+              onUnauthorized?.();
+              router.push(unauthorizedRedirect);
+
+              return;
             }
           }
 
           // Check permission requirements
           if (requiredPermissions.length > 0) {
-            const hasAllPermissions = requiredPermissions.every(permission => 
-              hasPermission(permission)
-            )
-            
+            const hasAllPermissions = requiredPermissions.every((permission) =>
+              hasPermission(permission),
+            );
+
             if (!hasAllPermissions) {
-              setGuardState({ 
-                loading: false, 
-                authorized: false, 
-                reason: 'Insufficient permissions' 
-              })
-              
-              onUnauthorized?.()
-              router.push(unauthorizedRedirect)
-              return
+              setGuardState({
+                loading: false,
+                authorized: false,
+                reason: "Insufficient permissions",
+              });
+
+              onUnauthorized?.();
+              router.push(unauthorizedRedirect);
+
+              return;
             }
           }
 
@@ -168,23 +177,23 @@ export function ProtectedRoute({
           if (requiredRole.length > 0) {
             // This would require extending the auth context to include roles
             // For now, we'll skip this check
-            console.warn('Role-based access control not fully implemented')
+            console.warn("Role-based access control not fully implemented");
           }
         }
 
         // If all checks pass
-        setGuardState({ loading: false, authorized: true })
+        setGuardState({ loading: false, authorized: true });
       } catch (error) {
-        console.error('Error checking route access:', error)
-        setGuardState({ 
-          loading: false, 
-          authorized: false, 
-          reason: 'Access check failed' 
-        })
+        console.error("Error checking route access:", error);
+        setGuardState({
+          loading: false,
+          authorized: false,
+          reason: "Access check failed",
+        });
       }
     }
 
-    checkAccess()
+    checkAccess();
   }, [
     initialized,
     loading,
@@ -203,20 +212,24 @@ export function ProtectedRoute({
     hasPermission,
     getUserTier,
     isMFARequired,
-  ])
+  ]);
 
   // Show loading state
   if (guardState.loading) {
-    return loadingComponent || <DefaultLoadingComponent />
+    return loadingComponent || <DefaultLoadingComponent />;
   }
 
   // Show unauthorized state
   if (!guardState.authorized) {
-    return unauthorizedComponent || <DefaultUnauthorizedComponent reason={guardState.reason} />
+    return (
+      unauthorizedComponent || (
+        <DefaultUnauthorizedComponent reason={guardState.reason} />
+      )
+    );
   }
 
   // Render protected content
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 // Default loading component
@@ -224,11 +237,11 @@ function DefaultLoadingComponent() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <Spinner size="lg" color="primary" />
+        <Spinner color="primary" size="lg" />
         <p className="mt-4 text-gray-600">Loading...</p>
       </div>
     </div>
-  )
+  );
 }
 
 // Default unauthorized component
@@ -239,113 +252,124 @@ function DefaultUnauthorizedComponent({ reason }: { reason?: string }) {
         <div className="text-6xl mb-4">🔒</div>
         <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
         <p className="text-gray-600 mb-4">
-          {reason || 'You do not have permission to access this page.'}
+          {reason || "You do not have permission to access this page."}
         </p>
         <button
-          onClick={() => window.history.back()}
           className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-600"
+          onClick={() => window.history.back()}
         >
           Go Back
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // Higher-order component version for convenience
 export function withProtection<P extends object>(
   Component: React.ComponentType<P>,
-  protectionOptions: Omit<ProtectedRouteProps, 'children'>
+  protectionOptions: Omit<ProtectedRouteProps, "children">,
 ) {
   return function ProtectedComponent(props: P) {
     return (
       <ProtectedRoute {...protectionOptions}>
         <Component {...props} />
       </ProtectedRoute>
-    )
-  }
+    );
+  };
 }
 
 // Utility hook for checking access without redirecting
-export function useRouteAccess(options: Omit<ProtectedRouteProps, 'children'>) {
-  const { 
-    user, 
-    loading, 
-    initialized, 
-    hasPermission, 
+export function useRouteAccess(options: Omit<ProtectedRouteProps, "children">) {
+  const {
+    user,
+    loading,
+    initialized,
+    hasPermission,
     getUserTier,
-    isMFARequired 
-  } = useAuth()
-  
+    isMFARequired,
+  } = useAuth();
+
   const [access, setAccess] = useState({
     canAccess: false,
     loading: true,
-    reason: '',
-  })
+    reason: "",
+  });
 
   useEffect(() => {
     async function checkAccess() {
       if (!initialized || loading) {
-        setAccess(prev => ({ ...prev, loading: true }))
-        return
+        setAccess((prev) => ({ ...prev, loading: true }));
+
+        return;
       }
 
       try {
-        let canAccess = true
-        let reason = ''
+        let canAccess = true;
+        let reason = "";
 
         // Authentication check
         if (options.requireAuth && !user) {
-          canAccess = false
-          reason = 'Authentication required'
+          canAccess = false;
+          reason = "Authentication required";
         }
 
         // Email verification check
-        if (canAccess && options.requireEmailVerified && user && !user.email_confirmed_at) {
-          canAccess = false
-          reason = 'Email verification required'
+        if (
+          canAccess &&
+          options.requireEmailVerified &&
+          user &&
+          !user.email_confirmed_at
+        ) {
+          canAccess = false;
+          reason = "Email verification required";
         }
 
         // MFA check
         if (canAccess && options.requireMFA && user) {
-          const mfaRequired = await isMFARequired()
+          const mfaRequired = await isMFARequired();
+
           if (mfaRequired) {
-            canAccess = false
-            reason = 'Multi-factor authentication required'
+            canAccess = false;
+            reason = "Multi-factor authentication required";
           }
         }
 
         // Tier check
         if (canAccess && options.requiredTier && user) {
-          const userTier = getUserTier()
-          const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 }
-          
+          const userTier = getUserTier();
+          const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 };
+
           if (tierHierarchy[userTier] < tierHierarchy[options.requiredTier]) {
-            canAccess = false
-            reason = `${options.requiredTier} subscription required`
+            canAccess = false;
+            reason = `${options.requiredTier} subscription required`;
           }
         }
 
         // Permission check
         if (canAccess && options.requiredPermissions?.length) {
-          const hasAllPermissions = options.requiredPermissions.every(permission => 
-            hasPermission(permission)
-          )
-          
+          const hasAllPermissions = options.requiredPermissions.every(
+            (permission) => hasPermission(permission),
+          );
+
           if (!hasAllPermissions) {
-            canAccess = false
-            reason = 'Insufficient permissions'
+            canAccess = false;
+            reason = "Insufficient permissions";
           }
         }
 
-        setAccess({ canAccess, loading: false, reason })
+        setAccess({ canAccess, loading: false, reason });
       } catch (error) {
-        console.error('Error checking route access:', error)
-        setAccess({ canAccess: false, loading: false, reason: 'Access check failed' })
+        console.error("Error checking route access:", error);
+        setAccess({
+          canAccess: false,
+          loading: false,
+          reason: "Access check failed",
+        });
       }
     }
 
-    checkAccess()
+    checkAccess();
   }, [
     initialized,
     loading,
@@ -358,26 +382,32 @@ export function useRouteAccess(options: Omit<ProtectedRouteProps, 'children'>) {
     hasPermission,
     getUserTier,
     isMFARequired,
-  ])
+  ]);
 
-  return access
+  return access;
 }
 
 // Specialized components for common protection patterns
-export function AdminOnlyRoute({ children, ...props }: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
+export function AdminOnlyRoute({
+  children,
+  ...props
+}: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
   return (
     <ProtectedRoute
       requireAuth={true}
-      requiredPermissions={['admin']}
+      requiredPermissions={["admin"]}
       unauthorizedRedirect="/admin/login"
       {...props}
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }
 
-export function ProTierRoute({ children, ...props }: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
+export function ProTierRoute({
+  children,
+  ...props
+}: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
   return (
     <ProtectedRoute
       requireAuth={true}
@@ -387,10 +417,13 @@ export function ProTierRoute({ children, ...props }: { children: React.ReactNode
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }
 
-export function EducationalRoute({ children, ...props }: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
+export function EducationalRoute({
+  children,
+  ...props
+}: { children: React.ReactNode } & Partial<ProtectedRouteProps>) {
   return (
     <ProtectedRoute
       requireAuth={true}
@@ -400,5 +433,5 @@ export function EducationalRoute({ children, ...props }: { children: React.React
     >
       {children}
     </ProtectedRoute>
-  )
+  );
 }

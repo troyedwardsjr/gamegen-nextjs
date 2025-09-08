@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+
 import PricingCard, { PricingTier } from "@/components/PricingCard";
 import PricingToggle from "@/components/PricingToggle";
 import PricingComparison from "@/components/PricingComparison";
@@ -14,7 +14,7 @@ const pricingTiers: PricingTier[] = [
     name: "Free",
     price: {
       monthly: 0,
-      yearly: 0
+      yearly: 0,
     },
     credits: "1,000",
     features: [
@@ -22,15 +22,15 @@ const pricingTiers: PricingTier[] = [
       "Platform publishing only",
       "Community support",
       "Basic templates",
-      "GameGen splash screen"
+      "GameGen splash screen",
     ],
-    cta: "Get Started Free"
+    cta: "Get Started Free",
   },
   {
     name: "Pro",
     price: {
       monthly: 20,
-      yearly: 192 // 20% discount: $20 * 12 * 0.8
+      yearly: 192, // 20% discount: $20 * 12 * 0.8
     },
     credits: "10,000",
     features: [
@@ -40,16 +40,16 @@ const pricingTiers: PricingTier[] = [
       "No splash screen",
       "Advanced templates",
       "Team collaboration (5 members)",
-      "Version control"
+      "Version control",
     ],
     popular: true,
-    cta: "Start Pro Trial"
+    cta: "Start Pro Trial",
   },
   {
     name: "Max",
     price: {
       monthly: 100,
-      yearly: 960 // 20% discount: $100 * 12 * 0.8
+      yearly: 960, // 20% discount: $100 * 12 * 0.8
     },
     credits: "100,000",
     features: [
@@ -59,10 +59,10 @@ const pricingTiers: PricingTier[] = [
       "Unlimited collaborators",
       "Dedicated support",
       "Custom integrations",
-      "Advanced analytics"
+      "Advanced analytics",
     ],
-    cta: "Contact Sales"
-  }
+    cta: "Contact Sales",
+  },
 ];
 
 // Mock subscription data for testing SubscriptionStatus
@@ -70,8 +70,12 @@ const mockCurrentPlan = {
   name: "Pro",
   price: 20,
   credits: 10000,
-  features: ["Advanced AI assistance", "Web & Desktop export", "Priority support"],
-  popular: true
+  features: [
+    "Advanced AI assistance",
+    "Web & Desktop export",
+    "Priority support",
+  ],
+  popular: true,
 };
 
 export default function PricingPage() {
@@ -102,16 +106,14 @@ export default function PricingPage() {
                 </span>
               </h1>
               <p className="text-lg sm:text-xl text-glass-text-muted leading-relaxed max-w-3xl mx-auto">
-                Create pixel art games with AI-powered tools. Choose the plan that fits your needs and start building amazing games today.
+                Create pixel art games with AI-powered tools. Choose the plan
+                that fits your needs and start building amazing games today.
               </p>
             </div>
 
             {/* Pricing Toggle */}
             <div className="flex justify-center mb-12 sm:mb-16">
-              <PricingToggle
-                isYearly={isYearly}
-                onToggle={setIsYearly}
-              />
+              <PricingToggle isYearly={isYearly} onToggle={setIsYearly} />
             </div>
 
             {/* Pricing Cards */}
@@ -119,29 +121,49 @@ export default function PricingPage() {
               {pricingTiers.map((tier, index) => (
                 <PricingCard
                   key={tier.name}
-                  tier={tier}
-                  isYearly={isYearly}
-                  index={index}
                   className="h-full"
+                  index={index}
+                  isYearly={isYearly}
+                  tier={tier}
                 />
               ))}
             </div>
 
             {/* Additional Info */}
-            <div className="mt-12 sm:mt-16 text-center animate-fade-in" style={{ animationDelay: "300ms" }}>
+            <div
+              className="mt-12 sm:mt-16 text-center animate-fade-in"
+              style={{ animationDelay: "300ms" }}
+            >
               <p className="text-glass-text-muted mb-6">
-                All plans include access to our AI-powered game creation platform
+                All plans include access to our AI-powered game creation
+                platform
               </p>
               <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
                 <div className="flex items-center space-x-2 text-glass-text-muted">
-                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      fillRule="evenodd"
+                    />
                   </svg>
                   <span>No credit card required</span>
                 </div>
                 <div className="flex items-center space-x-2 text-glass-text-muted">
-                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      clipRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      fillRule="evenodd"
+                    />
                   </svg>
                   <span>Cancel anytime</span>
                 </div>
@@ -159,14 +181,14 @@ export default function PricingPage() {
           </h2>
           <div className="max-w-md mx-auto">
             <SubscriptionStatus
-              currentPlan={mockCurrentPlan}
               billingCycle="monthly"
-              nextBillingDate="2025-10-06"
-              creditsUsed={3500}
               creditsRemaining={6500}
-              onUpgrade={() => alert('Upgrade clicked!')}
-              onManageBilling={() => alert('Manage billing clicked!')}
-              onViewPlans={() => alert('View plans clicked!')}
+              creditsUsed={3500}
+              currentPlan={mockCurrentPlan}
+              nextBillingDate="2025-10-06"
+              onManageBilling={() => alert("Manage billing clicked!")}
+              onUpgrade={() => alert("Upgrade clicked!")}
+              onViewPlans={() => alert("View plans clicked!")}
             />
           </div>
         </div>
@@ -187,26 +209,27 @@ export default function PricingPage() {
                 Ready to Create Amazing Games?
               </h2>
               <p className="text-glass-text-muted text-lg sm:text-xl leading-relaxed">
-                Join thousands of creators who are already building pixel art games with GameGen AI
+                Join thousands of creators who are already building pixel art
+                games with GameGen AI
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
               <GlassmorphicButton
-                variant="glass-filled"
-                intensity="strong"
                 blur="md"
                 className="bg-gradient-to-r from-primary to-purple-500 text-white border-0 px-8 py-3"
+                intensity="strong"
                 size="lg"
+                variant="glass-filled"
               >
                 Start Creating Free
               </GlassmorphicButton>
               <GlassmorphicButton
-                variant="glass-bordered"
-                intensity="medium"
                 blur="md"
                 className="px-8 py-3"
+                intensity="medium"
                 size="lg"
+                variant="glass-bordered"
               >
                 View Demo Games
               </GlassmorphicButton>

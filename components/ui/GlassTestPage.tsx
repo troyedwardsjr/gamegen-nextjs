@@ -5,7 +5,8 @@
  * This component demonstrates all the glassmorphic UI components
  */
 
-import React from 'react';
+import React from "react";
+
 import {
   GlassmorphicCard,
   GlassmorphicButton,
@@ -24,9 +25,7 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  GameGenCardPresets,
-  GameGenButtonPresets,
-} from './index';
+} from "./index";
 
 export function GlassTestPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -36,12 +35,18 @@ export function GlassTestPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black p-8 space-y-8">
       {/* Header */}
-      <GlassmorphicCard variant="gaming" blur="xl" pattern className="text-center">
+      <GlassmorphicCard
+        pattern
+        blur="xl"
+        className="text-center"
+        variant="gaming"
+      >
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
           GameGen Glassmorphic Components
         </h1>
         <p className="text-purple-200">
-          A comprehensive collection of glassmorphic UI components for gaming applications
+          A comprehensive collection of glassmorphic UI components for gaming
+          applications
         </p>
       </GlassmorphicCard>
 
@@ -49,17 +54,27 @@ export function GlassTestPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <GlassmorphicCard variant="default">
           <h3 className="text-lg font-semibold mb-2">Default Card</h3>
-          <p className="text-sm opacity-80">Basic glassmorphic card with subtle effects</p>
+          <p className="text-sm opacity-80">
+            Basic glassmorphic card with subtle effects
+          </p>
         </GlassmorphicCard>
 
-        <GlassmorphicCard variant="gaming" blur="lg" shadow="gaming">
-          <h3 className="text-lg font-semibold mb-2 text-purple-200">Gaming Card</h3>
-          <p className="text-sm text-purple-300">Enhanced card with gaming aesthetics</p>
+        <GlassmorphicCard blur="lg" shadow="gaming" variant="gaming">
+          <h3 className="text-lg font-semibold mb-2 text-purple-200">
+            Gaming Card
+          </h3>
+          <p className="text-sm text-purple-300">
+            Enhanced card with gaming aesthetics
+          </p>
         </GlassmorphicCard>
 
-        <GlassmorphicCard variant="accent-cyan" hover>
-          <h3 className="text-lg font-semibold mb-2 text-cyan-200">Accent Card</h3>
-          <p className="text-sm text-cyan-300">Cyan accent variant with hover effects</p>
+        <GlassmorphicCard hover variant="accent-cyan">
+          <h3 className="text-lg font-semibold mb-2 text-cyan-200">
+            Accent Card
+          </h3>
+          <p className="text-sm text-cyan-300">
+            Cyan accent variant with hover effects
+          </p>
         </GlassmorphicCard>
       </div>
 
@@ -67,19 +82,19 @@ export function GlassTestPage() {
       <GlassmorphicCard variant="subtle">
         <h2 className="text-2xl font-semibold mb-4">Button Variants</h2>
         <div className="flex flex-wrap gap-4">
-          <GlassmorphicButton variant="gaming" glow>
+          <GlassmorphicButton glow variant="gaming">
             Gaming Button
           </GlassmorphicButton>
 
-          <GlassmorphicButton variant="accent" glow>
+          <GlassmorphicButton glow variant="accent">
             Accent Button
           </GlassmorphicButton>
 
-          <GlassmorphicButton variant="success" glow>
+          <GlassmorphicButton glow variant="success">
             Success Button
           </GlassmorphicButton>
 
-          <GlassmorphicButton variant="danger" glow>
+          <GlassmorphicButton glow variant="danger">
             Danger Button
           </GlassmorphicButton>
 
@@ -93,19 +108,16 @@ export function GlassTestPage() {
       <GlassmorphicCard variant="default">
         <h2 className="text-2xl font-semibold mb-4">Input Components</h2>
         <div className="space-y-4">
-          <GlassmorphicInput 
-            variant="gaming" 
-            placeholder="Gaming themed input..." 
-            glow 
+          <GlassmorphicInput
+            glow
+            placeholder="Gaming themed input..."
+            variant="gaming"
           />
-          <GlassmorphicInput 
-            variant="accent" 
-            placeholder="Accent themed input..." 
+          <GlassmorphicInput
+            placeholder="Accent themed input..."
+            variant="accent"
           />
-          <GlassmorphicInput 
-            variant="subtle" 
-            placeholder="Subtle input..." 
-          />
+          <GlassmorphicInput placeholder="Subtle input..." variant="subtle" />
         </div>
       </GlassmorphicCard>
 
@@ -114,7 +126,7 @@ export function GlassTestPage() {
         {/* Modal Test */}
         <GlassmorphicCard variant="default">
           <h3 className="text-xl font-semibold mb-4">Modal Component</h3>
-          <GlassmorphicButton onPress={onOpen} variant="gaming" glow>
+          <GlassmorphicButton glow variant="gaming" onPress={onOpen}>
             Open Gaming Modal
           </GlassmorphicButton>
         </GlassmorphicCard>
@@ -122,9 +134,9 @@ export function GlassTestPage() {
         {/* Dropdown Test */}
         <GlassmorphicCard variant="default">
           <h3 className="text-xl font-semibold mb-4">Dropdown Component</h3>
-          <GlassmorphicDropdown variant="gaming" animated>
+          <GlassmorphicDropdown animated variant="gaming">
             <DropdownTrigger>
-              <GlassmorphicButton variant="accent" glow>
+              <GlassmorphicButton glow variant="accent">
                 Gaming Menu
               </GlassmorphicButton>
             </DropdownTrigger>
@@ -144,11 +156,11 @@ export function GlassTestPage() {
       <GlassmorphicCard variant="subtle">
         <h2 className="text-2xl font-semibold mb-4">Badge Components</h2>
         <div className="flex flex-wrap gap-4">
-          <GlassmorphicBadge variant="gaming" glow>
+          <GlassmorphicBadge glow variant="gaming">
             Level 42
           </GlassmorphicBadge>
 
-          <GlassmorphicBadge variant="success" glow>
+          <GlassmorphicBadge glow variant="success">
             Online
           </GlassmorphicBadge>
 
@@ -161,15 +173,15 @@ export function GlassTestPage() {
 
       {/* Alerts Section */}
       <div className="space-y-4">
-        <GlassmorphicButton 
-          variant="gaming" 
+        <GlassmorphicButton
+          variant="gaming"
           onPress={() => setShowAlert(!showAlert)}
         >
           Toggle Alert
         </GlassmorphicButton>
 
-        <GlassmorphicButton 
-          variant="accent" 
+        <GlassmorphicButton
+          variant="accent"
           onPress={() => setShowNotification(!showNotification)}
         >
           Show Game Notification
@@ -177,31 +189,31 @@ export function GlassTestPage() {
 
         {showAlert && (
           <GlassmorphicAlert
-            variant="gaming"
-            title="Welcome to GameGen!"
-            message="Your glassmorphic gaming platform is ready. Start creating amazing games with AI assistance."
             closable
+            message="Your glassmorphic gaming platform is ready. Start creating amazing games with AI assistance."
+            title="Welcome to GameGen!"
+            variant="gaming"
             onClose={() => setShowAlert(false)}
           />
         )}
 
         {showNotification && (
           <GameNotification
-            type="achievement"
-            title="Achievement Unlocked!"
             message="You've successfully implemented the glassmorphic design system!"
+            title="Achievement Unlocked!"
+            type="achievement"
             onClose={() => setShowNotification(false)}
           />
         )}
       </div>
 
       {/* Modal */}
-      <GlassmorphicModal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
-        variant="gaming"
-        blur="2xl"
+      <GlassmorphicModal
         gamePattern
+        blur="2xl"
+        isOpen={isOpen}
+        variant="gaming"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           <ModalHeader>
@@ -211,25 +223,26 @@ export function GlassTestPage() {
           </ModalHeader>
           <ModalBody>
             <p className="text-purple-300">
-              This is a gaming-themed glassmorphic modal with backdrop blur and 
-              beautiful visual effects. Perfect for game settings, dialogs, and more.
+              This is a gaming-themed glassmorphic modal with backdrop blur and
+              beautiful visual effects. Perfect for game settings, dialogs, and
+              more.
             </p>
-            <GlassmorphicInput 
-              variant="gaming" 
-              placeholder="Enter game name..." 
+            <GlassmorphicInput
               className="mt-4"
+              placeholder="Enter game name..."
+              variant="gaming"
             />
           </ModalBody>
           <ModalFooter>
-            <GlassmorphicButton 
-              variant="glass-ghost" 
+            <GlassmorphicButton
+              variant="glass-ghost"
               onPress={() => onOpenChange()}
             >
               Cancel
             </GlassmorphicButton>
-            <GlassmorphicButton 
-              variant="gaming" 
+            <GlassmorphicButton
               glow
+              variant="gaming"
               onPress={() => onOpenChange()}
             >
               Save Game

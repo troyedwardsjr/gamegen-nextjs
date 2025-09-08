@@ -3,50 +3,60 @@
  * Combines validation, focus management, and other authentication utilities
  */
 
-import type { Database } from '../supabase/database.types'
+import type { Database } from "../supabase/database.types";
+
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 // Type alias for better compatibility
-export type UserProfile = Database['public']['Tables']['profiles']['Row']
+export type UserProfile = Database["public"]["Tables"]["profiles"]["Row"];
 
 // Email validation utility - improved to handle edge cases
 export const isValidEmail = (email: string): boolean => {
   if (!email || email.length === 0) return false;
-  
+
   // More comprehensive email regex that handles edge cases
-  const emailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
-  
+  const emailRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+
   // Additional checks for common edge cases
-  if (email.includes('..')) return false; // No consecutive dots
-  if (email.startsWith('.') || email.endsWith('.')) return false; // No leading/trailing dots
+  if (email.includes("..")) return false; // No consecutive dots
+  if (email.startsWith(".") || email.endsWith(".")) return false; // No leading/trailing dots
   if (email.length > 254) return false; // RFC 5321 limit
-  
+
   return emailRegex.test(email);
 };
 
 // Basic password validation utility - more strict now
 export const isValidPassword = (password: string): boolean => {
   if (password.length < 8) return false;
-  
+
   // Reject common weak passwords
   const weakPasswords = [
-    'password', 'password123', '12345678', 'qwerty123', 
-    'abc123456', '123456789', 'password1', 'welcome123'
+    "password",
+    "password123",
+    "12345678",
+    "qwerty123",
+    "abc123456",
+    "123456789",
+    "password1",
+    "welcome123",
   ];
-  
+
   if (weakPasswords.includes(password.toLowerCase())) {
     return false;
   }
-  
+
   // Must have at least 3 of these 4 criteria:
   const hasLower = /[a-z]/.test(password);
   const hasUpper = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
-  
-  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
-  
+
+  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(
+    Boolean,
+  ).length;
+
   return criteriaCount >= 3;
 };
 
@@ -66,10 +76,16 @@ export const validatePassword = (password: string) => {
 
   // Check for weak passwords
   const weakPasswords = [
-    'password', 'password123', '12345678', 'qwerty123', 
-    'abc123456', '123456789', 'password1', 'welcome123'
+    "password",
+    "password123",
+    "12345678",
+    "qwerty123",
+    "abc123456",
+    "123456789",
+    "password1",
+    "welcome123",
   ];
-  
+
   if (weakPasswords.includes(password.toLowerCase())) {
     errors.push("Password is too common. Please choose a more secure password");
     isValid = false;
@@ -79,17 +95,22 @@ export const validatePassword = (password: string) => {
   const hasUpper = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
-  
-  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecialChar].filter(Boolean).length;
-  
+
+  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecialChar].filter(
+    Boolean,
+  ).length;
+
   if (criteriaCount < 3) {
     const missing = [];
+
     if (!hasLower) missing.push("lowercase letters");
     if (!hasUpper) missing.push("uppercase letters");
     if (!hasNumber) missing.push("numbers");
     if (!hasSpecialChar) missing.push("special characters");
-    
-    errors.push(`Password must contain at least 3 of these 4 types: lowercase letters, uppercase letters, numbers, special characters. Missing: ${missing.join(', ')}`);
+
+    errors.push(
+      `Password must contain at least 3 of these 4 types: lowercase letters, uppercase letters, numbers, special characters. Missing: ${missing.join(", ")}`,
+    );
     isValid = false;
   }
 
@@ -110,38 +131,45 @@ export const getPasswordStrength = (password: string) => {
   // Length scoring
   if (password.length >= 8) score += 2;
   else if (password.length >= 6) score += 1;
-  
+
   if (password.length >= 12) score += 1;
   if (password.length >= 16) score += 1;
-  
+
   // Character type scoring
   if (/[A-Z]/.test(password)) score += 1;
   if (/[a-z]/.test(password)) score += 1;
   if (/\d/.test(password)) score += 1;
   if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) score += 1;
-  
+
   // Bonus for variety
   const hasMultipleNumbers = (password.match(/\d/g) || []).length >= 2;
-  const hasMultipleSpecial = (password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/g) || []).length >= 2;
-  
+  const hasMultipleSpecial =
+    (password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/g) || []).length >= 2;
+
   if (hasMultipleNumbers) score += 1;
   if (hasMultipleSpecial) score += 1;
-  
+
   // Penalty for weak patterns
   const weakPasswords = [
-    'password', 'password123', '12345678', 'qwerty123', 
-    'abc123456', '123456789', 'password1', 'welcome123'
+    "password",
+    "password123",
+    "12345678",
+    "qwerty123",
+    "abc123456",
+    "123456789",
+    "password1",
+    "welcome123",
   ];
-  
+
   if (weakPasswords.includes(password.toLowerCase())) {
     score = Math.max(0, score - 3);
   }
 
   const percentage = Math.min(100, (score / maxScore) * 100);
-  
+
   let label: string;
   let color: "danger" | "warning" | "success" | "default";
-  
+
   if (percentage >= 80) {
     label = "Very strong";
     color = "success";
@@ -171,13 +199,15 @@ export const manageFocus = {
   // Trap focus within a container
   trapFocus: (container: HTMLElement) => {
     const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
+      if (e.key === "Tab") {
         if (e.shiftKey) {
           if (document.activeElement === firstElement) {
             lastElement?.focus();
@@ -192,31 +222,41 @@ export const manageFocus = {
       }
     };
 
-    container.addEventListener('keydown', handleTabKey);
+    container.addEventListener("keydown", handleTabKey);
     firstElement?.focus();
 
-    return () => container.removeEventListener('keydown', handleTabKey);
+    return () => container.removeEventListener("keydown", handleTabKey);
   },
 
   // Focus first error or invalid input
   focusFirstError: (container: HTMLElement) => {
-    const errorElement = container.querySelector('[aria-invalid="true"], .is-invalid, [data-invalid]') as HTMLElement;
+    const errorElement = container.querySelector(
+      '[aria-invalid="true"], .is-invalid, [data-invalid]',
+    ) as HTMLElement;
+
     if (errorElement) {
       errorElement.focus();
+
       return true;
     }
+
     return false;
   },
 
   // Focus first input in form
   focusFirstInput: (container: HTMLElement) => {
-    const firstInput = container.querySelector('input, textarea, select') as HTMLElement;
+    const firstInput = container.querySelector(
+      "input, textarea, select",
+    ) as HTMLElement;
+
     if (firstInput) {
       firstInput.focus();
+
       return true;
     }
+
     return false;
-  }
+  },
 };
 
 // Server-side Supabase client for middleware and server components
@@ -266,6 +306,7 @@ export const getSession = async () => {
     return session;
   } catch (error) {
     console.error("Error:", error);
+
     return null;
   }
 };
@@ -282,6 +323,7 @@ export const getUser = async () => {
     return user;
   } catch (error) {
     console.error("Error:", error);
+
     return null;
   }
 };
@@ -304,16 +346,17 @@ export const getProfile = async (userId: string) => {
     return data;
   } catch (error) {
     console.error("Error fetching profile:", error);
+
     return null;
   }
 };
 
 // Auth error handling utility
 export const getAuthErrorMessage = (error: any): string => {
-  if (!error) return 'An unexpected error occurred';
-  
+  if (!error) return "An unexpected error occurred";
+
   const message = error.message || error.error_description || error.toString();
-  
+
   switch (message) {
     case "Invalid login credentials":
       return "Invalid email or password. Please check your credentials and try again.";

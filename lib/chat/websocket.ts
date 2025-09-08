@@ -1,6 +1,6 @@
 "use client";
 
-import { RealtimeChannel, RealtimeClient } from '@supabase/supabase-js';
+import { RealtimeChannel, RealtimeClient } from "@supabase/supabase-js";
 
 export interface ChatWebSocketConfig {
   sessionId: string;
@@ -9,7 +9,9 @@ export interface ChatWebSocketConfig {
   onMessageUpdated?: (message: any) => void;
   onUserTyping?: (data: { userId: string; isTyping: boolean }) => void;
   onError?: (error: Error) => void;
-  onStatusChange?: (status: 'connecting' | 'connected' | 'disconnected' | 'error') => void;
+  onStatusChange?: (
+    status: "connecting" | "connected" | "disconnected" | "error",
+  ) => void;
 }
 
 export class ChatWebSocket {
@@ -29,19 +31,19 @@ export class ChatWebSocket {
 
   private async init() {
     try {
-      this.config.onStatusChange?.('connecting');
-      
+      this.config.onStatusChange?.("connecting");
+
       // Get Supabase URL and key from environment
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Supabase configuration missing');
+        throw new Error("Supabase configuration missing");
       }
 
       // Create Supabase realtime client
       this.client = new RealtimeClient(
-        `${supabaseUrl.replace('https://', 'wss://').replace('http://', 'ws://')}/realtime/v1`,
+        `${supabaseUrl.replace("https://", "wss://").replace("http://", "ws://")}/realtime/v1`,
         {
           apikey: supabaseKey,
           params: {
@@ -51,56 +53,60 @@ export class ChatWebSocket {
           reconnectAfterMs: (tries) => {
             return Math.min(1000 * Math.pow(2, tries), 30000);
           },
-        }
+        },
       );
 
       // Set up connection event listeners
       this.client.onOpen(() => {
-        console.log('WebSocket connected');
-        this.config.onStatusChange?.('connected');
+        console.log("WebSocket connected");
+        this.config.onStatusChange?.("connected");
         this.reconnectAttempts = 0;
         this.setupHeartbeat();
       });
 
       this.client.onClose(() => {
-        console.log('WebSocket disconnected');
-        this.config.onStatusChange?.('disconnected');
+        console.log("WebSocket disconnected");
+        this.config.onStatusChange?.("disconnected");
         this.cleanup();
         this.attemptReconnect();
       });
 
       this.client.onError((error) => {
-        console.error('WebSocket error:', error);
-        this.config.onStatusChange?.('error');
+        console.error("WebSocket error:", error);
+        this.config.onStatusChange?.("error");
         this.config.onError?.(new Error(`WebSocket error: ${error}`));
       });
 
       // Create channel for the specific chat session
-      this.channel = this.client.channel(`chat_session_${this.config.sessionId}`, {
-        config: {
-          presence: { key: this.config.userId },
-          broadcast: { self: true },
+      this.channel = this.client.channel(
+        `chat_session_${this.config.sessionId}`,
+        {
+          config: {
+            presence: { key: this.config.userId },
+            broadcast: { self: true },
+          },
         },
-      });
+      );
 
       this.setupChannelListeners();
-      
+
       // Connect to the channel
       await this.client.connect();
       this.channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to chat channel');
+        if (status === "SUBSCRIBED") {
+          console.log("Successfully subscribed to chat channel");
           this.joinPresence();
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Failed to subscribe to chat channel');
-          this.config.onError?.(new Error('Failed to subscribe to chat channel'));
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("Failed to subscribe to chat channel");
+          this.config.onError?.(
+            new Error("Failed to subscribe to chat channel"),
+          );
         }
       });
-
     } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
+      console.error("Failed to initialize WebSocket:", error);
       this.config.onError?.(error as Error);
-      this.config.onStatusChange?.('error');
+      this.config.onStatusChange?.("error");
     }
   }
 
@@ -109,75 +115,76 @@ export class ChatWebSocket {
 
     // Listen for new messages
     this.channel.on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chat_messages',
+        event: "INSERT",
+        schema: "public",
+        table: "chat_messages",
         filter: `session_id=eq.${this.config.sessionId}`,
       },
       (payload) => {
-        console.log('New message received:', payload.new);
+        console.log("New message received:", payload.new);
         this.config.onMessageReceived?.(payload.new);
-      }
+      },
     );
 
     // Listen for message updates (e.g., streaming updates)
     this.channel.on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'chat_messages',
+        event: "UPDATE",
+        schema: "public",
+        table: "chat_messages",
         filter: `session_id=eq.${this.config.sessionId}`,
       },
       (payload) => {
-        console.log('Message updated:', payload.new);
+        console.log("Message updated:", payload.new);
         this.config.onMessageUpdated?.(payload.new);
-      }
+      },
     );
 
     // Listen for typing indicators via broadcast
-    this.channel.on('broadcast', { event: 'typing' }, ({ payload }) => {
+    this.channel.on("broadcast", { event: "typing" }, ({ payload }) => {
       if (payload.userId !== this.config.userId) {
         this.config.onUserTyping?.(payload);
       }
     });
 
     // Listen for message streaming events
-    this.channel.on('broadcast', { event: 'message_stream' }, ({ payload }) => {
+    this.channel.on("broadcast", { event: "message_stream" }, ({ payload }) => {
       this.handleStreamingMessage(payload);
     });
 
     // Listen for user presence changes
-    this.channel.on('presence', { event: 'sync' }, () => {
+    this.channel.on("presence", { event: "sync" }, () => {
       const presenceState = this.channel?.presenceState();
-      console.log('Presence sync:', presenceState);
+
+      console.log("Presence sync:", presenceState);
     });
 
-    this.channel.on('presence', { event: 'join' }, ({ newPresences }) => {
-      console.log('User joined:', newPresences);
+    this.channel.on("presence", { event: "join" }, ({ newPresences }) => {
+      console.log("User joined:", newPresences);
     });
 
-    this.channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
-      console.log('User left:', leftPresences);
+    this.channel.on("presence", { event: "leave" }, ({ leftPresences }) => {
+      console.log("User left:", leftPresences);
     });
   }
 
   private handleStreamingMessage(payload: any) {
     // Handle real-time streaming of AI responses
-    if (payload.type === 'stream_chunk') {
+    if (payload.type === "stream_chunk") {
       this.config.onMessageReceived?.({
         ...payload.message,
         content: payload.message.content + payload.chunk,
         isStreaming: true,
       });
-    } else if (payload.type === 'stream_complete') {
+    } else if (payload.type === "stream_complete") {
       this.config.onMessageUpdated?.({
         ...payload.message,
         isStreaming: false,
       });
-    } else if (payload.type === 'stream_error') {
+    } else if (payload.type === "stream_error") {
       this.config.onError?.(new Error(payload.error));
     }
   }
@@ -196,8 +203,8 @@ export class ChatWebSocket {
     this.heartbeatInterval = setInterval(() => {
       if (this.channel && this.client?.isConnected()) {
         this.channel.send({
-          type: 'heartbeat',
-          event: 'ping',
+          type: "heartbeat",
+          event: "ping",
           payload: { timestamp: Date.now() },
         });
       }
@@ -218,16 +225,19 @@ export class ChatWebSocket {
 
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached');
-      this.config.onError?.(new Error('Max reconnection attempts reached'));
+      console.error("Max reconnection attempts reached");
+      this.config.onError?.(new Error("Max reconnection attempts reached"));
+
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+    console.log(
+      `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`,
+    );
+
     setTimeout(() => {
       if (this.client && !this.client.isConnected()) {
         this.client.connect();
@@ -246,8 +256,8 @@ export class ChatWebSocket {
 
     // Send typing indicator
     this.channel.send({
-      type: 'broadcast',
-      event: 'typing',
+      type: "broadcast",
+      event: "typing",
       payload: {
         userId: this.config.userId,
         isTyping,
@@ -270,14 +280,18 @@ export class ChatWebSocket {
     }
   }
 
-  public sendStreamingChunk(messageId: string, chunk: string, isComplete: boolean = false) {
+  public sendStreamingChunk(
+    messageId: string,
+    chunk: string,
+    isComplete: boolean = false,
+  ) {
     if (!this.channel) return;
 
     this.channel.send({
-      type: 'broadcast',
-      event: 'message_stream',
+      type: "broadcast",
+      event: "message_stream",
       payload: {
-        type: isComplete ? 'stream_complete' : 'stream_chunk',
+        type: isComplete ? "stream_complete" : "stream_chunk",
         messageId,
         chunk,
         timestamp: Date.now(),
@@ -289,10 +303,10 @@ export class ChatWebSocket {
     if (!this.channel) return;
 
     this.channel.send({
-      type: 'broadcast',
-      event: 'message_stream',
+      type: "broadcast",
+      event: "message_stream",
       payload: {
-        type: 'stream_error',
+        type: "stream_error",
         messageId,
         error,
         timestamp: Date.now(),
@@ -310,7 +324,7 @@ export class ChatWebSocket {
 
   public disconnect() {
     this.cleanup();
-    
+
     if (this.channel) {
       this.channel.untrack();
       this.channel.unsubscribe();
@@ -327,12 +341,18 @@ export class ChatWebSocket {
 }
 
 // Helper function to create WebSocket connection
-export function createChatWebSocket(config: ChatWebSocketConfig): ChatWebSocket {
+export function createChatWebSocket(
+  config: ChatWebSocketConfig,
+): ChatWebSocket {
   return new ChatWebSocket(config);
 }
 
 // WebSocket status type
-export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type WebSocketStatus =
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
 
 // Typing indicator interface
 export interface TypingIndicator {

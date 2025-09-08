@@ -1,16 +1,14 @@
 /**
  * Toxoid WebSocket Manager
- * 
+ *
  * Real-time WebSocket communication system for hot-reloading Toxoid scripts.
- * Provides bidirectional communication between the GameGen editor and 
+ * Provides bidirectional communication between the GameGen editor and
  * running game instances with version control and error handling.
  */
 
-import {
-  ScriptHotReloadEvent,
-  WebSocketScriptMessage
-} from '@/types/toxoid';
-import { WebSocket } from 'ws';
+import { WebSocket } from "ws";
+
+import { ScriptHotReloadEvent, WebSocketScriptMessage } from "@/types/toxoid";
 
 interface WebSocketClient {
   id: string;
@@ -68,8 +66,8 @@ export class ToxoidWebSocketManager {
       maxConnections: 100,
       maxScriptSize: 1024 * 1024, // 1MB
       enableCompression: true,
-      corsOrigins: ['http://localhost:3000', 'https://gamegen.dev'],
-      ...config
+      corsOrigins: ["http://localhost:3000", "https://gamegen.dev"],
+      ...config,
     };
   }
 
@@ -79,22 +77,25 @@ export class ToxoidWebSocketManager {
   async initialize(): Promise<void> {
     try {
       // Import WebSocket server dynamically to avoid SSR issues
-      const { WebSocketServer } = await import('ws');
-      
+      const { WebSocketServer } = await import("ws");
+
       this.wss = new WebSocketServer({
         port: this.config.port,
         perMessageDeflate: this.config.enableCompression,
-        maxPayload: this.config.maxScriptSize
+        maxPayload: this.config.maxScriptSize,
       });
 
       this.setupWebSocketHandlers();
       this.startPingTimer();
 
-      console.log(`[WebSocket] Toxoid hot-reload server listening on port ${this.config.port}`);
-
+      console.log(
+        `[WebSocket] Toxoid hot-reload server listening on port ${this.config.port}`,
+      );
     } catch (error) {
-      console.error('[WebSocket] Failed to initialize server:', error);
-      throw new Error(`WebSocket server initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("[WebSocket] Failed to initialize server:", error);
+      throw new Error(
+        `WebSocket server initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -111,8 +112,8 @@ export class ToxoidWebSocketManager {
     }
 
     // Close all client connections
-    const closePromises = Array.from(this.clients.values()).map(client => 
-      this.closeClient(client.id, 1001, 'Server shutting down')
+    const closePromises = Array.from(this.clients.values()).map((client) =>
+      this.closeClient(client.id, 1001, "Server shutting down"),
     );
 
     await Promise.all(closePromises);
@@ -121,7 +122,7 @@ export class ToxoidWebSocketManager {
     if (this.wss) {
       return new Promise((resolve) => {
         this.wss.close(() => {
-          console.log('[WebSocket] Server shut down successfully');
+          console.log("[WebSocket] Server shut down successfully");
           resolve();
         });
       });
@@ -132,10 +133,10 @@ export class ToxoidWebSocketManager {
    * Broadcast script update to all subscribed clients
    */
   async broadcastScriptUpdate(
-    scriptId: string, 
-    content: string, 
+    scriptId: string,
+    content: string,
     userId?: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<void> {
     try {
       const session = sessionId ? this.sessions.get(sessionId) : null;
@@ -145,6 +146,7 @@ export class ToxoidWebSocketManager {
       if (session) {
         // Store rollback version before updating
         const currentVersion = session.scripts.get(scriptId);
+
         if (currentVersion) {
           this.addRollbackVersion(session, scriptId, currentVersion);
         }
@@ -153,36 +155,37 @@ export class ToxoidWebSocketManager {
       }
 
       const event: ScriptHotReloadEvent = {
-        type: 'script_updated',
+        type: "script_updated",
         scriptId,
         script: content,
         version: newVersion.version,
-        timestamp: newVersion.timestamp
+        timestamp: newVersion.timestamp,
       };
 
       // Broadcast to all subscribed clients
-      const subscribedClients = Array.from(this.clients.values())
-        .filter(client => 
+      const subscribedClients = Array.from(this.clients.values()).filter(
+        (client) =>
           client.subscribedScripts.has(scriptId) &&
-          (!sessionId || client.sessionId === sessionId)
-        );
+          (!sessionId || client.sessionId === sessionId),
+      );
 
-      const broadcastPromises = subscribedClients.map(client =>
+      const broadcastPromises = subscribedClients.map((client) =>
         this.sendToClient(client.id, {
-          action: 'update_script',
+          action: "update_script",
           scriptId,
           script: content,
           userId,
-          sessionId
-        })
+          sessionId,
+        }),
       );
 
       await Promise.all(broadcastPromises);
 
-      console.log(`[WebSocket] Broadcasted script update for ${scriptId} to ${subscribedClients.length} clients`);
-
+      console.log(
+        `[WebSocket] Broadcasted script update for ${scriptId} to ${subscribedClients.length} clients`,
+      );
     } catch (error) {
-      console.error('[WebSocket] Failed to broadcast script update:', error);
+      console.error("[WebSocket] Failed to broadcast script update:", error);
       throw error;
     }
   }
@@ -194,14 +197,14 @@ export class ToxoidWebSocketManager {
     scriptId: string,
     errors: string[],
     clientId?: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<void> {
     const event: ScriptHotReloadEvent = {
-      type: 'script_error',
+      type: "script_error",
       scriptId,
-      error: errors.join('\n'),
+      error: errors.join("\n"),
       version: Date.now(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     if (clientId) {
@@ -209,7 +212,9 @@ export class ToxoidWebSocketManager {
     } else if (sessionId) {
       await this.broadcastToSession(sessionId, event);
     } else {
-      console.warn('[WebSocket] Cannot send validation error: no target specified');
+      console.warn(
+        "[WebSocket] Cannot send validation error: no target specified",
+      );
     }
   }
 
@@ -219,32 +224,47 @@ export class ToxoidWebSocketManager {
   async rollbackScript(
     scriptId: string,
     sessionId: string,
-    versionsBack: number = 1
+    versionsBack: number = 1,
   ): Promise<boolean> {
     const session = this.sessions.get(sessionId);
+
     if (!session) {
       console.warn(`[WebSocket] Session ${sessionId} not found for rollback`);
+
       return false;
     }
 
     const rollbackVersions = session.rollbackVersions.get(scriptId);
+
     if (!rollbackVersions || rollbackVersions.length < versionsBack) {
-      console.warn(`[WebSocket] Not enough rollback versions for script ${scriptId}`);
+      console.warn(
+        `[WebSocket] Not enough rollback versions for script ${scriptId}`,
+      );
+
       return false;
     }
 
-    const targetVersion = rollbackVersions[rollbackVersions.length - versionsBack];
-    
+    const targetVersion =
+      rollbackVersions[rollbackVersions.length - versionsBack];
+
     // Update current version
     session.scripts.set(scriptId, { ...targetVersion, version: Date.now() });
-    
+
     // Remove used rollback versions
     rollbackVersions.splice(-versionsBack);
 
     // Broadcast rollback
-    await this.broadcastScriptUpdate(scriptId, targetVersion.content, targetVersion.userId, sessionId);
+    await this.broadcastScriptUpdate(
+      scriptId,
+      targetVersion.content,
+      targetVersion.userId,
+      sessionId,
+    );
 
-    console.log(`[WebSocket] Rolled back script ${scriptId} by ${versionsBack} version(s)`);
+    console.log(
+      `[WebSocket] Rolled back script ${scriptId} by ${versionsBack} version(s)`,
+    );
+
     return true;
   }
 
@@ -271,13 +291,15 @@ export class ToxoidWebSocketManager {
     totalRollbackVersions: number;
   } | null {
     const session = this.sessions.get(sessionId);
+
     if (!session) return null;
 
     return {
       clientCount: session.clients.size,
       scriptCount: session.scripts.size,
-      totalRollbackVersions: Array.from(session.rollbackVersions.values())
-        .reduce((total, versions) => total + versions.length, 0)
+      totalRollbackVersions: Array.from(
+        session.rollbackVersions.values(),
+      ).reduce((total, versions) => total + versions.length, 0),
     };
   }
 
@@ -285,16 +307,18 @@ export class ToxoidWebSocketManager {
    * Setup WebSocket server event handlers
    */
   private setupWebSocketHandlers(): void {
-    this.wss.on('connection', (socket: WebSocket, request: any) => {
+    this.wss.on("connection", (socket: WebSocket, request: any) => {
       this.handleNewConnection(socket, request);
     });
 
-    this.wss.on('error', (error: Error) => {
-      console.error('[WebSocket] Server error:', error);
+    this.wss.on("error", (error: Error) => {
+      console.error("[WebSocket] Server error:", error);
     });
 
-    this.wss.on('listening', () => {
-      console.log(`[WebSocket] Server is listening on port ${this.config.port}`);
+    this.wss.on("listening", () => {
+      console.log(
+        `[WebSocket] Server is listening on port ${this.config.port}`,
+      );
     });
   }
 
@@ -303,20 +327,29 @@ export class ToxoidWebSocketManager {
    */
   private handleNewConnection(socket: WebSocket, request: any): void {
     if (this.isShuttingDown) {
-      socket.close(1012, 'Server is shutting down');
+      socket.close(1012, "Server is shutting down");
+
       return;
     }
 
     if (this.clients.size >= this.config.maxConnections) {
-      socket.close(1013, 'Maximum connections exceeded');
+      socket.close(1013, "Maximum connections exceeded");
+
       return;
     }
 
     // Check origin if configured
     const origin = request.headers.origin;
-    if (this.config.corsOrigins.length > 0 && !this.config.corsOrigins.includes(origin)) {
-      console.warn(`[WebSocket] Rejected connection from unauthorized origin: ${origin}`);
-      socket.close(1008, 'Unauthorized origin');
+
+    if (
+      this.config.corsOrigins.length > 0 &&
+      !this.config.corsOrigins.includes(origin)
+    ) {
+      console.warn(
+        `[WebSocket] Rejected connection from unauthorized origin: ${origin}`,
+      );
+      socket.close(1008, "Unauthorized origin");
+
       return;
     }
 
@@ -326,73 +359,81 @@ export class ToxoidWebSocketManager {
       socket,
       subscribedScripts: new Set(),
       lastPing: Date.now(),
-      isAlive: true
+      isAlive: true,
     };
 
     this.clients.set(clientId, client);
 
     // Setup client event handlers
-    socket.on('message', (data: Buffer) => {
+    socket.on("message", (data: Buffer) => {
       this.handleClientMessage(clientId, data);
     });
 
-    socket.on('close', (code: number, reason: Buffer) => {
+    socket.on("close", (code: number, reason: Buffer) => {
       this.handleClientDisconnect(clientId, code, reason.toString());
     });
 
-    socket.on('error', (error: Error) => {
+    socket.on("error", (error: Error) => {
       console.error(`[WebSocket] Client ${clientId} error:`, error);
-      this.handleClientDisconnect(clientId, 1011, 'Connection error');
+      this.handleClientDisconnect(clientId, 1011, "Connection error");
     });
 
-    socket.on('pong', () => {
+    socket.on("pong", () => {
       client.isAlive = true;
       client.lastPing = Date.now();
     });
 
     console.log(`[WebSocket] New client connected: ${clientId}`);
-    
+
     // Send welcome message
     this.sendToClient(clientId, {
-      action: 'welcome',
+      action: "welcome",
       clientId,
-      serverTime: new Date().toISOString()
+      serverTime: new Date().toISOString(),
     });
   }
 
   /**
    * Handle message from client
    */
-  private async handleClientMessage(clientId: string, data: Buffer): Promise<void> {
+  private async handleClientMessage(
+    clientId: string,
+    data: Buffer,
+  ): Promise<void> {
     const client = this.clients.get(clientId);
+
     if (!client) return;
 
     try {
       const message: WebSocketScriptMessage = JSON.parse(data.toString());
-      
+
       switch (message.action) {
-        case 'subscribe':
+        case "subscribe":
           await this.handleSubscribe(clientId, message);
           break;
-        case 'unsubscribe':
+        case "unsubscribe":
           await this.handleUnsubscribe(clientId, message);
           break;
-        case 'update_script':
+        case "update_script":
           await this.handleScriptUpdate(clientId, message);
           break;
-        case 'validate_script':
+        case "validate_script":
           await this.handleScriptValidation(clientId, message);
           break;
         default:
-          console.warn(`[WebSocket] Unknown action from client ${clientId}: ${message.action}`);
+          console.warn(
+            `[WebSocket] Unknown action from client ${clientId}: ${message.action}`,
+          );
       }
-
     } catch (error) {
-      console.error(`[WebSocket] Failed to handle message from client ${clientId}:`, error);
-      
+      console.error(
+        `[WebSocket] Failed to handle message from client ${clientId}:`,
+        error,
+      );
+
       this.sendToClient(clientId, {
-        action: 'error',
-        message: 'Failed to process message'
+        action: "error",
+        message: "Failed to process message",
       });
     }
   }
@@ -400,26 +441,37 @@ export class ToxoidWebSocketManager {
   /**
    * Handle client disconnect
    */
-  private handleClientDisconnect(clientId: string, code: number, reason: string): void {
+  private handleClientDisconnect(
+    clientId: string,
+    code: number,
+    reason: string,
+  ): void {
     const client = this.clients.get(clientId);
+
     if (!client) return;
 
     // Remove client from sessions
-    this.sessions.forEach(session => {
+    this.sessions.forEach((session) => {
       session.clients.delete(clientId);
     });
 
     // Remove client
     this.clients.delete(clientId);
 
-    console.log(`[WebSocket] Client ${clientId} disconnected (${code}): ${reason}`);
+    console.log(
+      `[WebSocket] Client ${clientId} disconnected (${code}): ${reason}`,
+    );
   }
 
   /**
    * Handle subscription request
    */
-  private async handleSubscribe(clientId: string, message: WebSocketScriptMessage): Promise<void> {
+  private async handleSubscribe(
+    clientId: string,
+    message: WebSocketScriptMessage,
+  ): Promise<void> {
     const client = this.clients.get(clientId);
+
     if (!client || !message.scriptId) return;
 
     client.subscribedScripts.add(message.scriptId);
@@ -430,65 +482,79 @@ export class ToxoidWebSocketManager {
 
     if (message.sessionId) {
       client.sessionId = message.sessionId;
-      
+
       // Add client to session
       let session = this.sessions.get(message.sessionId);
+
       if (!session) {
         session = {
           sessionId: message.sessionId,
           clients: new Set(),
           scripts: new Map(),
-          rollbackVersions: new Map()
+          rollbackVersions: new Map(),
         };
         this.sessions.set(message.sessionId, session);
       }
-      
+
       session.clients.add(clientId);
     }
 
     await this.sendToClient(clientId, {
-      action: 'subscribed',
+      action: "subscribed",
       scriptId: message.scriptId,
-      sessionId: message.sessionId
+      sessionId: message.sessionId,
     });
 
-    console.log(`[WebSocket] Client ${clientId} subscribed to script ${message.scriptId}`);
+    console.log(
+      `[WebSocket] Client ${clientId} subscribed to script ${message.scriptId}`,
+    );
   }
 
   /**
    * Handle unsubscription request
    */
-  private async handleUnsubscribe(clientId: string, message: WebSocketScriptMessage): Promise<void> {
+  private async handleUnsubscribe(
+    clientId: string,
+    message: WebSocketScriptMessage,
+  ): Promise<void> {
     const client = this.clients.get(clientId);
+
     if (!client || !message.scriptId) return;
 
     client.subscribedScripts.delete(message.scriptId);
 
     await this.sendToClient(clientId, {
-      action: 'unsubscribed',
-      scriptId: message.scriptId
+      action: "unsubscribed",
+      scriptId: message.scriptId,
     });
 
-    console.log(`[WebSocket] Client ${clientId} unsubscribed from script ${message.scriptId}`);
+    console.log(
+      `[WebSocket] Client ${clientId} unsubscribed from script ${message.scriptId}`,
+    );
   }
 
   /**
    * Handle script update from client
    */
-  private async handleScriptUpdate(clientId: string, message: WebSocketScriptMessage): Promise<void> {
+  private async handleScriptUpdate(
+    clientId: string,
+    message: WebSocketScriptMessage,
+  ): Promise<void> {
     if (!message.scriptId || !message.script) {
       await this.sendToClient(clientId, {
-        action: 'error',
-        message: 'Missing scriptId or script content'
+        action: "error",
+        message: "Missing scriptId or script content",
       });
+
       return;
     }
 
     if (message.script.length > this.config.maxScriptSize) {
       await this.sendToClient(clientId, {
-        action: 'error',
-        message: `Script too large (max ${this.config.maxScriptSize} bytes)`
+        action: "error",
+        message: `Script too large (max ${this.config.maxScriptSize} bytes)`,
       });
+
       return;
     }
 
@@ -497,29 +563,33 @@ export class ToxoidWebSocketManager {
       message.scriptId,
       message.script,
       message.userId,
-      message.sessionId
+      message.sessionId,
     );
   }
 
   /**
    * Handle script validation request
    */
-  private async handleScriptValidation(clientId: string, message: WebSocketScriptMessage): Promise<void> {
+  private async handleScriptValidation(
+    clientId: string,
+    message: WebSocketScriptMessage,
+  ): Promise<void> {
     if (!message.scriptId || !message.script) {
       await this.sendToClient(clientId, {
-        action: 'error',
-        message: 'Missing scriptId or script content'
+        action: "error",
+        message: "Missing scriptId or script content",
       });
+
       return;
     }
 
     // In a full implementation, this would integrate with the script validator
     // For now, send a mock validation response
     const event: ScriptHotReloadEvent = {
-      type: 'script_validated',
+      type: "script_validated",
       scriptId: message.scriptId,
       version: Date.now(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     await this.sendEventToClient(clientId, event);
@@ -530,35 +600,46 @@ export class ToxoidWebSocketManager {
    */
   private async sendToClient(clientId: string, message: any): Promise<void> {
     const client = this.clients.get(clientId);
+
     if (!client || client.socket.readyState !== WebSocket.OPEN) return;
 
     try {
       client.socket.send(JSON.stringify(message));
     } catch (error) {
-      console.error(`[WebSocket] Failed to send message to client ${clientId}:`, error);
-      this.handleClientDisconnect(clientId, 1011, 'Send failed');
+      console.error(
+        `[WebSocket] Failed to send message to client ${clientId}:`,
+        error,
+      );
+      this.handleClientDisconnect(clientId, 1011, "Send failed");
     }
   }
 
   /**
    * Send event to specific client
    */
-  private async sendEventToClient(clientId: string, event: ScriptHotReloadEvent): Promise<void> {
+  private async sendEventToClient(
+    clientId: string,
+    event: ScriptHotReloadEvent,
+  ): Promise<void> {
     await this.sendToClient(clientId, {
-      action: 'event',
-      event
+      action: "event",
+      event,
     });
   }
 
   /**
    * Broadcast to all clients in session
    */
-  private async broadcastToSession(sessionId: string, event: ScriptHotReloadEvent): Promise<void> {
+  private async broadcastToSession(
+    sessionId: string,
+    event: ScriptHotReloadEvent,
+  ): Promise<void> {
     const session = this.sessions.get(sessionId);
+
     if (!session) return;
 
-    const broadcastPromises = Array.from(session.clients).map(clientId =>
-      this.sendEventToClient(clientId, event)
+    const broadcastPromises = Array.from(session.clients).map((clientId) =>
+      this.sendEventToClient(clientId, event),
     );
 
     await Promise.all(broadcastPromises);
@@ -567,13 +648,18 @@ export class ToxoidWebSocketManager {
   /**
    * Close specific client connection
    */
-  private async closeClient(clientId: string, code: number, reason: string): Promise<void> {
+  private async closeClient(
+    clientId: string,
+    code: number,
+    reason: string,
+  ): Promise<void> {
     const client = this.clients.get(clientId);
+
     if (!client) return;
 
     return new Promise((resolve) => {
       client.socket.close(code, reason);
-      client.socket.on('close', () => resolve());
+      client.socket.on("close", () => resolve());
     });
   }
 
@@ -584,13 +670,17 @@ export class ToxoidWebSocketManager {
     this.pingTimer = setInterval(() => {
       this.clients.forEach((client, clientId) => {
         if (client.socket.readyState !== WebSocket.OPEN) {
-          this.handleClientDisconnect(clientId, 1006, 'Connection lost');
+          this.handleClientDisconnect(clientId, 1006, "Connection lost");
+
           return;
         }
 
         if (!client.isAlive) {
-          console.warn(`[WebSocket] Client ${clientId} did not respond to ping, terminating`);
+          console.warn(
+            `[WebSocket] Client ${clientId} did not respond to ping, terminating`,
+          );
           client.socket.terminate();
+
           return;
         }
 
@@ -610,22 +700,31 @@ export class ToxoidWebSocketManager {
   /**
    * Create new script version
    */
-  private createScriptVersion(scriptId: string, content: string, userId?: string): ScriptVersion {
+  private createScriptVersion(
+    scriptId: string,
+    content: string,
+    userId?: string,
+  ): ScriptVersion {
     return {
       scriptId,
       version: Date.now(),
       content,
       timestamp: new Date(),
       userId,
-      validated: false
+      validated: false,
     };
   }
 
   /**
    * Add version to rollback history
    */
-  private addRollbackVersion(session: HotReloadSession, scriptId: string, version: ScriptVersion): void {
+  private addRollbackVersion(
+    session: HotReloadSession,
+    scriptId: string,
+    version: ScriptVersion,
+  ): void {
     let rollbackVersions = session.rollbackVersions.get(scriptId);
+
     if (!rollbackVersions) {
       rollbackVersions = [];
       session.rollbackVersions.set(scriptId, rollbackVersions);

@@ -4,7 +4,8 @@ import React from "react";
 import { Badge, BadgeProps } from "@heroui/badge";
 import { clsx } from "clsx";
 
-export interface GlassmorphicBadgeProps extends Omit<BadgeProps, "variant" | "color"> {
+export interface GlassmorphicBadgeProps
+  extends Omit<BadgeProps, "variant" | "color"> {
   variant?: "default" | "gaming" | "accent" | "success" | "warning" | "danger";
   size?: "sm" | "md" | "lg";
   blur?: "sm" | "md" | "lg";
@@ -28,23 +29,23 @@ export function GlassmorphicBadge({
 }: GlassmorphicBadgeProps) {
   const getVariantClasses = () => {
     const blurClass = `backdrop-blur-${blur}`;
-    
+
     switch (variant) {
       case "gaming":
         return `bg-gradient-to-r from-purple-500/50 to-purple-600/60 ${blurClass} backdrop-saturate-150 border border-purple-400/60 text-purple-100 shadow-md`;
-      
+
       case "accent":
         return `bg-gradient-to-r from-cyan-500/50 to-purple-500/50 ${blurClass} backdrop-saturate-150 border border-cyan-400/60 text-cyan-100 shadow-md`;
-      
+
       case "success":
         return `bg-gradient-to-r from-emerald-500/50 to-green-500/50 ${blurClass} backdrop-saturate-150 border border-emerald-400/60 text-emerald-100 shadow-md`;
-      
+
       case "warning":
         return `bg-gradient-to-r from-amber-500/50 to-yellow-500/50 ${blurClass} backdrop-saturate-150 border border-amber-400/60 text-amber-100 shadow-md`;
-      
+
       case "danger":
         return `bg-gradient-to-r from-rose-500/50 to-red-500/50 ${blurClass} backdrop-saturate-150 border border-rose-400/60 text-rose-100 shadow-md`;
-      
+
       default:
         return `bg-white/30 dark:bg-black/40 ${blurClass} backdrop-saturate-150 border border-white/40 dark:border-white/30 text-foreground shadow-md`;
     }
@@ -63,7 +64,7 @@ export function GlassmorphicBadge({
 
   const getGlowClasses = () => {
     if (!glow) return "";
-    
+
     switch (variant) {
       case "gaming":
         return "shadow-lg shadow-purple-500/40";
@@ -82,7 +83,7 @@ export function GlassmorphicBadge({
 
   const getPulseClasses = () => {
     if (!pulse) return "";
-    
+
     switch (variant) {
       case "gaming":
         return "animate-pulse";
@@ -105,13 +106,12 @@ export function GlassmorphicBadge({
   );
 
   // Use simple CSS animations instead of Framer Motion for badges
-  const animationClass = animated ? "transition-all duration-200 hover:scale-105" : "";
+  const animationClass = animated
+    ? "transition-all duration-200 hover:scale-105"
+    : "";
 
   return (
-    <Badge 
-      className={clsx(badgeClasses, animationClass)} 
-      {...props}
-    >
+    <Badge className={clsx(badgeClasses, animationClass)} {...props}>
       {children}
     </Badge>
   );
@@ -188,12 +188,12 @@ export function GameStatusBadge({
 
   return (
     <GlassmorphicBadge
-      variant={config.variant}
-      size={size}
-      glow={config.glow}
-      pulse={config.pulse}
       animated={animated}
       className={className}
+      glow={config.glow}
+      pulse={config.pulse}
+      size={size}
+      variant={config.variant}
     >
       <span className="mr-1">{config.icon}</span>
       {config.text}

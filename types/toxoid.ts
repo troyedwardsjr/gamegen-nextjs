@@ -1,7 +1,7 @@
 /**
  * Toxoid Game Engine TypeScript Definitions
- * 
- * Comprehensive TypeScript interfaces for the Toxoid/WorldLink 
+ *
+ * Comprehensive TypeScript interfaces for the Toxoid/WorldLink
  * JavaScript scripting API, providing type safety for ECS operations,
  * system registration, observers, and rendering functions.
  */
@@ -99,34 +99,34 @@ export interface AnimationConfig {
 export interface ToxoidEntity {
   readonly id: EntityId;
   readonly name: string;
-  
+
   // Component management
   add(componentName: string): boolean;
   remove(componentName: string): boolean;
   has(componentName: string): boolean;
   getComponent<T extends ComponentData>(componentName: string): T | null;
-  
+
   // Custom properties (for script-specific data)
   [key: string]: any;
 }
 
 // System execution phases
 export enum ToxoidPhases {
-  ON_LOAD = 'OnLoad',
-  ON_START = 'OnStart',
-  PRE_UPDATE = 'PreUpdate', 
-  ON_UPDATE = 'OnUpdate',
-  POST_UPDATE = 'PostUpdate',
-  PRE_STORE = 'PreStore',
-  ON_STORE = 'OnStore',
-  ON_VALIDATE = 'OnValidate'
+  ON_LOAD = "OnLoad",
+  ON_START = "OnStart",
+  PRE_UPDATE = "PreUpdate",
+  ON_UPDATE = "OnUpdate",
+  POST_UPDATE = "PostUpdate",
+  PRE_STORE = "PreStore",
+  ON_STORE = "OnStore",
+  ON_VALIDATE = "OnValidate",
 }
 
 // Observer event types
 export enum ToxoidEvents {
-  ON_ADD = 'OnAdd',
-  ON_REMOVE = 'OnRemove',
-  ON_SET = 'OnSet'
+  ON_ADD = "OnAdd",
+  ON_REMOVE = "OnRemove",
+  ON_SET = "OnSet",
 }
 
 // System iteration interface
@@ -164,41 +164,67 @@ export interface ToxoidAPI {
   createEntity(name?: string): ToxoidEntity | null;
   getEntity(entityId: EntityId): ToxoidEntity | null;
   removeEntity(entityId: EntityId): void;
-  
+
   // Sprite and image functions
-  loadSprite(path: string, callback?: (entity: ToxoidEntity) => void): ToxoidEntity | null;
+  loadSprite(
+    path: string,
+    callback?: (entity: ToxoidEntity) => void,
+  ): ToxoidEntity | null;
   createSprite(path: string): ToxoidEntity | null;
-  loadAnimatedSprite(path: string, config: AnimationConfig): ToxoidEntity | null;
+  loadAnimatedSprite(
+    path: string,
+    config: AnimationConfig,
+  ): ToxoidEntity | null;
   loadSpineAnimation(
-    atlasFile: string, 
-    skeletonFile: string, 
-    textureName: string, 
+    atlasFile: string,
+    skeletonFile: string,
+    textureName: string,
     renderedOnLoad: boolean,
-    callback?: (entity: ToxoidEntity) => void
+    callback?: (entity: ToxoidEntity) => void,
   ): ToxoidEntity | null;
   loadImage(path: string): EntityId;
-  
+
   // Rendering functions
-  rect(x: number, y: number, width: number, height: number, color: Color): EntityId;
-  filledRect(x: number, y: number, width: number, height: number, color: Color): EntityId;
+  rect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: Color,
+  ): EntityId;
+  filledRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: Color,
+  ): EntityId;
   lines(linesData: LineData[], color: Color): EntityId;
-  
+
   // Camera functions
   setCamera(x: number, y: number, zoom: number): void;
   getCamera(): Camera | null;
-  
+
   // World functions
   getSingleton<T extends ComponentData>(componentName: string): T | null;
   addSingleton(componentName: string): boolean;
   removeSingleton(componentName: string): boolean;
-  
+
   // Component management
-  getComponentByName<T extends ComponentData>(entityId: EntityId, componentName: string): T | null;
-  updateComponent(entityId: EntityId, componentName: string, fieldName: string, newValue: any): boolean;
+  getComponentByName<T extends ComponentData>(
+    entityId: EntityId,
+    componentName: string,
+  ): T | null;
+  updateComponent(
+    entityId: EntityId,
+    componentName: string,
+    fieldName: string,
+    newValue: any,
+  ): boolean;
   listComponents(): string[];
   syncComponents(): number;
   createComponent(name: string): ComponentId;
-  
+
   // Deferred operations
   isDeferred(): boolean;
   deferBegin(): boolean;
@@ -213,7 +239,7 @@ export interface ToxoidSystem {
     name: string,
     query: string,
     phase: ToxoidPhases,
-    callback: SystemCallback
+    callback: SystemCallback,
   ): SystemId | null;
 }
 
@@ -248,8 +274,14 @@ export interface Toxoid {
 // Script Generation Types
 export interface ScriptGenerationRequest {
   prompt: string;
-  gameType: 'bullet_hell' | 'rpg' | 'platformer' | 'puzzle' | 'racing' | 'custom';
-  complexity: 'simple' | 'intermediate' | 'advanced';
+  gameType:
+    | "bullet_hell"
+    | "rpg"
+    | "platformer"
+    | "puzzle"
+    | "racing"
+    | "custom";
+  complexity: "simple" | "intermediate" | "advanced";
   features: string[];
   existingCode?: string;
   constraints?: ScriptConstraints;
@@ -259,7 +291,7 @@ export interface ScriptGenerationRequest {
 
 export interface ScriptConstraints {
   maxMemoryMB: number; // Default 50MB
-  maxStackMB: number;  // Default 1MB
+  maxStackMB: number; // Default 1MB
   allowedAPIs: string[];
   forbiddenPatterns: string[];
   maxExecutionTime?: number;
@@ -284,7 +316,7 @@ export interface ValidationError {
   line: number;
   column: number;
   message: string;
-  severity: 'error' | 'critical';
+  severity: "error" | "critical";
   code: string;
 }
 
@@ -300,15 +332,15 @@ export interface ScriptMetrics {
   cyclomaticComplexity: number;
   apiUsageCount: Record<string, number>;
   performanceScore: number; // 0-100
-  securityScore: number;     // 0-100
+  securityScore: number; // 0-100
   maintainabilityScore: number; // 0-100
 }
 
 export interface ScriptOptimizationRequest {
   script: string;
-  optimizationLevel: 'basic' | 'aggressive' | 'minify';
+  optimizationLevel: "basic" | "aggressive" | "minify";
   preserveComments?: boolean;
-  targetRuntime: 'quickjs' | 'v8' | 'both';
+  targetRuntime: "quickjs" | "v8" | "both";
 }
 
 export interface ScriptOptimizationResult {
@@ -328,8 +360,8 @@ export interface ScriptTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'system' | 'component' | 'observer' | 'behavior' | 'complete_game';
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  category: "system" | "component" | "observer" | "behavior" | "complete_game";
+  difficulty: "beginner" | "intermediate" | "advanced";
   tags: string[];
   code: string;
   dependencies: string[];
@@ -364,7 +396,7 @@ export interface ComponentTemplate {
 
 export interface ComponentField {
   name: string;
-  type: 'number' | 'string' | 'boolean' | 'object';
+  type: "number" | "string" | "boolean" | "object";
   default: any;
   description: string;
   constraints?: FieldConstraints;
@@ -387,7 +419,7 @@ export interface TemplateParameter {
 
 // Hot-reload Types
 export interface ScriptHotReloadEvent {
-  type: 'script_updated' | 'script_error' | 'script_validated';
+  type: "script_updated" | "script_error" | "script_validated";
   scriptId: string;
   script?: string;
   error?: string;
@@ -396,7 +428,7 @@ export interface ScriptHotReloadEvent {
 }
 
 export interface WebSocketScriptMessage {
-  action: 'update_script' | 'validate_script' | 'subscribe' | 'unsubscribe';
+  action: "update_script" | "validate_script" | "subscribe" | "unsubscribe";
   scriptId?: string;
   script?: string;
   userId?: string;
@@ -407,7 +439,7 @@ export interface WebSocketScriptMessage {
 export interface SecurityCheck {
   name: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   pattern: RegExp | ((code: string) => boolean);
   suggestion?: string;
 }
@@ -420,7 +452,7 @@ export interface SecurityScanResult {
 
 export interface SecurityIssue {
   check: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   line?: number;
   column?: number;
   message: string;
@@ -460,14 +492,14 @@ export interface HotPath {
 
 export interface LoopMetrics {
   line: number;
-  type: 'for' | 'while' | 'forEach';
+  type: "for" | "while" | "forEach";
   estimatedIterations: number;
-  complexity: 'constant' | 'linear' | 'quadratic' | 'exponential';
+  complexity: "constant" | "linear" | "quadratic" | "exponential";
   optimization: string;
 }
 
 export interface OptimizationSuggestion {
-  type: 'memory' | 'performance' | 'api_usage';
+  type: "memory" | "performance" | "api_usage";
   priority: number;
   description: string;
   before: string;

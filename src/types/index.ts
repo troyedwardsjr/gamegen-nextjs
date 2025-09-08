@@ -1,6 +1,6 @@
 /**
  * GameGen Types - Main Export Index
- * 
+ *
  * Central export file for all TypeScript type definitions in the GameGen
  * pixel art game creation platform.
  */
@@ -8,20 +8,20 @@
 // =========================
 // Database Types
 // =========================
-export * from './database';
+export * from "./database";
 
 // =========================
 // Social Features Types
 // =========================
-export * from './social';
+export * from "./social";
 
 // =========================
 // Authentication Types
 // =========================
-export * from './auth';
+export * from "./auth";
 
 // =========================
-// User Types  
+// User Types
 // =========================
 export {
   UserDisplayPreferences,
@@ -51,11 +51,11 @@ export {
   isCompleteUserProfile,
   hasAchievement,
   calculateCreatorLevel,
-  calculateReputationScore
-} from './user';
+  calculateReputationScore,
+} from "./user";
 
 // Re-export UserProfile from database to avoid conflicts
-export type { UserProfile } from './database';
+export type { UserProfile } from "./database";
 
 // =========================
 // Subscription & Billing Types
@@ -90,28 +90,28 @@ export {
   canUpgradeTo,
   calculateUsagePercentage,
   getNextBillingDate,
-  formatCurrency
-} from './subscription';
+  formatCurrency,
+} from "./subscription";
 
 // Re-export Subscription from database to avoid conflicts
-export type { Subscription } from './database';
+export type { Subscription } from "./database";
 
 // =========================
 // API Types
 // =========================
-export * from './api';
+export * from "./api";
 
 // =========================
 // UI Component Types
 // =========================
-export * from './ui';
+export * from "./ui";
 
 // =========================
 // Common Type Aliases
 // =========================
 
 // React component type for better reusability
-import { FunctionComponent, ComponentType } from 'react';
+import { FunctionComponent, ComponentType } from "react";
 
 export type FC<P = {}> = FunctionComponent<P>;
 export type Component<P = {}> = ComponentType<P>;
@@ -214,7 +214,7 @@ export interface GameLevel {
   layers: Array<{
     id: string;
     name: string;
-    type: 'tile' | 'object' | 'collision';
+    type: "tile" | "object" | "collision";
     data: any;
     visible: boolean;
     opacity: number;
@@ -230,11 +230,21 @@ export interface GameLevel {
 }
 
 // Input handling types
-export type InputKey = 
-  | 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
-  | 'w' | 'a' | 's' | 'd'
-  | 'Space' | 'Enter' | 'Escape'
-  | 'Mouse0' | 'Mouse1' | 'Mouse2';
+export type InputKey =
+  | "ArrowUp"
+  | "ArrowDown"
+  | "ArrowLeft"
+  | "ArrowRight"
+  | "w"
+  | "a"
+  | "s"
+  | "d"
+  | "Space"
+  | "Enter"
+  | "Escape"
+  | "Mouse0"
+  | "Mouse1"
+  | "Mouse2";
 
 export interface InputMapping {
   [action: string]: InputKey[];
@@ -276,16 +286,16 @@ export interface GameGenPlugin {
   version: string;
   description: string;
   author: string;
-  
+
   // Lifecycle hooks
   onInit?: () => void | Promise<void>;
   onDestroy?: () => void | Promise<void>;
-  
+
   // Feature extensions
   components?: Record<string, any>;
   systems?: Record<string, any>;
   tools?: Record<string, any>;
-  
+
   // Dependencies
   dependencies?: string[];
   peerDependencies?: string[];
@@ -296,7 +306,7 @@ export interface AssetProcessingOptions {
   optimize: boolean;
   generate_mipmaps: boolean;
   compress: boolean;
-  format?: 'png' | 'jpeg' | 'webp';
+  format?: "png" | "jpeg" | "webp";
   quality?: number; // 0-100 for lossy formats
   max_width?: number;
   max_height?: number;
@@ -318,7 +328,7 @@ export interface Version {
 // Collaboration types
 export interface Collaborator {
   user_id: UserId;
-  role: 'owner' | 'editor' | 'viewer';
+  role: "owner" | "editor" | "viewer";
   permissions: string[];
   invited_at: Timestamp;
   joined_at?: Timestamp;
@@ -340,8 +350,8 @@ export interface CollaborationSession {
 
 // Export/publishing types
 export interface ExportTarget {
-  platform: 'web' | 'desktop' | 'mobile';
-  format: 'html5' | 'electron' | 'apk' | 'ipa';
+  platform: "web" | "desktop" | "mobile";
+  format: "html5" | "electron" | "apk" | "ipa";
   settings: Record<string, any>;
 }
 
@@ -350,11 +360,11 @@ export interface PublishingOptions {
   description: string;
   tags: string[];
   category: string;
-  age_rating: 'everyone' | 'teen' | 'mature';
+  age_rating: "everyone" | "teen" | "mature";
   screenshots: string[];
   trailer_url?: string;
   release_notes?: string;
-  visibility: 'public' | 'unlisted' | 'private';
+  visibility: "public" | "unlisted" | "private";
 }
 
 // Utility type helpers
@@ -365,7 +375,9 @@ export type DeepPartial<T> = {
 };
 
 // Promise types for async operations
-export type AsyncResult<T, E = GameGenError> = Promise<{ data: T } | { error: E }>;
+export type AsyncResult<T, E = GameGenError> = Promise<
+  { data: T } | { error: E }
+>;
 export type PromiseValue<T> = T extends Promise<infer V> ? V : T;
 
 // Collection types
@@ -390,7 +402,7 @@ export interface GameGenConfig {
   app: {
     name: string;
     version: string;
-    environment: 'development' | 'staging' | 'production';
+    environment: "development" | "staging" | "production";
     debug_mode: boolean;
   };
   api: {
@@ -422,63 +434,65 @@ export interface GameGenConfig {
 
 // Type guards for runtime type checking
 export const isGameGenError = (error: any): error is GameGenError => {
-  return error instanceof Error && 'code' in error && 'recoverable' in error;
+  return error instanceof Error && "code" in error && "recoverable" in error;
 };
 
 export const isValidPoint = (value: any): value is Point => {
-  return value && typeof value.x === 'number' && typeof value.y === 'number';
+  return value && typeof value.x === "number" && typeof value.y === "number";
 };
 
 export const isValidDimensions = (value: any): value is Dimensions => {
-  return value && typeof value.width === 'number' && typeof value.height === 'number';
+  return (
+    value && typeof value.width === "number" && typeof value.height === "number"
+  );
 };
 
 export const isValidColor = (value: any): value is Color => {
-  return value && 
-    typeof value.r === 'number' && 
-    typeof value.g === 'number' && 
-    typeof value.b === 'number' &&
-    value.r >= 0 && value.r <= 255 &&
-    value.g >= 0 && value.g <= 255 &&
-    value.b >= 0 && value.b <= 255;
+  return (
+    value &&
+    typeof value.r === "number" &&
+    typeof value.g === "number" &&
+    typeof value.b === "number" &&
+    value.r >= 0 &&
+    value.r <= 255 &&
+    value.g >= 0 &&
+    value.g <= 255 &&
+    value.b >= 0 &&
+    value.b <= 255
+  );
 };
 
 // Constants for common values
 export const GAME_TYPES = [
-  'bullet_hell',
-  'rpg', 
-  'action_adventure',
-  'team_deathmatch',
-  'puzzle',
-  'platformer'
+  "bullet_hell",
+  "rpg",
+  "action_adventure",
+  "team_deathmatch",
+  "puzzle",
+  "platformer",
 ] as const;
 
 export const ASSET_TYPES = [
-  'sprite',
-  'tileset', 
-  'background',
-  'sound',
-  'music',
-  'font',
-  'script'
+  "sprite",
+  "tileset",
+  "background",
+  "sound",
+  "music",
+  "font",
+  "script",
 ] as const;
 
-export const SUBSCRIPTION_TIERS = [
-  'free',
-  'pro',
-  'max',
-  'enterprise'
-] as const;
+export const SUBSCRIPTION_TIERS = ["free", "pro", "max", "enterprise"] as const;
 
 export const AI_OPERATION_TYPES = [
-  'sprite_generation',
-  'background_generation', 
-  'sound_generation',
-  'music_generation',
-  'code_generation',
-  'game_logic_generation',
-  'level_design_generation',
-  'story_generation',
-  'asset_enhancement',
-  'asset_variation'
+  "sprite_generation",
+  "background_generation",
+  "sound_generation",
+  "music_generation",
+  "code_generation",
+  "game_logic_generation",
+  "level_design_generation",
+  "story_generation",
+  "asset_enhancement",
+  "asset_variation",
 ] as const;
