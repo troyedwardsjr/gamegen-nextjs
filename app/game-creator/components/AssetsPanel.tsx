@@ -77,6 +77,18 @@ const SpritesTab = ({
             Upload
           </GlassmorphicButton>
         </div>
+
+        {/* AI Recommendations */}
+        <div className="mt-3 p-2 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-lg border border-purple-500/20">
+          <div className="text-xs font-medium text-purple-200 mb-1">🤖 AI Recommendations</div>
+          <div className="text-xs text-white/70">Perfect match for cyberpunk theme in your current project</div>
+          <div className="flex items-center mt-1">
+            <div className="text-xs text-emerald-400">95% confidence</div>
+            <div className="ml-2 h-1 flex-1 bg-white/20 rounded">
+              <div className="h-full w-[95%] bg-gradient-to-r from-emerald-400 to-cyan-400 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Asset Grid */}
@@ -571,6 +583,18 @@ export function AssetsPanel() {
       badge: recommendations.length > 0 ? recommendations.length : undefined,
     },
   ];
+
+  if (error) {
+    return (
+      <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="h-full p-4">
+        <div className="text-center text-red-400">
+          <div className="text-lg mb-2">⚠️</div>
+          <div className="text-sm">Error loading assets</div>
+          <div className="text-xs text-white/60 mt-1">{error}</div>
+        </div>
+      </GlassmorphicCard>
+    );
+  }
 
   return (
     <>
