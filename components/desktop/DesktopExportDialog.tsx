@@ -17,7 +17,8 @@ import { Progress } from '@heroui/progress';
 import { Chip } from '@heroui/chip';
 import { Divider } from '@heroui/divider';
 import { Download, FolderOpen, Settings, Package, Zap } from 'lucide-react';
-import { useDesktop, useDesktopExport } from '@/hooks/useDesktop';
+import { useDesktop } from '@/hooks/useDesktop';
+import { useDesktopExport } from '@/hooks/useDesktopExport';
 import type { ExportOptions } from '@/lib/desktop/api';
 
 interface DesktopExportDialogProps {

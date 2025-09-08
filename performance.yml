@@ -1,0 +1,183 @@
+# Artillery.js Load Testing Configuration for GameGen Platform
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 1
+      name: "Warm up"
+    # Ramp up phase
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp up load"
+    # Sustained load phase
+    - duration: 180
+      arrivalRate: 20
+      name: "Sustained load"
+    # Spike test phase
+    - duration: 60
+      arrivalRate: 20
+      rampTo: 50
+      name: "Spike test"
+    # Cool down phase
+    - duration: 30
+      arrivalRate: 50
+      rampTo: 1
+      name: "Cool down"
+  
+  processor: "./performance/performance-processor.js"
+  
+  # HTTP configuration
+  http:
+    timeout: 10
+    pool: 10
+    
+  # Environment variables
+  variables:
+    baseUrl: 'http://localhost:3000'
+    apiKey: '{{ $env.TEST_API_KEY }}'
+
+  # Metrics and monitoring
+  engines:
+    http: {}
+
+scenarios:
+  # Home page load test
+  - name: "Homepage Load"
+    weight: 20
+    flow:
+      - get:
+          url: "/"
+          capture:
+            - header: 'x-response-time'
+              as: 'response_time'
+          expect:
+            - statusCode: 200
+            - contentType: text/html
+      - think: 2
+
+  # Authentication flow test
+  - name: "Authentication Flow"
+    weight: 15
+    flow:
+      - get:
+          url: "/auth"
+          expect:
+            - statusCode: 200
+      - think: 3
+      - post:
+          url: "/api/auth/signin"
+          json:
+            email: "test{{ $uuid }}@example.com"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.session"
+              as: "session"
+      - think: 2
+
+  # Game Creator Load Test
+  - name: "Game Creator Interface"
+    weight: 25
+    flow:
+      # Navigate to game creator
+      - get:
+          url: "/game-creator"
+          headers:
+            Authorization: "Bearer {{ session }}"
+          expect:
+            - statusCode: 200
+      - think: 5
+      
+      # Create new game
+      - post:
+          url: "/api/games"
+          headers:
+            Authorization: "Bearer {{ session }}"
+          json:
+            title: "Test Game {{ $uuid }}"
+            type: "platformer"
+          capture:
+            - json: "$.id"
+              as: "gameId"
+      - think: 3
+
+  # LLM API Performance Test
+  - name: "LLM Generation API"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/llm/generate"
+          headers:
+            Authorization: "Bearer {{ session }}"
+            Content-Type: "application/json"
+          json:
+            messages:
+              - role: "user"
+                content: "Create a simple game mechanic"
+            max_tokens: 100
+            temperature: 0.7
+          expect:
+            - statusCode: [200, 201]
+            - hasProperty: "content"
+          capture:
+            - json: "$.usage.total_tokens"
+              as: "tokens_used"
+      - think: 2
+
+  # Game Export Test
+  - name: "Game Export Performance"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/games/{{ gameId }}/export"
+          headers:
+            Authorization: "Bearer {{ session }}"
+          json:
+            format: "html5"
+            optimization: "size"
+          expect:
+            - statusCode: [200, 202]
+      - think: 10
+      
+      # Check export status
+      - get:
+          url: "/api/games/{{ gameId }}/export/status"
+          headers:
+            Authorization: "Bearer {{ session }}"
+          expect:
+            - statusCode: 200
+
+# Metrics to track
+metrics:
+  # Custom metrics
+  - name: "response_time_p95"
+    unit: "ms"
+    # Artillery will calculate P95 automatically
+    
+  - name: "error_rate"
+    unit: "percent"
+    
+  - name: "tokens_per_second"
+    unit: "tokens/s"
+
+# Alerts and thresholds
+thresholds:
+  http:
+    response_time:
+      p95: 2000  # 95% of requests should be under 2s
+      p99: 5000  # 99% of requests should be under 5s
+    error_rate: 5%  # Error rate should be below 5%
+  
+  # Custom thresholds for specific scenarios
+  scenarios:
+    "LLM Generation API":
+      response_time:
+        p95: 3000  # LLM responses can take longer
+        p99: 10000
+    
+    "Game Creator Interface":
+      response_time:
+        p95: 1500  # UI should be responsive
+        p99: 3000

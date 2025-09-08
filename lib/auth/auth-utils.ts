@@ -17,7 +17,7 @@ export const isValidEmail = (email: string): boolean => {
 
   // More comprehensive email regex that handles edge cases
   const emailRegex =
-    /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
 
   // Additional checks for common edge cases
   if (email.includes("..")) return false; // No consecutive dots
@@ -47,17 +47,13 @@ export const isValidPassword = (password: string): boolean => {
     return false;
   }
 
-  // Must have at least 3 of these 4 criteria:
+  // Must have ALL 4 criteria for stronger security:
   const hasLower = /[a-z]/.test(password);
   const hasUpper = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
 
-  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(
-    Boolean,
-  ).length;
-
-  return criteriaCount >= 3;
+  return hasLower && hasUpper && hasNumber && hasSpecial;
 };
 
 // Enhanced password validation with detailed rules
@@ -96,11 +92,8 @@ export const validatePassword = (password: string) => {
   const hasNumber = /\d/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
 
-  const criteriaCount = [hasLower, hasUpper, hasNumber, hasSpecialChar].filter(
-    Boolean,
-  ).length;
-
-  if (criteriaCount < 3) {
+  // Check that all criteria are met for stronger security
+  if (!hasLower || !hasUpper || !hasNumber || !hasSpecialChar) {
     const missing = [];
 
     if (!hasLower) missing.push("lowercase letters");
@@ -109,7 +102,7 @@ export const validatePassword = (password: string) => {
     if (!hasSpecialChar) missing.push("special characters");
 
     errors.push(
-      `Password must contain at least 3 of these 4 types: lowercase letters, uppercase letters, numbers, special characters. Missing: ${missing.join(", ")}`,
+      `Password must contain all of these 4 types: lowercase letters, uppercase letters, numbers, special characters. Missing: ${missing.join(", ")}`,
     );
     isValid = false;
   }

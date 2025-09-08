@@ -8,7 +8,8 @@ import { Divider } from '@heroui/divider';
 import { Progress } from '@heroui/progress';
 import { Badge } from '@heroui/badge';
 import { Settings, Download, Shield, Keyboard, FolderOpen, ExternalLink } from 'lucide-react';
-import { useDesktop, useDesktopUpdater } from '@/hooks/useDesktop';
+import { useDesktop } from '@/hooks/useDesktop';
+import { useDesktopUpdater } from '@/hooks/useDesktopUpdater';
 import { DesktopAPI } from '@/lib/desktop/api';
 
 interface DesktopSettingsProps {
