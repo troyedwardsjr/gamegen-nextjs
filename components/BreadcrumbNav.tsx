@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Breadcrumbs, BreadcrumbItem } from "@heroui/breadcrumbs";
+// Removed non-existent @heroui/breadcrumbs import
 
 import {
   ChevronRightIcon,
@@ -16,7 +16,7 @@ import {
   InformationCircleIcon,
 } from "@/components/icons";
 
-export interface BreadcrumbItem {
+export interface BreadcrumbNavItem {
   label: string;
   href?: string;
   icon?: React.ComponentType<{ className?: string }>;
@@ -24,7 +24,7 @@ export interface BreadcrumbItem {
 }
 
 interface BreadcrumbNavProps {
-  items?: BreadcrumbItem[];
+  items?: BreadcrumbNavItem[];
   variant?: "default" | "glass" | "minimal";
   className?: string;
   separator?: React.ReactNode;
@@ -47,11 +47,11 @@ export function BreadcrumbNav({
   const pathname = usePathname();
 
   // Auto-generate breadcrumb items from pathname if not provided
-  const getBreadcrumbItems = (): BreadcrumbItem[] => {
+  const getBreadcrumbItems = (): BreadcrumbNavItem[] => {
     if (items) return items;
 
     const segments = pathname.split("/").filter(Boolean);
-    const breadcrumbItems: BreadcrumbItem[] = [];
+    const breadcrumbItems: BreadcrumbNavItem[] = [];
 
     // Always add home
     if (showHomeIcon) {
@@ -247,48 +247,83 @@ export function BreadcrumbNav({
     );
   }
 
-  // Default variant using HeroUI Breadcrumbs
+  // Default variant using custom breadcrumb implementation
   return (
-    <motion.div
+    <motion.nav
       animate={{ opacity: 1, y: 0 }}
-      className={className}
+      className={`flex items-center space-x-2 text-sm ${className}`}
       initial={{ opacity: 0, y: -10 }}
     >
-      <Breadcrumbs
-        classNames={{
-          list: "gap-2",
-          item: "text-gray-400 data-[current=true]:text-white",
-          separator: "text-gray-500",
-        }}
-        itemClasses={{
-          base: "transition-colors hover:text-white",
-        }}
-        separator={separator || <ChevronRightIcon className="w-4 h-4" />}
-      >
-        {displayItems.map((item, index) => {
-          const isLast = index === displayItems.length - 1;
-          const Icon = item.icon;
+      {displayItems.map((item, index) => {
+        const isLast = index === displayItems.length - 1;
+        const Icon = item.icon;
 
-          return (
-            <BreadcrumbItem
-              key={`${item.label}-${index}`}
-              href={item.href}
-              isCurrent={isLast}
-              isDisabled={item.disabled}
-              startContent={Icon && <Icon className="w-4 h-4" />}
+        return (
+          <React.Fragment key={`${item.label}-${index}`}>
+            <motion.div
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-2"
+              initial={{ opacity: 0, x: -5 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <motion.span
-                animate={{ opacity: 1, x: 0 }}
-                initial={{ opacity: 0, x: -5 }}
-                transition={{ delay: index * 0.1 }}
+              {Icon && (
+                <Icon
+                  className={`w-4 h-4 ${
+                    isLast
+                      ? "text-white"
+                      : item.disabled
+                        ? "text-gray-500"
+                        : "text-gray-400"
+                  }`}
+                />
+              )}
+              {item.href && !item.disabled ? (
+                <Link
+                  className="text-gray-400 hover:text-white transition-colors duration-200 hover:underline"
+                  href={item.href}
+                >
+                  <motion.span
+                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, x: -5 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </Link>
+              ) : (
+                <span
+                  className={
+                    isLast
+                      ? "text-white font-medium"
+                      : item.disabled
+                        ? "text-gray-500"
+                        : "text-gray-400"
+                  }
+                >
+                  <motion.span
+                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, x: -5 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </span>
+              )}
+            </motion.div>
+
+            {!isLast && (
+              <motion.div
+                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                transition={{ delay: index * 0.1 + 0.05 }}
               >
-                {item.label}
-              </motion.span>
-            </BreadcrumbItem>
-          );
-        })}
-      </Breadcrumbs>
-    </motion.div>
+                {separator || <ChevronRightIcon className="w-4 h-4 text-gray-500" />}
+              </motion.div>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </motion.nav>
   );
 }
 
@@ -358,12 +393,12 @@ export function MobileBreadcrumb({
 /**
  * Hook to generate breadcrumb items from current route
  */
-export function useBreadcrumbs(): BreadcrumbItem[] {
+export function useBreadcrumbs(): BreadcrumbNavItem[] {
   const pathname = usePathname();
 
   return React.useMemo(() => {
     const segments = pathname.split("/").filter(Boolean);
-    const breadcrumbItems: BreadcrumbItem[] = [];
+    const breadcrumbItems: BreadcrumbNavItem[] = [];
 
     // Add home
     breadcrumbItems.push({

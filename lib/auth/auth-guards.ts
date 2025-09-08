@@ -119,7 +119,7 @@ export async function authGuard(
     }
 
     // Check roles (if implemented in your profile structure)
-    if (requiredRole.length > 0 && profile) {
+    if (requiredRole.length > 0 && profile && user) {
       // Assuming roles are stored in user metadata or profile
       const userRoles = (user.user_metadata?.roles as string[]) || [];
       const hasRequiredRole = requiredRole.some((role) =>
@@ -136,7 +136,7 @@ export async function authGuard(
     }
 
     // Check permissions (if implemented in your profile structure)
-    if (requiredPermissions.length > 0 && profile) {
+    if (requiredPermissions.length > 0 && profile && user) {
       // Assuming permissions are stored in user metadata
       const userPermissions =
         (user.user_metadata?.permissions as string[]) || [];
@@ -249,7 +249,7 @@ export async function apiAuthGuard(
     }
 
     // Check roles
-    if (requiredRole.length > 0 && profile) {
+    if (requiredRole.length > 0 && profile && user) {
       const userRoles = (user.user_metadata?.roles as string[]) || [];
       const hasRequiredRole = requiredRole.some((role) =>
         userRoles.includes(role),
@@ -265,7 +265,7 @@ export async function apiAuthGuard(
     }
 
     // Check permissions
-    if (requiredPermissions.length > 0 && profile) {
+    if (requiredPermissions.length > 0 && profile && user) {
       const userPermissions =
         (user.user_metadata?.permissions as string[]) || [];
       const hasAllPermissions = requiredPermissions.every((permission) =>

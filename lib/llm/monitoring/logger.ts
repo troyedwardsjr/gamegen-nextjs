@@ -62,7 +62,7 @@ export interface SecurityEvent {
 
 export class LLMLogger {
   private config: LoggerConfig;
-  private supabase: SupabaseClient;
+  private supabase: Promise<SupabaseClient>;
   private logBuffer: RequestLog[] = [];
   private performanceBuffer: PerformanceMetrics[] = [];
   private securityBuffer: SecurityEvent[] = [];
@@ -209,7 +209,7 @@ export class LLMLogger {
     limit?: number;
     offset?: number;
   }): Promise<{ logs: RequestLog[]; total_count: number }> {
-    let query = this.supabase
+    let query = (await this.supabase)
       .from("llm_request_logs")
       .select("*", { count: "exact" });
 
@@ -279,7 +279,7 @@ export class LLMLogger {
       total_cost: number;
     };
   }> {
-    let query = this.supabase.from("llm_performance_metrics").select("*");
+    let query = (await this.supabase).from("llm_performance_metrics").select("*");
 
     if (filters.provider_id) {
       query = query.eq("provider_id", filters.provider_id);
@@ -319,7 +319,7 @@ export class LLMLogger {
     end_date?: Date;
     limit?: number;
   }): Promise<SecurityEvent[]> {
-    let query = this.supabase.from("llm_security_events").select("*");
+    let query = (await this.supabase).from("llm_security_events").select("*");
 
     if (filters.event_type) {
       query = query.eq("event_type", filters.event_type);
@@ -365,13 +365,13 @@ export class LLMLogger {
     cutoffDate.setDate(cutoffDate.getDate() - this.config.retention_days);
 
     // Delete old request logs
-    const { count: deletedLogs } = await this.supabase
+    const { count: deletedLogs } = await (await this.supabase)
       .from("llm_request_logs")
       .delete({ count: "exact" })
       .lt("start_time", cutoffDate.toISOString());
 
     // Delete old performance metrics
-    const { count: deletedMetrics } = await this.supabase
+    const { count: deletedMetrics } = await (await this.supabase)
       .from("llm_performance_metrics")
       .delete({ count: "exact" })
       .lt("start_time", cutoffDate.toISOString());
@@ -381,7 +381,7 @@ export class LLMLogger {
 
     securityCutoff.setDate(securityCutoff.getDate() - 90);
 
-    const { count: deletedEvents } = await this.supabase
+    const { count: deletedEvents } = await (await this.supabase)
       .from("llm_security_events")
       .delete({ count: "exact" })
       .lt("timestamp", securityCutoff.toISOString());
@@ -486,7 +486,7 @@ export class LLMLogger {
    * Store logs in database
    */
   private async storeLogs(logs: RequestLog[]): Promise<void> {
-    const { error } = await this.supabase.from("llm_request_logs").insert(logs);
+    const { error } = await (await this.supabase).from("llm_request_logs").insert(logs);
 
     if (error) {
       console.error("[LLMLogger] Failed to store logs:", error);
@@ -507,7 +507,7 @@ export class LLMLogger {
   private async storePerformanceMetrics(
     metrics: PerformanceMetrics[],
   ): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("llm_performance_metrics")
       .insert(metrics);
 
@@ -528,7 +528,7 @@ export class LLMLogger {
    * Store security events in database
    */
   private async storeSecurityEvents(events: SecurityEvent[]): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("llm_security_events")
       .insert(events);
 

@@ -197,7 +197,7 @@ export class ToxoidInputManager {
   isKeyPressed(key: string): boolean {
     const normalizedKey = this.normalizeKey(key);
 
-    return this.inputState.keyboard[normalizedKey] || false;
+    return this.inputState.keyboard.keys[normalizedKey] || false;
   }
 
   /**
@@ -207,8 +207,8 @@ export class ToxoidInputManager {
     const normalizedKey = this.normalizeKey(key);
 
     return (
-      (this.inputState.keyboard[normalizedKey] || false) &&
-      !(this.previousInputState.keyboard[normalizedKey] || false)
+      (this.inputState.keyboard.keys[normalizedKey] || false) &&
+      !(this.previousInputState.keyboard.keys[normalizedKey] || false)
     );
   }
 
@@ -219,8 +219,8 @@ export class ToxoidInputManager {
     const normalizedKey = this.normalizeKey(key);
 
     return (
-      !(this.inputState.keyboard[normalizedKey] || false) &&
-      (this.previousInputState.keyboard[normalizedKey] || false)
+      !(this.inputState.keyboard.keys[normalizedKey] || false) &&
+      (this.previousInputState.keyboard.keys[normalizedKey] || false)
     );
   }
 
@@ -229,8 +229,8 @@ export class ToxoidInputManager {
    */
   getMousePosition(): { x: number; y: number } {
     return {
-      x: this.inputState.mouse.x,
-      y: this.inputState.mouse.y,
+      x: this.inputState.mouse.position.x,
+      y: this.inputState.mouse.position.y,
     };
   }
 
@@ -240,11 +240,11 @@ export class ToxoidInputManager {
   isMouseButtonPressed(button: "left" | "right" | "middle"): boolean {
     switch (button) {
       case "left":
-        return this.inputState.mouse.left_button;
+        return this.inputState.mouse.leftButton;
       case "right":
-        return this.inputState.mouse.right_button;
+        return this.inputState.mouse.rightButton;
       case "middle":
-        return this.inputState.mouse.middle_button;
+        return this.inputState.mouse.middleButton;
       default:
         return false;
     }
@@ -267,7 +267,7 @@ export class ToxoidInputManager {
     this.updateGamepadState();
 
     // Reset mouse wheel
-    this.inputState.mouse.wheel_delta = 0;
+    this.inputState.mouse.wheelDelta = 0;
   }
 
   // ==========================================================================
@@ -282,18 +282,26 @@ export class ToxoidInputManager {
         isKeyJustReleased: (key: string) => this.isKeyJustReleased(key),
       } as KeyboardInputSingleton,
       mouse: {
-        x: 0,
-        y: 0,
-        left_button: false,
-        right_button: false,
-        middle_button: false,
-        wheel_delta: 0,
-      },
+        position: { x: 0, y: 0 },
+        previousPosition: { x: 0, y: 0 },
+        leftButton: false,
+        rightButton: false,
+        middleButton: false,
+        wheelDelta: 0,
+        isButtonPressed: (button: 'left' | 'right' | 'middle') => this.isMouseButtonPressed(button),
+        isButtonJustPressed: (button: 'left' | 'right' | 'middle') => false, // Placeholder
+        isButtonJustReleased: (button: 'left' | 'right' | 'middle') => false, // Placeholder
+      } as MouseInputSingleton,
       gamepad: {
-        connected: false,
+        gamepads: [],
         buttons: [],
         axes: [],
-      },
+        connected: false,
+        getGamepad: (index: number) => null, // Placeholder
+        isConnected: (index: number) => false, // Placeholder
+        getButtonValue: (gamepadIndex: number, button: string) => 0, // Placeholder
+        isButtonPressed: (gamepadIndex: number, button: string) => false, // Placeholder
+      } as GamepadInputSingleton,
       touch: {
         points: [],
         isSupported: false,
@@ -339,14 +347,14 @@ export class ToxoidInputManager {
       e.preventDefault();
       const key = this.normalizeKey(e.code || e.key);
 
-      this.inputState.keyboard[key] = true;
+      this.inputState.keyboard.keys[key] = true;
     };
 
     const keyUpListener = (e: KeyboardEvent) => {
       e.preventDefault();
       const key = this.normalizeKey(e.code || e.key);
 
-      this.inputState.keyboard[key] = false;
+      this.inputState.keyboard.keys[key] = false;
     };
 
     // Mouse events
@@ -355,13 +363,13 @@ export class ToxoidInputManager {
       this.updateMousePosition(e);
       switch (e.button) {
         case 0:
-          this.inputState.mouse.left_button = true;
+          this.inputState.mouse.leftButton = true;
           break;
         case 1:
-          this.inputState.mouse.middle_button = true;
+          this.inputState.mouse.middleButton = true;
           break;
         case 2:
-          this.inputState.mouse.right_button = true;
+          this.inputState.mouse.rightButton = true;
           break;
       }
     };
@@ -371,13 +379,13 @@ export class ToxoidInputManager {
       this.updateMousePosition(e);
       switch (e.button) {
         case 0:
-          this.inputState.mouse.left_button = false;
+          this.inputState.mouse.leftButton = false;
           break;
         case 1:
-          this.inputState.mouse.middle_button = false;
+          this.inputState.mouse.middleButton = false;
           break;
         case 2:
-          this.inputState.mouse.right_button = false;
+          this.inputState.mouse.rightButton = false;
           break;
       }
     };
@@ -388,7 +396,7 @@ export class ToxoidInputManager {
 
     const wheelListener = (e: WheelEvent) => {
       e.preventDefault();
-      this.inputState.mouse.wheel_delta = e.deltaY > 0 ? -1 : 1;
+      this.inputState.mouse.wheelDelta = e.deltaY > 0 ? -1 : 1;
     };
 
     // Touch events
@@ -425,17 +433,17 @@ export class ToxoidInputManager {
     }
 
     // Store listeners for cleanup
-    this.eventListeners.set("keydown", keyDownListener);
-    this.eventListeners.set("keyup", keyUpListener);
-    this.eventListeners.set("mousedown", mouseDownListener);
-    this.eventListeners.set("mouseup", mouseUpListener);
-    this.eventListeners.set("mousemove", mouseMoveListener);
-    this.eventListeners.set("wheel", wheelListener);
+    this.eventListeners.set("keydown", keyDownListener as EventListener);
+    this.eventListeners.set("keyup", keyUpListener as EventListener);
+    this.eventListeners.set("mousedown", mouseDownListener as EventListener);
+    this.eventListeners.set("mouseup", mouseUpListener as EventListener);
+    this.eventListeners.set("mousemove", mouseMoveListener as EventListener);
+    this.eventListeners.set("wheel", wheelListener as EventListener);
 
     if (this.inputState.touch.isSupported) {
-      this.eventListeners.set("touchstart", touchStartListener);
-      this.eventListeners.set("touchmove", touchMoveListener);
-      this.eventListeners.set("touchend", touchEndListener);
+      this.eventListeners.set("touchstart", touchStartListener as EventListener);
+      this.eventListeners.set("touchmove", touchMoveListener as EventListener);
+      this.eventListeners.set("touchend", touchEndListener as EventListener);
     }
   }
 
@@ -476,8 +484,8 @@ export class ToxoidInputManager {
     const scaleX = this.canvas.width / rect.width;
     const scaleY = this.canvas.height / rect.height;
 
-    this.inputState.mouse.x = (e.clientX - rect.left) * scaleX;
-    this.inputState.mouse.y = (e.clientY - rect.top) * scaleY;
+    this.inputState.mouse.position.x = (e.clientX - rect.left) * scaleX;
+    this.inputState.mouse.position.y = (e.clientY - rect.top) * scaleY;
   }
 
   private updateTouchPoints(e: TouchEvent): void {

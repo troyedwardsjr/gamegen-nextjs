@@ -42,7 +42,6 @@ export function ChatPanel({
     error,
     wsStatus,
     currentMessage,
-    contexts,
     hasMoreMessages,
     isLoadingMore,
 
@@ -62,6 +61,14 @@ export function ChatPanel({
     autoConnect: true,
     enableWebSocket: true,
   });
+
+  // Define available contexts
+  const contexts: ChatContext[] = [
+    { id: "game-design", name: "Game Design", type: "game-design" as const, icon: "🎮" },
+    { id: "code-help", name: "Code Help", type: "code-help" as const, icon: "💻" },
+    { id: "art-generation", name: "Art Generation", type: "art-generation" as const, icon: "🎨" },
+    { id: "general", name: "General", type: "general" as const, icon: "💬" },
+  ];
 
   // Local state
   const [selectedContext, setSelectedContext] = useState<ChatContext>(
@@ -104,9 +111,9 @@ export function ChatPanel({
 
   // Handle voice transcription
   const handleVoiceTranscription = useCallback((text: string) => {
-    setCurrentMessage((prev) => prev + (prev ? " " : "") + text);
+    setCurrentMessage(currentMessage + (currentMessage ? " " : "") + text);
     inputRef.current?.focus();
-  }, []);
+  }, [currentMessage]);
 
   // Handle prompt template selection
   const handleTemplateSelect = useCallback(async (template: any) => {
@@ -339,7 +346,7 @@ export function ChatPanel({
               className="flex items-center space-x-1"
               size="sm"
               title="Toggle voice input"
-              variant={isVoiceInputEnabled ? "accent-cyan" : "glass-ghost"}
+              variant={isVoiceInputEnabled ? "accent" : "glass-ghost"}
               onClick={() => setIsVoiceInputEnabled(!isVoiceInputEnabled)}
             >
               <span>🎤</span>
@@ -370,7 +377,7 @@ export function ChatPanel({
               {/* Category filter */}
               <div className="flex flex-wrap gap-1">
                 <GlassmorphicButton
-                  size="xs"
+                  size="sm"
                   variant={selectedCategory === null ? "gaming" : "glass-ghost"}
                   onClick={() => setSelectedCategory(null)}
                 >
@@ -380,7 +387,7 @@ export function ChatPanel({
                   <GlassmorphicButton
                     key={category.id}
                     className="flex items-center space-x-1"
-                    size="xs"
+                    size="sm"
                     variant={
                       selectedCategory === category.id
                         ? "gaming"
@@ -412,7 +419,7 @@ export function ChatPanel({
                             {template.name}
                           </h4>
                           {template.isPopular && (
-                            <GlassmorphicBadge size="xs" variant="accent-cyan">
+                            <GlassmorphicBadge size="sm" variant="accent">
                               Popular
                             </GlassmorphicBadge>
                           )}
@@ -594,14 +601,14 @@ export function ChatPanel({
               exit={{ opacity: 0, y: 20 }}
               initial={{ opacity: 0, y: 20 }}
             >
-              <GlassmorphicCard className="p-3 max-w-md" variant="glass-danger">
+              <GlassmorphicCard className="p-3 max-w-md" variant="accent-rose">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-red-400">⚠️</span>
                     <span className="text-sm text-red-400">{error}</span>
                   </div>
                   <GlassmorphicButton
-                    size="xs"
+                    size="sm"
                     variant="glass-ghost"
                     onClick={clearError}
                   >

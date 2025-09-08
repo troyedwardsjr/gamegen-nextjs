@@ -104,7 +104,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     // Authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         undefined,
         error instanceof LLMError
           ? error
-          : new LLMError(error.message, "INTERNAL_ERROR"),
+          : new LLMError(error instanceof Error ? error.message : "Unknown error", "INTERNAL_ERROR"),
         undefined,
         userId,
       );
@@ -285,7 +285,7 @@ async function handleRegularRequest(
       success: true,
       data: response,
       usage: response.usage,
-      cost: billingTracker.calculateCost ? undefined : 0, // Would be calculated in billing tracker
+      cost: 0, // Would be calculated in billing tracker
     });
   } catch (error) {
     // Release reservation
@@ -377,8 +377,8 @@ async function handleStreamingRequest(
         // Send error to client
         const errorData = JSON.stringify({
           type: "error",
-          error: error.message,
-          code: error.code || "STREAMING_ERROR",
+          error: error instanceof Error ? error.message : "Unknown error",
+          code: (error as any).code || "STREAMING_ERROR",
         });
 
         controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
@@ -390,7 +390,7 @@ async function handleStreamingRequest(
           undefined,
           error instanceof LLMError
             ? error
-            : new LLMError(error.message, "STREAMING_ERROR"),
+            : new LLMError(error instanceof Error ? error.message : "Unknown error", "STREAMING_ERROR"),
           "claude",
           userId,
         );

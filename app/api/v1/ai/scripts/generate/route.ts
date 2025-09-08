@@ -20,8 +20,14 @@ let scriptValidator: ToxoidScriptValidator;
 
 async function initializeServices() {
   if (!providerManager) {
-    providerManager = new ProviderManager();
-    await providerManager.initialize();
+    providerManager = new ProviderManager({
+      default_provider: "claude",
+      fallback_chain: ["claude"],
+      load_balancing: { type: "round_robin" },
+      health_check_interval: 30000,
+      failover_enabled: true,
+      max_concurrent_requests: 10,
+    });
   }
 
   if (!scriptGenerator) {

@@ -610,12 +610,11 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({
                   {errors.map((error, i) => (
                     <GlassmorphicAlert
                       key={i}
-                      description={error.message}
-                      size="sm"
+                      message={error.message}
                       title={`Line ${error.line}`}
                       variant={
                         error.type === "error"
-                          ? "danger"
+                          ? "error"
                           : error.type === "warning"
                             ? "warning"
                             : "info"

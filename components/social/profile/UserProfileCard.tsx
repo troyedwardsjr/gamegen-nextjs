@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Avatar, Button, Chip } from "@heroui/react";
+import { Avatar } from "@heroui/avatar";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { MapPin, ExternalLink, Crown, Star, Verified } from "lucide-react";
@@ -71,7 +73,7 @@ export function UserProfileCard({
       case "sm":
         return {
           container: "p-4",
-          avatar: "w-12 h-12" as const,
+          avatar: "sm" as const,
           title: "text-base",
           subtitle: "text-xs",
           spacing: "gap-3",
@@ -79,7 +81,7 @@ export function UserProfileCard({
       case "lg":
         return {
           container: "p-8",
-          avatar: "w-20 h-20" as const,
+          avatar: "lg" as const,
           title: "text-xl",
           subtitle: "text-sm",
           spacing: "gap-6",
@@ -87,7 +89,7 @@ export function UserProfileCard({
       default:
         return {
           container: "p-6",
-          avatar: "w-16 h-16" as const,
+          avatar: "md" as const,
           title: "text-lg",
           subtitle: "text-sm",
           spacing: "gap-4",
@@ -166,15 +168,6 @@ export function UserProfileCard({
               )}
             </div>
 
-            {/* Location */}
-            {profile.location && (
-              <div className="flex items-center gap-1 text-foreground/60 mb-2">
-                <MapPin size={12} />
-                <span className={`truncate ${sizeClasses.subtitle}`}>
-                  {profile.location}
-                </span>
-              </div>
-            )}
 
             {/* Bio */}
             {showBio && profile.bio && size !== "sm" && (

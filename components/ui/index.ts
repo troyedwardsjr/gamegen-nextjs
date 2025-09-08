@@ -27,6 +27,15 @@ export {
   type GlassmorphicButtonProps,
 } from "./GlassmorphicButton";
 
+// Import for internal usage
+import { GameGenCardPresets } from "./GlassmorphicCard";
+import { GameGenButtonPresets } from "./GlassmorphicButton";
+import { GameGenInputPresets } from "./GlassmorphicInput";
+import { GameGenModalPresets } from "./GlassmorphicModal";
+import { GameGenDropdownPresets } from "./GlassmorphicDropdown";
+import { GameGenBadgePresets } from "./GlassmorphicBadge";
+import { GameGenAlertPresets } from "./GlassmorphicAlert";
+
 export {
   GlassmorphicInput,
   GameGenInputPresets,

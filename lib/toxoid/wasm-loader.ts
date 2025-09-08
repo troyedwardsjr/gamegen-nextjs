@@ -317,6 +317,10 @@ export class ToxoidWasmLoader {
       // const Module = window.Module || {};
 
       const mockModule: ToxoidWasmModule = {
+        _initialize: () => {},
+        _cleanup: () => {},
+        _update: (deltaTime: number) => {},
+        _render: () => {},
         _malloc: (size: number) => 0,
         _free: (ptr: number) => {},
         HEAPU8: new Uint8Array(1024),
@@ -329,6 +333,7 @@ export class ToxoidWasmLoader {
           argTypes: string[],
           args: any[],
         ) => {},
+        ready: Promise.resolve({} as ToxoidWasmModule),
       };
 
       // Simulate async loading
@@ -400,22 +405,20 @@ export class ToxoidWasmLoader {
     const mockEngine: ToxoidEngine = {
       API: {
         createEntity: (name?: string) => ({
-          id: Math.random(),
-          name,
-          add: () => ({}) as any,
-          remove: () => ({}) as any,
+          id: Math.random() as any, // Cast to EntityId for mock
+          name: name || "",
+          add: () => true,
+          remove: () => true,
           has: () => false,
-          getComponent: () => ({}),
-          setComponent: () => {},
-          destroy: () => {},
-        }),
+          getComponent: () => null,
+        } as any), // Use as any for mock to avoid complex type matching
         destroyEntity: () => {},
         getEntityById: () => null,
         getEntityByName: () => null,
         registerComponent: () => {},
         registerSingleton: () => ({}),
-        loadSprite: () => ({ id: 0, width: 0, height: 0, success: false }),
-        loadSpineAnimation: () => 0,
+        loadSprite: () => null, // Returns ToxoidEntity | null according to interface
+        loadSpineAnimation: () => null, // Returns ToxoidEntity | null according to interface
         filledRect: () => {},
         outlineRect: () => {},
         filledCircle: () => {},
@@ -452,7 +455,7 @@ export class ToxoidWasmLoader {
       Events: {} as any,
       ObserverEvents: {} as any,
       registerComponent: () => {},
-    };
+    } as any; // Cast entire API to bypass type issues for mock
 
     return mockEngine;
   }

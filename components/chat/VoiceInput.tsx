@@ -77,8 +77,8 @@ interface SpeechRecognition extends EventTarget {
 
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
   }
 }
 
@@ -428,7 +428,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
           )}
           disabled={disabled || !state.hasPermission}
           title={state.isListening ? "Stop voice input" : "Start voice input"}
-          variant={state.isListening ? "accent-cyan" : "glass-subtle"}
+          variant={state.isListening ? "accent" : "glass"}
           onClick={toggleListening}
         >
           {/* Microphone icon */}
@@ -464,7 +464,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
         {/* Language selector button */}
         <GlassmorphicButton
           className="absolute -top-1 -right-1 text-xs"
-          size="xs"
+          size="sm"
           title={`Change language (${currentLanguage?.name})`}
           variant="glass-ghost"
           onClick={() => setShowLanguageSelector(!showLanguageSelector)}
@@ -484,7 +484,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
           >
             <GlassmorphicCard
               className="p-2 w-48 max-h-64 overflow-y-auto"
-              variant="glass-subtle"
+              variant="subtle"
             >
               <div className="space-y-1">
                 {SUPPORTED_LANGUAGES.map((lang) => (
@@ -522,7 +522,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
           >
-            <GlassmorphicCard className="p-3" variant="glass-subtle">
+            <GlassmorphicCard className="p-3" variant="subtle">
               {/* Transcript text */}
               <div className="text-sm text-white/90 mb-3">
                 <span className="text-white font-medium">
@@ -562,14 +562,14 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
                 <div className="flex space-x-1">
                   <GlassmorphicButton
                     disabled={!fullTranscript}
-                    size="xs"
-                    variant="accent-cyan"
+                    size="sm"
+                    variant="accent"
                     onClick={sendCurrentTranscript}
                   >
                     Send
                   </GlassmorphicButton>
                   <GlassmorphicButton
-                    size="xs"
+                    size="sm"
                     variant="glass-ghost"
                     onClick={clearTranscript}
                   >
@@ -595,7 +595,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({
             exit={{ opacity: 0, y: -10 }}
             initial={{ opacity: 0, y: -10 }}
           >
-            <GlassmorphicCard className="p-2" variant="glass-danger">
+            <GlassmorphicCard className="p-2" variant="accent-rose">
               <div className="text-xs text-red-400 flex items-center space-x-1">
                 <span>⚠️</span>
                 <span>{state.error}</span>

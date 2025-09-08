@@ -6,7 +6,7 @@
  * management.
  */
 
-import pRetry from "p-retry";
+import pRetry, { AbortError } from "p-retry";
 
 import {
   LLMProvider,
@@ -69,7 +69,7 @@ export abstract class BaseProvider implements LLMProvider {
             // Check if error is retryable
             if (error instanceof LLMError && !error.retryable) {
               // Don't retry for non-retryable errors
-              throw new pRetry.AbortError(error.message);
+              throw new AbortError(error.message);
             }
             throw error;
           }
@@ -82,7 +82,8 @@ export abstract class BaseProvider implements LLMProvider {
           onFailedAttempt: (error) => {
             console.warn(
               `Attempt ${error.attemptNumber} failed for ${this.id}:`,
-              error.message,
+              error.retriesLeft,
+              "retries left",
             );
           },
         },
@@ -103,7 +104,9 @@ export abstract class BaseProvider implements LLMProvider {
       // Wrap unknown errors in LLMError
       if (!(error instanceof LLMError)) {
         throw new LLMError(
-          `Provider ${this.id} generation failed: ${error.message}`,
+          `Provider ${this.id} generation failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
           "GENERATION_FAILED",
           this.id,
           true,
@@ -151,7 +154,9 @@ export abstract class BaseProvider implements LLMProvider {
 
       if (!(error instanceof LLMError)) {
         throw new LLMError(
-          `Provider ${this.id} streaming failed: ${error.message}`,
+          `Provider ${this.id} streaming failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
           "STREAMING_FAILED",
           this.id,
           true,
@@ -195,7 +200,10 @@ export abstract class BaseProvider implements LLMProvider {
       this._healthStatus = ProviderHealthStatus.OFFLINE;
       this._lastHealthCheck = now;
 
-      console.warn(`Health check failed for ${this.id}:`, error.message);
+      console.warn(
+        `Health check failed for ${this.id}:`,
+        error instanceof Error ? error.message : "Unknown error",
+      );
 
       return false;
     }

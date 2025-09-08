@@ -124,7 +124,7 @@ export function ActivityFilters({
     onFiltersChange({
       activityTypes: Array.from(selectedActivityTypes) as ActivityType[],
       visibility: Array.from(selectedVisibility) as ActivityVisibility[],
-      dateRange,
+      dateRange: dateRange || undefined,
     });
   };
 

@@ -105,7 +105,7 @@ export const isEmpty = (value: any): boolean => {
 
 // Array utilities
 export const unique = <T>(array: T[]): T[] => {
-  return [...new Set(array)];
+  return Array.from(new Set(array));
 };
 
 export const uniqueBy = <T>(array: T[], keyFn: (item: T) => any): T[] => {
@@ -225,7 +225,7 @@ export const debounce = <T extends (...args: any[]) => any>(
     }
   };
 
-  return debounced as T;
+  return debounced as unknown as T;
 };
 
 export const throttle = <T extends (...args: any[]) => any>(
@@ -272,7 +272,7 @@ export const throttle = <T extends (...args: any[]) => any>(
     }
   };
 
-  return throttled as T;
+  return throttled as unknown as T;
 };
 
 export const memoize = <T extends (...args: any[]) => any>(func: T): T => {

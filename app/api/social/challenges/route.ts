@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
     // Process challenges to find user participation
     const processedChallenges = challenges?.map((challenge) => {
       const participant = user
-        ? challenge.challenge_participants?.find((p) => p.user_id === user.id)
+        ? challenge.challenge_participants?.find((p: any) => p.user_id === user.id)
         : null;
 
       return {

@@ -9,7 +9,10 @@ import crypto from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import DOMPurify from "isomorphic-dompurify";
+// Simple sanitization fallback until isomorphic-dompurify is added
+const simpleSanitize = (input: string): string => {
+  return input.replace(/[<>\"'&]/g, '');
+};
 
 import { AccountSecurityManager } from "./security";
 import { rateLimitMiddleware } from "./rate-limit";
@@ -346,11 +349,10 @@ export class SecurityMiddleware {
       // Check URL parameters
       const searchParams = request.nextUrl.searchParams;
 
-      for (const [key, value] of searchParams.entries()) {
-        const sanitized = DOMPurify.sanitize(value, {
-          ALLOWED_TAGS: [],
-          ALLOWED_ATTR: [],
-        });
+      const entries = Array.from(searchParams.entries());
+      for (let i = 0; i < entries.length; i++) {
+        const [key, value] = entries[i];
+        const sanitized = simpleSanitize(value);
 
         if (sanitized !== value) {
           threats.push(
@@ -408,10 +410,7 @@ export class SecurityMiddleware {
     }
 
     if (typeof obj === "string") {
-      const sanitized = DOMPurify.sanitize(obj, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: [],
-      });
+      const sanitized = simpleSanitize(obj);
 
       return { sanitized, modified: sanitized !== obj };
     }
@@ -556,7 +555,7 @@ export class SecurityMiddleware {
     );
     response.headers.set("Access-Control-Max-Age", "86400");
 
-    return new Response(null, { status: 200, headers: response.headers });
+    return NextResponse.next({ headers: response.headers });
   }
 
   private isLocalhost(origin: string): boolean {

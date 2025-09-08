@@ -13,8 +13,8 @@ import type {
   StreamChunk,
   LLMMessage,
   TokenUsage,
-  LLMError,
 } from "@/lib/llm/types";
+import { LLMError } from "@/lib/llm/types";
 
 import { useState, useCallback, useRef, useEffect } from "react";
 
@@ -148,7 +148,7 @@ export function useLLMGeneration(
 
         return generationResponse;
       } catch (error) {
-        if (error.name === "AbortError") {
+        if (error instanceof Error && error.name === "AbortError") {
           // Request was cancelled
           setState((prev) => ({
             ...prev,
@@ -162,7 +162,10 @@ export function useLLMGeneration(
         const llmError =
           error instanceof LLMError
             ? error
-            : new LLMError(error.message || "Unknown error", "UNKNOWN_ERROR");
+            : new LLMError(
+                error instanceof Error ? error.message : "Unknown error",
+                "UNKNOWN_ERROR",
+              );
 
         setState((prev) => ({
           ...prev,
@@ -305,7 +308,7 @@ export function useLLMGeneration(
           error instanceof LLMError
             ? error
             : new LLMError(
-                error.message || "Streaming failed",
+                error instanceof Error ? error.message : "Streaming failed",
                 "STREAMING_ERROR",
               );
 

@@ -1,17 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Avatar,
-  Button,
-  Textarea,
-  Divider,
-  Spinner,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/react";
+import { Avatar } from "@heroui/avatar";
+import { Button } from "@heroui/button";
+import { Textarea } from "@heroui/input";
+import { Divider } from "@heroui/divider";
+import { Spinner } from "@heroui/spinner";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageCircle,
@@ -188,7 +183,7 @@ export function GameComments({
         replies: [],
         like_count: 0,
         is_liked: false,
-      };
+      } as unknown as CommentWithProfile;
 
       if (parentId) {
         // Add as reply
@@ -206,7 +201,7 @@ export function GameComments({
       }
 
       // Create activity
-      await supabase.from("activities").insert({
+      await (supabase as any).from("activities").insert({
         user_id: currentUserId,
         activity_type: "game_commented",
         target_game_id: gameId,
@@ -301,7 +296,7 @@ export function GameComments({
           updated_at: new Date().toISOString(),
         })
         .eq("id", commentId)
-        .eq("author_id", currentUserId);
+        .eq("author_id", currentUserId!);
 
       if (error) throw error;
 

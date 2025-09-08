@@ -144,6 +144,7 @@ export function GlassmorphicDropdownItem({
 
   return (
     <DropdownItem
+      key={props.key || "dropdown-item"}
       className={clsx(
         getItemClasses(),
         "rounded-md transition-all duration-200",

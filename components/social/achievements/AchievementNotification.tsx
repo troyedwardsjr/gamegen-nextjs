@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@heroui/react";
+import { Button } from "@heroui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Share2, ExternalLink, Sparkles } from "lucide-react";
 import { toast } from "sonner";

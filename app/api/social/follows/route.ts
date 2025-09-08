@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     const { count: totalCount } = await countQuery;
 
     // Transform the data
-    const transformedFollows = follows?.map((follow) => ({
+    const transformedFollows = follows?.map((follow: any) => ({
       id: follow.id,
       user: type === "followers" ? follow.follower : follow.following,
       created_at: follow.created_at,

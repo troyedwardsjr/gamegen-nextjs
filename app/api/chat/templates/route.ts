@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 // GET /api/chat/templates - Get prompt templates
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const category = searchParams.get("category");
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    let query = supabase
+    let query = (supabase as any)
       .from("chat_prompt_templates")
       .select("*")
       .order("usage_count", { ascending: false })
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (isPublic && !user) {
       // Anonymous users can only see public templates
       query = query.eq("is_public", true);
-    } else if (isPublic) {
+    } else if (isPublic && user) {
       // Authenticated users can see public templates and their own
       query = query.or(`is_public.eq.true,created_by.eq.${user.id}`);
     } else if (user) {
@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Also get category counts for filtering UI
-    const { data: categoryCounts } = await supabase
+    const { data: categoryCounts } = await (supabase as any)
       .from("chat_prompt_templates")
       .select("category")
       .eq("is_public", true);
 
     const categories =
-      categoryCounts?.reduce((acc: Record<string, number>, { category }) => {
+      categoryCounts?.reduce((acc: Record<string, number>, { category }: any) => {
         acc[category] = (acc[category] || 0) + 1;
 
         return acc;
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 // POST /api/chat/templates - Create new template
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create template
-    const { data: template, error } = await supabase
+    const { data: template, error } = await (supabase as any)
       .from("chat_prompt_templates")
       .insert({
         name,

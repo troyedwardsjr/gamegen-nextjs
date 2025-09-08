@@ -106,25 +106,41 @@ export interface CameraComponent extends ToxoidComponent {
 // =============================================================================
 
 export interface KeyboardInputSingleton {
-  [key: string]: boolean;
-  isKeyPressed(key: string): boolean;
-  isKeyJustPressed(key: string): boolean;
-  isKeyJustReleased(key: string): boolean;
+  pressedKeys: Set<string>;
+  keys: { [key: string]: boolean };
+  isKeyPressed: (key: string) => boolean;
+  isKeyJustPressed: (key: string) => boolean;
+  isKeyJustReleased: (key: string) => boolean;
 }
 
 export interface MouseInputSingleton {
-  x: number;
-  y: number;
-  left_button: boolean;
-  right_button: boolean;
-  middle_button: boolean;
-  wheel_delta: number;
+  position: { x: number; y: number };
+  previousPosition: { x: number; y: number };
+  leftButton: boolean;
+  rightButton: boolean;
+  middleButton: boolean;
+  wheelDelta: number;
+  isButtonPressed: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonJustPressed: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonJustReleased: (button: 'left' | 'right' | 'middle') => boolean;
+}
+
+export interface GamepadInput {
+  leftStick: { x: number; y: number };
+  rightStick: { x: number; y: number };
+  buttons: { [key: string]: boolean };
+  triggers: { left: number; right: number };
 }
 
 export interface GamepadInputSingleton {
-  connected: boolean;
+  gamepads: GamepadInput[];
   buttons: boolean[];
   axes: number[];
+  connected: boolean;
+  getGamepad: (index: number) => GamepadInput | null;
+  isConnected: (index: number) => boolean;
+  getButtonValue: (gamepadIndex: number, button: string) => number;
+  isButtonPressed: (gamepadIndex: number, button: string) => boolean;
 }
 
 // =============================================================================
@@ -280,7 +296,7 @@ export interface ToxoidEngine {
   System: ToxoidSystemAPI;
   Query: ToxoidQueryAPI;
   Observer: ToxoidObserverAPI;
-  Entity: typeof ToxoidEntity;
+  Entity: ToxoidEntity;
   Phases: typeof ToxoidPhases;
   Events: typeof ToxoidEvents;
   ObserverEvents: typeof ToxoidEvents; // Alias for cleaner code
@@ -380,25 +396,4 @@ export interface AssetManager {
   getMemoryUsage(): number;
 }
 
-// =============================================================================
-// GLOBAL DECLARATIONS
-// =============================================================================
-
-declare global {
-  interface Window {
-    Toxoid?: ToxoidEngine;
-    ToxoidModule?: ToxoidWasmModule;
-    toxoidReady?: boolean;
-  }
-
-  // For scripts running in QuickJS context
-  var Toxoid: ToxoidEngine;
-  var console: {
-    log(...args: any[]): void;
-    error(...args: any[]): void;
-    warn(...args: any[]): void;
-    info(...args: any[]): void;
-  };
-}
-
-export {};
+// Global declarations are handled in /types/toxoid.ts to avoid conflicts

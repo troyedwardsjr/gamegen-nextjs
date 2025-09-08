@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Avatar, Chip } from "@heroui/react";
+import { Avatar } from "@heroui/avatar";
+import { Chip } from "@heroui/chip";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Crown, TrendingUp } from "lucide-react";
 

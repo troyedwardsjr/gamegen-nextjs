@@ -94,29 +94,17 @@ export function UserProfile({
       // Fetch user games
       const { data: gamesData } = await supabase
         .from("games")
-        .select(
-          `
-          id,
-          title,
-          description,
-          thumbnail_url,
-          created_at,
-          is_published,
-          play_count,
-          like_count,
-          fork_count,
-          tags
-        `,
-        )
+        .select("*")
         .eq("creator_id", userId)
-        .eq("is_published", true)
+        .eq("visibility", "public")
+        .not("published_at", "is", null)
         .order("created_at", { ascending: false })
         .limit(12);
 
       if (gamesData) setGames(gamesData);
 
       // Fetch user achievements (featured ones for profile display)
-      const { data: achievementsData } = await supabase
+      const { data: achievementsData } = await (supabase as any)
         .from("user_achievements")
         .select(
           `
@@ -152,8 +140,8 @@ export function UserProfile({
           .from("games")
           .select("id", { count: "exact" })
           .eq("creator_id", userId)
-          .eq("is_published", true),
-        supabase
+          .eq("visibility", "public"),
+        (supabase as any)
           .from("user_achievements")
           .select("id", { count: "exact" })
           .eq("user_id", userId),
@@ -266,16 +254,10 @@ export function UserProfile({
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/60">
-                  {profileData.location && (
-                    <div className="flex items-center gap-1">
-                      <MapPin size={14} />
-                      {profileData.location}
-                    </div>
-                  )}
-                  {profileData.website && (
+                  {profileData.website_url && (
                     <a
                       className="flex items-center gap-1 hover:text-secondary-500 transition-colors"
-                      href={profileData.website}
+                      href={profileData.website_url}
                       rel="noopener noreferrer"
                       target="_blank"
                     >
@@ -338,8 +320,7 @@ export function UserProfile({
                 {achievements.map((userAchievement) => (
                   <AchievementBadge
                     key={userAchievement.id}
-                    showTooltip
-                    achievement={userAchievement.achievements}
+                    achievement={userAchievement.achievement_id as any}
                     size="sm"
                   />
                 ))}
@@ -407,7 +388,7 @@ export function UserProfile({
           {activeTab === "games" && (
             <div>
               {games.length > 0 ? (
-                <GameGrid games={games} />
+                <GameGrid initialGames={games} />
               ) : (
                 <div className="text-center py-12">
                   <GamepadIcon
@@ -452,7 +433,7 @@ export function UserProfile({
                       >
                         <CardBody className="p-4">
                           <AchievementBadge
-                            achievement={userAchievement.achievements}
+                            achievement={userAchievement.achievement_id as any}
                             className="mx-auto mb-3"
                             size="lg"
                           />

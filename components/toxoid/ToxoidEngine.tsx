@@ -127,19 +127,19 @@ const DebugOverlay: React.FC<{ gameState: ToxoidGameState }> = ({
         : "STOPPED"}
     </GlassmorphicBadge>
 
-    <GlassmorphicBadge size="sm" variant="glass">
+    <GlassmorphicBadge size="sm" variant="accent">
       FPS: {Math.round(gameState.fps)}
     </GlassmorphicBadge>
 
-    <GlassmorphicBadge size="sm" variant="glass">
+    <GlassmorphicBadge size="sm" variant="accent">
       Entities: {gameState.entityCount}
     </GlassmorphicBadge>
 
-    <GlassmorphicBadge size="sm" variant="glass">
+    <GlassmorphicBadge size="sm" variant="accent">
       Systems: {gameState.systemCount}
     </GlassmorphicBadge>
 
-    <GlassmorphicBadge size="sm" variant="glass">
+    <GlassmorphicBadge size="sm" variant="accent">
       Memory: {(gameState.memoryUsage / 1024 / 1024).toFixed(1)}MB
     </GlassmorphicBadge>
   </div>
@@ -409,7 +409,7 @@ export const ToxoidEngine = forwardRef<ToxoidEngineRef, ToxoidEngineProps>(
 
     if (error) {
       return (
-        <GlassmorphicCard className={`relative ${className}`} variant="danger">
+        <GlassmorphicCard className={`relative ${className}`} variant="accent-rose">
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[320px]">
             <div className="text-red-400 mb-4">
               <svg
@@ -452,7 +452,6 @@ export const ToxoidEngine = forwardRef<ToxoidEngineRef, ToxoidEngineProps>(
           className="w-full h-full rounded-lg"
           height={height}
           style={{
-            imageRendering: "pixelated",
             imageRendering: "crisp-edges",
             maxWidth: "100%",
             maxHeight: "100%",

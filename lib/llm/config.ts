@@ -299,7 +299,11 @@ export class LLMConfigManager {
 
       console.info("[LLMConfig] Configuration imported successfully");
     } catch (error) {
-      throw new Error(`Failed to import configuration: ${error.message}`);
+      throw new Error(
+        `Failed to import configuration: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -472,7 +476,9 @@ export class LLMConfigManager {
         this.validateProviderConfig(providerConfig as ProviderConfiguration);
       } catch (error) {
         throw new Error(
-          `Invalid provider config for '${providerId}': ${error.message}`,
+          `Invalid provider config for '${providerId}': ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
         );
       }
     }
@@ -528,7 +534,7 @@ export class LLMConfigManager {
     const newProviderIds = new Set(Object.keys(newConfig.providers));
 
     // Added providers
-    const addedProviders = [...newProviderIds].filter(
+    const addedProviders = Array.from(newProviderIds).filter(
       (id) => !oldProviderIds.has(id),
     );
 
@@ -537,7 +543,7 @@ export class LLMConfigManager {
     }
 
     // Removed providers
-    const removedProviders = [...oldProviderIds].filter(
+    const removedProviders = Array.from(oldProviderIds).filter(
       (id) => !newProviderIds.has(id),
     );
 
@@ -548,7 +554,7 @@ export class LLMConfigManager {
     // Modified providers
     const modifiedProviders: string[] = [];
 
-    for (const providerId of newProviderIds) {
+    Array.from(newProviderIds).forEach((providerId) => {
       if (oldProviderIds.has(providerId)) {
         const oldProvider = oldConfig.providers[providerId];
         const newProvider = newConfig.providers[providerId];
@@ -557,7 +563,7 @@ export class LLMConfigManager {
           modifiedProviders.push(providerId);
         }
       }
-    }
+    });
 
     if (modifiedProviders.length > 0) {
       diff.modified_providers = modifiedProviders;

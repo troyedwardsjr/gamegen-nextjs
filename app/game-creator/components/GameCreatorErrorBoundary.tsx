@@ -93,9 +93,9 @@ export class GameCreatorErrorBoundary extends React.Component<
               {process.env.NODE_ENV === "development" && this.state.error && (
                 <div className="mb-6 text-left">
                   <GlassmorphicAlert
-                    description={this.state.error.message}
+                    message={this.state.error.message}
                     title="Error Details"
-                    variant="danger"
+                    variant="error"
                   />
 
                   {this.state.error.stack && (

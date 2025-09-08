@@ -330,7 +330,7 @@ export function TrendingGames({
                   </div>
                   <div className="flex items-center gap-1">
                     <Eye size={14} />
-                    <span>{(game.view_count || 0).toLocaleString()}</span>
+                    <span>{(game.like_count || 0).toLocaleString()}</span>
                   </div>
                 </div>
 

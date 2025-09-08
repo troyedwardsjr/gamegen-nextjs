@@ -50,28 +50,28 @@ export class ChatWebSocket {
             eventsPerSecond: 30, // Rate limit for events
           },
           heartbeatIntervalMs: 30000,
-          reconnectAfterMs: (tries) => {
+          reconnectAfterMs: (tries: number) => {
             return Math.min(1000 * Math.pow(2, tries), 30000);
           },
-        },
+        } as any,
       );
 
       // Set up connection event listeners
-      this.client.onOpen(() => {
+      (this.client as any).onOpen(() => {
         console.log("WebSocket connected");
         this.config.onStatusChange?.("connected");
         this.reconnectAttempts = 0;
         this.setupHeartbeat();
       });
 
-      this.client.onClose(() => {
+      (this.client as any).onClose(() => {
         console.log("WebSocket disconnected");
         this.config.onStatusChange?.("disconnected");
         this.cleanup();
         this.attemptReconnect();
       });
 
-      this.client.onError((error) => {
+      (this.client as any).onError((error: any) => {
         console.error("WebSocket error:", error);
         this.config.onStatusChange?.("error");
         this.config.onError?.(new Error(`WebSocket error: ${error}`));
@@ -202,7 +202,7 @@ export class ChatWebSocket {
   private setupHeartbeat() {
     this.heartbeatInterval = setInterval(() => {
       if (this.channel && this.client?.isConnected()) {
-        this.channel.send({
+        (this.channel as any).send({
           type: "heartbeat",
           event: "ping",
           payload: { timestamp: Date.now() },
@@ -255,7 +255,7 @@ export class ChatWebSocket {
     }
 
     // Send typing indicator
-    this.channel.send({
+    (this.channel as any).send({
       type: "broadcast",
       event: "typing",
       payload: {
@@ -287,7 +287,7 @@ export class ChatWebSocket {
   ) {
     if (!this.channel) return;
 
-    this.channel.send({
+    (this.channel as any).send({
       type: "broadcast",
       event: "message_stream",
       payload: {
@@ -302,7 +302,7 @@ export class ChatWebSocket {
   public sendStreamingError(messageId: string, error: string) {
     if (!this.channel) return;
 
-    this.channel.send({
+    (this.channel as any).send({
       type: "broadcast",
       event: "message_stream",
       payload: {

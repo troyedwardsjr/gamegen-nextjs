@@ -207,18 +207,17 @@ export function GameGrid({
             return game.is_featured;
           case "educational":
             return (
-              game.category === "educational" ||
-              game.tags?.includes("educational")
+                            game.tags?.includes("educational")
             );
           case "arcade":
-            return game.category === "arcade" || game.tags?.includes("arcade");
+            return game.tags?.includes("arcade");
           case "puzzle":
-            return game.category === "puzzle" || game.tags?.includes("puzzle");
+            return game.tags?.includes("puzzle");
           case "rpg":
-            return game.category === "rpg" || game.tags?.includes("rpg");
+            return game.tags?.includes("rpg");
           case "strategy":
             return (
-              game.category === "strategy" || game.tags?.includes("strategy")
+              game.tags?.includes("strategy")
             );
           default:
             return true;

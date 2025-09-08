@@ -6,7 +6,7 @@ import { Progress } from "@heroui/progress";
 import { Badge } from "@heroui/badge";
 
 import { useLLMProvider } from "@/lib/hooks/use-llm-provider";
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface LLMMetrics {
   total_requests: number;
@@ -59,7 +59,8 @@ export function LLMDashboard() {
       }
 
       // Fetch metrics from database
-      const { data: requests, error: requestsError } = await supabase
+      const supabase = createClient();
+      const { data: requests, error: requestsError } = await (supabase as any)
         .from("llm_requests")
         .select("*")
         .gte("created_at", startTime.toISOString());
@@ -70,11 +71,11 @@ export function LLMDashboard() {
       const aggregatedMetrics: LLMMetrics = {
         total_requests: requests?.length || 0,
         total_tokens:
-          requests?.reduce((sum, r) => sum + (r.tokens_used || 0), 0) || 0,
-        total_cost: requests?.reduce((sum, r) => sum + (r.cost || 0), 0) || 0,
+          requests?.reduce((sum: number, r: any) => sum + (r.tokens_used || 0), 0) || 0,
+        total_cost: requests?.reduce((sum: number, r: any) => sum + (r.cost || 0), 0) || 0,
         success_rate: calculateSuccessRate(requests || []),
         avg_response_time: calculateAvgResponseTime(requests || []),
-        errors_today: requests?.filter((r) => r.status === "error").length || 0,
+        errors_today: requests?.filter((r: any) => r.status === "error").length || 0,
         requests_by_provider: groupByProvider(requests || [], "count"),
         tokens_by_provider: groupByProvider(requests || [], "tokens"),
         hourly_requests: calculateHourlyRequests(requests || []),
@@ -136,7 +137,8 @@ export function LLMDashboard() {
   };
 
   const getTopUsers = async (startTime: Date) => {
-    const { data, error } = await supabase
+    const supabase = createClient();
+    const { data, error } = await (supabase as any)
       .from("llm_requests")
       .select("user_id, tokens_used")
       .gte("created_at", startTime.toISOString());
@@ -145,7 +147,7 @@ export function LLMDashboard() {
 
     const userStats: Record<string, { requests: number; tokens: number }> = {};
 
-    data.forEach((r) => {
+    data.forEach((r: any) => {
       if (!userStats[r.user_id]) {
         userStats[r.user_id] = { requests: 0, tokens: 0 };
       }
@@ -251,14 +253,14 @@ export function LLMDashboard() {
           <CardBody>
             <p className="text-small text-default-500">Success Rate</p>
             <p className="text-2xl font-bold">
-              {metrics?.success_rate.toFixed(1)}%
+              {(metrics?.success_rate ?? 0).toFixed(1)}%
             </p>
             <Badge
               className="mt-2"
               color={
-                metrics?.success_rate >= 95
+                (metrics?.success_rate ?? 0) >= 95
                   ? "success"
-                  : metrics?.success_rate >= 90
+                  : (metrics?.success_rate ?? 0) >= 90
                     ? "warning"
                     : "danger"
               }
@@ -286,17 +288,17 @@ export function LLMDashboard() {
                 </p>
                 <Badge
                   color={
-                    metrics?.avg_response_time < 1000
+                    (metrics?.avg_response_time ?? 0) < 1000
                       ? "success"
-                      : metrics?.avg_response_time < 3000
+                      : (metrics?.avg_response_time ?? 0) < 3000
                         ? "warning"
                         : "danger"
                   }
                   variant="flat"
                 >
-                  {metrics?.avg_response_time < 1000
+                  {(metrics?.avg_response_time ?? 0) < 1000
                     ? "Fast"
-                    : metrics?.avg_response_time < 3000
+                    : (metrics?.avg_response_time ?? 0) < 3000
                       ? "Normal"
                       : "Slow"}
                 </Badge>

@@ -374,7 +374,7 @@ export const formatRelativeTime = (
   return d.toLocaleDateString();
 };
 
-export const formatDuration = (ms: number): string => {
+export const formatDurationFromMs = (ms: number): string => {
   if (ms < 0) return "0s";
 
   const seconds = Math.floor(ms / 1000);
@@ -419,7 +419,7 @@ export const formatGameSessionDuration = (
   const end = endTime ? createDate(endTime) : new Date();
   const duration = end.getTime() - start.getTime();
 
-  return formatDuration(duration);
+  return formatDurationFromMs(duration);
 };
 
 export const calculateGameStreakDays = (gameSessions: DateInput[]): number => {
@@ -430,7 +430,7 @@ export const calculateGameStreakDays = (gameSessions: DateInput[]): number => {
     .sort((a, b) => b.getTime() - a.getTime())
     .map((date) => startOfDay(date).getTime());
 
-  const uniqueDates = [...new Set(sortedDates)];
+  const uniqueDates = Array.from(new Set(sortedDates));
 
   let streak = 0;
   let currentDate = startOfDay(new Date()).getTime();

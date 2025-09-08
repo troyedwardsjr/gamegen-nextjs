@@ -207,7 +207,7 @@ export const reverse = (str: string): string => {
   return str.split("").reverse().join("");
 };
 
-export const shuffle = (str: string): string => {
+export const shuffleString = (str: string): string => {
   const chars = str.split("");
 
   for (let i = chars.length - 1; i > 0; i--) {

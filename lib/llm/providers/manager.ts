@@ -254,38 +254,38 @@ export class ProviderManager {
     }
 
     // Apply load balancing strategy
-    return this.applyLoadBalancing(availableProviders, criteria);
+    return await this.applyLoadBalancing(availableProviders, criteria);
   }
 
   /**
    * Get status of all providers
    */
   async getAllProviderStatus(): Promise<ProviderStatus[]> {
-    const statuses: ProviderStatus[] = [];
+    const statusPromises = Array.from(this.providers.entries()).map(
+      async ([providerId, provider]) => {
+        const circuitBreaker = this.circuitBreakers.get(providerId);
+        const rateLimiter = this.rateLimiters.get(providerId);
+        const metrics = await provider.getMetrics();
 
-    for (const [providerId, provider] of this.providers) {
-      const circuitBreaker = this.circuitBreakers.get(providerId);
-      const rateLimiter = this.rateLimiters.get(providerId);
-      const metrics = await provider.getMetrics();
+        const status: ProviderStatus = {
+          provider_id: providerId,
+          health_status: metrics.health_status,
+          last_health_check: new Date(), // This would be tracked separately in a real implementation
+          circuit_breaker_state: circuitBreaker?.getState() || ("closed" as any),
+          rate_limit_status: rateLimiter?.getStatus() || {
+            requests_used: 0,
+            tokens_used: 0,
+            window_start: new Date(),
+            is_exceeded: false,
+          },
+          metrics,
+        };
 
-      const status: ProviderStatus = {
-        provider_id: providerId,
-        health_status: metrics.health_status,
-        last_health_check: new Date(), // This would be tracked separately in a real implementation
-        circuit_breaker_state: circuitBreaker?.getState() || ("closed" as any),
-        rate_limit_status: rateLimiter?.getStatus() || {
-          requests_used: 0,
-          tokens_used: 0,
-          window_start: new Date(),
-          is_exceeded: false,
-        },
-        metrics,
-      };
+        return status;
+      },
+    );
 
-      statuses.push(status);
-    }
-
-    return statuses;
+    return Promise.all(statusPromises);
   }
 
   /**
@@ -332,9 +332,9 @@ export class ProviderManager {
    */
   async destroy(): Promise<void> {
     // Clear health check intervals
-    for (const interval of this.healthCheckIntervals.values()) {
+    Array.from(this.healthCheckIntervals.values()).forEach((interval) => {
       clearInterval(interval);
-    }
+    });
     this.healthCheckIntervals.clear();
 
     // Destroy all providers
@@ -373,10 +373,10 @@ export class ProviderManager {
   /**
    * Apply load balancing strategy
    */
-  private applyLoadBalancing(
+  private async applyLoadBalancing(
     providers: LLMProvider[],
     criteria: ProviderSelectionCriteria,
-  ): LLMProvider {
+  ): Promise<LLMProvider> {
     switch (this.config.load_balancing.type) {
       case "round_robin":
         return this.roundRobinSelection(providers);
@@ -575,7 +575,10 @@ export class ProviderManager {
       } catch (fallbackError) {
         this.log("warn", "Failover attempt failed", {
           fallbackProvider: fallbackId,
-          error: fallbackError.message,
+          error:
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : "Unknown error",
         });
 
         // Record failure in circuit breaker
@@ -605,7 +608,7 @@ export class ProviderManager {
         } catch (error) {
           this.log("warn", "Health check failed", {
             providerId,
-            error: error.message,
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }

@@ -391,7 +391,7 @@ export class SessionManager {
       }
 
       // Generate permissions based on subscription tier
-      const tier = profile.subscription_tier as ExtendedSession["tier"];
+      const tier: ExtendedSession["tier"] = profile.subscription_tier || "free";
       const permissions = this.getPermissionsForTier(tier);
 
       return {
@@ -541,6 +541,39 @@ export class SessionManager {
       }
     } catch (error) {
       console.error("Error logging security event:", error);
+    }
+  }
+
+  /**
+   * Reset password for email
+   */
+  async resetPasswordForEmail(email: string, options?: { redirectTo?: string }) {
+    return this.supabase.auth.resetPasswordForEmail(email, options);
+  }
+
+  /**
+   * Update user data
+   */
+  async updateUser(attributes: { password?: string; email?: string; data?: object }) {
+    return this.supabase.auth.updateUser(attributes);
+  }
+
+  /**
+   * Resend verification email
+   */
+  async resend(options: { type: "signup" | "recovery"; email?: string; phone?: string }) {
+    if (options.type === "recovery") {
+      // For password recovery, we need to use resetPasswordForEmail
+      if (!options.email) {
+        throw new Error("Email is required for password recovery");
+      }
+      return this.supabase.auth.resetPasswordForEmail(options.email);
+    } else {
+      // For signup verification
+      return this.supabase.auth.resend({
+        type: "signup",
+        email: options.email!,
+      });
     }
   }
 

@@ -61,7 +61,7 @@ export function FollowButton({
         toast.success("Unfollowed successfully");
 
         // Create unfollow activity
-        await supabase.from("activities").insert({
+        await (supabase as any).from("activities").insert({
           user_id: currentUserId,
           activity_type: "user_followed",
           target_user_id: targetUserId,
@@ -82,7 +82,7 @@ export function FollowButton({
         toast.success("Following successfully");
 
         // Create follow activity
-        await supabase.from("activities").insert({
+        await (supabase as any).from("activities").insert({
           user_id: currentUserId,
           activity_type: "user_followed",
           target_user_id: targetUserId,
@@ -98,7 +98,7 @@ export function FollowButton({
           .single();
 
         if (followerProfile) {
-          await supabase.from("notifications").insert({
+          await (supabase as any).from("notifications").insert({
             recipient_id: targetUserId,
             sender_id: currentUserId,
             notification_type: "follow",

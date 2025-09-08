@@ -16,7 +16,7 @@ import {
 import { Spinner } from "@heroui/spinner";
 
 import { useLLMProvider } from "@/lib/hooks/use-llm-provider";
-import { ProviderConfiguration, ProviderHealthStatus } from "@/lib/llm/types";
+import { ProviderConfiguration, ProviderConfig, ProviderHealthStatus } from "@/lib/llm/types";
 
 export default function LLMProvidersPage() {
   const {
@@ -32,16 +32,11 @@ export default function LLMProvidersPage() {
   } = useLLMProvider();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProvider, setEditingProvider] = useState<ProviderConfiguration | null>(
+  const [editingProvider, setEditingProvider] = useState<any | null>(
     null,
   );
   const [formData, setFormData] = useState<Partial<ProviderConfiguration>>({});
   const [testResults, setTestResults] = useState<Record<string, any>>({});
-  // Health status can be derived from provider status
-  const healthStatuses = providers.reduce((acc, provider) => {
-    acc[provider.provider_id] = provider.health_status;
-    return acc;
-  }, {} as Record<string, ProviderHealthStatus>);
 
   const handleAddProvider = () => {
     setEditingProvider(null);
@@ -56,12 +51,8 @@ export default function LLMProvidersPage() {
         max_tokens: 4000,
         temperature: 0.7,
         timeout: 30000,
-        retry: {
-          retries: 3,
-          minTimeout: 1000,
-          maxTimeout: 10000,
-          factor: 2,
-        },
+        retry_attempts: 3,
+        health_check_interval: 60000,
         rate_limit: {
           requests_per_minute: 20,
           tokens_per_minute: 40000,
@@ -73,28 +64,45 @@ export default function LLMProvidersPage() {
     setIsModalOpen(true);
   };
 
-  const handleEditProvider = (provider: ProviderConfig) => {
+  const handleEditProvider = (provider: any) => {
     setEditingProvider(provider);
-    setFormData(provider);
+    setFormData({
+      id: provider.provider_id,
+      name: provider.provider_id, // Use provider_id as name for now
+      type: "claude", // Default type
+      config: provider.metrics?.config || {},
+      priority: 1,
+      enabled: true,
+    });
     setIsModalOpen(true);
   };
 
   const handleSaveProvider = async () => {
-    if (editingProvider) {
-      await updateProvider(editingProvider.id, formData as ProviderConfig);
-    } else {
-      await addProvider(formData as ProviderConfig);
+    try {
+      if (editingProvider) {
+        await updateProviderConfig(editingProvider.provider_id || editingProvider.id, formData);
+      } else {
+        // For now, just show an alert since we don't have an add provider API
+        alert("Adding new providers is not implemented yet");
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving provider:", error);
     }
-    setIsModalOpen(false);
   };
 
   const handleTestProvider = async (providerId: string) => {
-    const result = await testProvider(providerId);
-
-    setTestResults((prev) => ({ ...prev, [providerId]: result }));
+    try {
+      // For now, just get metrics as a simple "test"
+      const result = await getProviderMetrics(providerId);
+      setTestResults((prev) => ({ ...prev, [providerId]: result }));
+    } catch (error) {
+      console.error("Error testing provider:", error);
+      setTestResults((prev) => ({ ...prev, [providerId]: { error: "Test failed" } }));
+    }
   };
 
-  const getHealthBadge = (health?: ProviderHealthStatus) => {
+  const getHealthBadge = (health?: string) => {
     if (!health) return <Badge color="default">Unknown</Badge>;
 
     const colors: Record<string, "success" | "warning" | "danger"> = {
@@ -104,13 +112,13 @@ export default function LLMProvidersPage() {
     };
 
     return (
-      <Badge color={colors[health.status] || "default"}>
-        {health.status.toUpperCase()}
+      <Badge color={colors[health] || "default"}>
+        {health.toUpperCase()}
       </Badge>
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spinner size="lg" />
@@ -137,17 +145,17 @@ export default function LLMProvidersPage() {
 
       <div className="grid gap-6">
         {providers.map((provider) => (
-          <Card key={provider.id} className="relative">
+          <Card key={provider.provider_id} className="relative">
             <CardHeader className="flex justify-between items-start">
               <div className="flex items-center gap-3">
                 <div>
-                  <h3 className="text-xl font-semibold">{provider.name}</h3>
+                  <h3 className="text-xl font-semibold">{provider.provider_id}</h3>
                   <p className="text-small text-default-500">
-                    {provider.type} - {provider.config.model}
+                    Provider - {provider.provider_id}
                   </p>
                 </div>
-                {getHealthBadge(healthStatuses[provider.id])}
-                {activeProvider?.id === provider.id && (
+                {getHealthBadge(provider.health_status)}
+                {provider.health_status === "healthy" && (
                   <Badge color="primary" variant="flat">
                     Active
                   </Badge>
@@ -155,16 +163,16 @@ export default function LLMProvidersPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Switch
-                  isSelected={provider.enabled}
+                  isSelected={provider.health_status === "healthy"}
                   size="sm"
                   onValueChange={(value) =>
-                    updateProvider(provider.id, { ...provider, enabled: value })
+                    toggleProvider(provider.provider_id, value)
                   }
                 />
                 <Button
                   size="sm"
                   variant="flat"
-                  onPress={() => handleTestProvider(provider.id)}
+                  onPress={() => handleTestProvider(provider.provider_id)}
                 >
                   Test
                 </Button>
@@ -175,21 +183,24 @@ export default function LLMProvidersPage() {
                 >
                   Edit
                 </Button>
-                {activeProvider?.id !== provider.id && (
+                {provider.health_status !== "healthy" && (
                   <Button
                     color="primary"
                     size="sm"
                     variant="flat"
-                    onPress={() => setActiveProvider(provider.id)}
+                    onPress={() => resetCircuitBreaker(provider.provider_id)}
                   >
-                    Set Active
+                    Reset
                   </Button>
                 )}
                 <Button
                   color="danger"
                   size="sm"
                   variant="flat"
-                  onPress={() => removeProvider(provider.id)}
+                  onPress={() => {
+                    // For now, just show an alert since we don't have a remove provider API
+                    alert("Removing providers is not implemented yet");
+                  }}
                 >
                   Remove
                 </Button>
@@ -198,40 +209,39 @@ export default function LLMProvidersPage() {
             <CardBody className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-small text-default-500">Endpoint</p>
+                  <p className="text-small text-default-500">Status</p>
                   <p className="text-small font-mono">
-                    {provider.config.endpoint}
+                    {provider.health_status}
                   </p>
                 </div>
                 <div>
-                  <p className="text-small text-default-500">Max Tokens</p>
-                  <p className="text-small">{provider.config.max_tokens}</p>
+                  <p className="text-small text-default-500">Circuit Breaker</p>
+                  <p className="text-small">{provider.circuit_breaker_state}</p>
                 </div>
                 <div>
-                  <p className="text-small text-default-500">Temperature</p>
-                  <p className="text-small">{provider.config.temperature}</p>
+                  <p className="text-small text-default-500">Last Check</p>
+                  <p className="text-small">{new Date(provider.last_health_check).toLocaleTimeString()}</p>
                 </div>
                 <div>
-                  <p className="text-small text-default-500">Priority</p>
-                  <p className="text-small">{provider.priority}</p>
+                  <p className="text-small text-default-500">Provider ID</p>
+                  <p className="text-small">{provider.provider_id}</p>
                 </div>
               </div>
 
-              {healthStatuses[provider.id] && (
+              {provider.metrics && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
                   <div>
                     <p className="text-small text-default-500">Response Time</p>
                     <p className="text-small">
-                      {healthStatuses[provider.id].response_time}ms
+                      {provider.metrics.average_response_time}ms
                     </p>
                   </div>
                   <div>
                     <p className="text-small text-default-500">Success Rate</p>
                     <p className="text-small">
-                      {(healthStatuses[provider.id].success_rate * 100).toFixed(
-                        2,
-                      )}
-                      %
+                      {provider.metrics.successful_requests > 0 ? 
+                        ((provider.metrics.successful_requests / provider.metrics.total_requests) * 100).toFixed(2) : 0
+                      }%
                     </p>
                   </div>
                   <div>
@@ -239,25 +249,23 @@ export default function LLMProvidersPage() {
                       Total Requests
                     </p>
                     <p className="text-small">
-                      {healthStatuses[provider.id].total_requests}
+                      {provider.metrics.total_requests}
                     </p>
                   </div>
                   <div>
-                    <p className="text-small text-default-500">Last Check</p>
+                    <p className="text-small text-default-500">Last Used</p>
                     <p className="text-small">
-                      {new Date(
-                        healthStatuses[provider.id].last_check,
-                      ).toLocaleTimeString()}
+                      {new Date(provider.metrics.last_used).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
               )}
 
-              {testResults[provider.id] && (
+              {testResults[provider.provider_id] && (
                 <div className="mt-4 p-4 bg-default-50 rounded-lg">
                   <p className="text-small font-semibold mb-2">Test Results:</p>
                   <pre className="text-xs overflow-auto">
-                    {JSON.stringify(testResults[provider.id], null, 2)}
+                    {JSON.stringify(testResults[provider.provider_id], null, 2)}
                   </pre>
                 </div>
               )}

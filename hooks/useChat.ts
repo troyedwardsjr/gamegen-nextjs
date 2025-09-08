@@ -79,6 +79,7 @@ export interface ChatState {
 
   // WebSocket state
   wsStatus: WebSocketStatus;
+  isConnected: boolean;
   typingUsers: string[];
 
   // Message state
@@ -173,6 +174,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
     isSending: false,
     error: null,
     wsStatus: "disconnected",
+    isConnected: false,
     typingUsers: [],
     currentMessage: "",
     editingMessageId: null,
@@ -253,7 +255,11 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
 
   const handleStatusChange = useCallback(
     (status: WebSocketStatus) => {
-      setState((prev) => ({ ...prev, wsStatus: status }));
+      setState((prev) => ({ 
+        ...prev, 
+        wsStatus: status,
+        isConnected: status === "connected"
+      }));
 
       if (status === "connected") {
         toast({
@@ -304,7 +310,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("chat_sessions")
           .insert({
             user_id: user.id,
@@ -344,7 +350,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
 
       try {
         // Load session data
-        const { data: session, error: sessionError } = await supabase
+        const { data: session, error: sessionError } = await (supabase as any)
           .from("chat_sessions")
           .select("*")
           .eq("id", sessionId)
@@ -354,7 +360,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
         if (sessionError) throw sessionError;
 
         // Load recent messages
-        const { data: messages, error: messagesError } = await supabase
+        const { data: messages, error: messagesError } = await (supabase as any)
           .from("chat_messages")
           .select("*")
           .eq("session_id", sessionId)
@@ -388,7 +394,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
 
     try {
       const oldestMessage = state.messages[0];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("chat_messages")
         .select("*")
         .eq("session_id", state.session.id)
@@ -445,7 +451,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
           status: "sending",
         };
 
-        const { data: savedMessage, error: messageError } = await supabase
+        const { data: savedMessage, error: messageError } = await (supabase as any)
           .from("chat_messages")
           .insert(userMessage)
           .select()
@@ -507,7 +513,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
                     }));
                   } else if (data.type === "content_delta" && aiMessage) {
                     aiMessage = {
-                      ...aiMessage,
+                      ...aiMessage!,
                       content: aiMessage.content + data.delta,
                       is_streaming: true,
                     };
@@ -519,7 +525,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
                     }));
                   } else if (data.type === "message_stop" && aiMessage) {
                     aiMessage = {
-                      ...aiMessage,
+                      ...aiMessage!,
                       is_streaming: false,
                       status: "delivered",
                       ...data.message,
@@ -607,7 +613,7 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
       if (!message) return;
 
       try {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("chat_messages")
           .update({ is_favorite: !message.is_favorite })
           .eq("id", messageId);
@@ -739,7 +745,6 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
     ...state,
 
     // Computed
-    contexts,
     isConnected,
 
     // Actions
