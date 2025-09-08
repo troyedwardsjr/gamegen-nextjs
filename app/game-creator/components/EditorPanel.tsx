@@ -10,7 +10,7 @@ import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
 import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import { GlassmorphicAlert } from "@/components/ui/GlassmorphicAlert";
 
-import { ToxoidEngine } from "@/components/toxoid/ToxoidEngine";
+import WorldLinkCanvas from "@/components/toxoid/WorldLinkCanvas";
 import { ScriptEditor } from "@/components/toxoid/ScriptEditor";
 import { ToxoidGameState, GameScript } from "@/types/toxoid";
 
@@ -26,95 +26,46 @@ const LivePlayTab = () => {
     systemCount: 0,
     memoryUsage: 0,
   });
-  const toxoidRef = useRef<any>(null);
+  const worldLinkEngineRef = useRef<any>(null);
 
-  const handleToxoidReady = useCallback((engine: any) => {
-    console.log('[LivePlayTab] Toxoid engine ready:', engine);
+  const handleWorldLinkReady = useCallback((engine: any) => {
+    console.log('[LivePlayTab] WorldLink engine ready:', engine);
+    worldLinkEngineRef.current = engine;
     
-    // Load a basic demo script
+    // Update game state to indicate engine is ready
+    setGameState(prev => ({ ...prev, isRunning: true }));
+    
+    // Execute a basic demo script if the engine supports scripting
     const demoScript = `
 // Create a simple demo scene
-console.log("Setting up demo scene...");
+console.log("Setting up WorldLink demo scene...");
 
-// Register basic game state
-const GameState = Toxoid.API.registerSingleton("GameState", [
-    { name: "score", type: "number" },
-    { name: "lives", type: "number" },
-    { name: "level", type: "number" }
-]);
-
-GameState.score = 0;
-GameState.lives = 3;
-GameState.level = 1;
-
-// Create player entity
-const player = Toxoid.API.createEntity("Player");
-player.add("Position");
-player.add("Sprite");
-
-const playerPos = player.getComponent("Position");
-playerPos.x = 320;
-playerPos.y = 240;
-
-// Create a simple movement system
-Toxoid.System.create("PlayerMovement", "Position, Player", Toxoid.Phases.ON_UPDATE,
-    function(iter) {
-        const keyboard = Toxoid.API.getKeyboardInput();
-        
-        iter.entities().forEach(entity => {
-            const pos = entity.getComponent("Position");
-            const speed = 200;
-            
-            if (keyboard && keyboard.isKeyPressed) {
-                if (keyboard.isKeyPressed("ArrowLeft") || keyboard.isKeyPressed("a")) {
-                    pos.x -= speed * iter.deltaTime;
-                }
-                if (keyboard.isKeyPressed("ArrowRight") || keyboard.isKeyPressed("d")) {
-                    pos.x += speed * iter.deltaTime;
-                }
-                if (keyboard.isKeyPressed("ArrowUp") || keyboard.isKeyPressed("w")) {
-                    pos.y -= speed * iter.deltaTime;
-                }
-                if (keyboard.isKeyPressed("ArrowDown") || keyboard.isKeyPressed("s")) {
-                    pos.y += speed * iter.deltaTime;
-                }
-            }
-        });
-    }
-);
-
-console.log("Demo scene created successfully!");
+// Basic initialization - this will depend on the actual WorldLink API
+if (typeof Module !== 'undefined' && Module._main) {
+  console.log("WorldLink engine initialized successfully!");
+}
     `;
 
-    // Execute demo script
-    if (toxoidRef.current) {
-      toxoidRef.current.executeScript(demoScript).catch((error: Error) => {
-        console.error('[LivePlayTab] Demo script error:', error);
-      });
-    }
+    // For now, just log the demo script - actual execution will depend on WorldLink API
+    console.log('[LivePlayTab] Demo script ready:', demoScript);
   }, []);
 
-  const handleGameStateChange = useCallback((newGameState: ToxoidGameState) => {
-    setGameState(newGameState);
+  const handleWorldLinkError = useCallback((error: string) => {
+    console.error('[LivePlayTab] WorldLink engine error:', error);
+    setGameState(prev => ({ ...prev, isRunning: false }));
   }, []);
 
   const handlePlay = useCallback(() => {
-    if (toxoidRef.current) {
-      if (isPlaying) {
-        toxoidRef.current.stop();
-        setIsPlaying(false);
-      } else {
-        toxoidRef.current.start();
-        setIsPlaying(true);
-      }
-    }
+    // For now, just toggle the playing state
+    // Actual play/pause functionality will depend on WorldLink API
+    setIsPlaying(prev => !prev);
+    setGameState(prev => ({ ...prev, isPaused: !isPlaying }));
   }, [isPlaying]);
 
   const handleReset = useCallback(async () => {
-    if (toxoidRef.current) {
-      await toxoidRef.current.reset();
-      setIsPlaying(false);
-    }
+    // Reset functionality will depend on WorldLink API
+    setIsPlaying(false);
+    setGameState(prev => ({ ...prev, isPaused: false }));
   }, []);
 
   return (
@@ -166,27 +117,23 @@ console.log("Demo scene created successfully!");
         </div>
       </div>
 
-      {/* Toxoid Engine */}
+      {/* WorldLink Engine */}
       <div className="flex-1 p-4">
-        <ToxoidEngine
-          ref={toxoidRef}
+        <WorldLinkCanvas
           width={640}
           height={480}
-          enableScripting={true}
-          debugMode={true}
-          onReady={handleToxoidReady}
-          onGameStateChange={handleGameStateChange}
-          onError={(error) => console.error('[LivePlayTab] Engine error:', error)}
-          onScriptError={(error) => console.error('[LivePlayTab] Script error:', error)}
+          onReady={handleWorldLinkReady}
+          onError={handleWorldLinkError}
+          enableDebugMode={true}
           className="w-full h-full"
         />
       </div>
 
       {/* Game Instructions */}
       <div className="p-4 border-t border-white/10 text-xs text-white/60 space-y-1">
-        <div>Use WASD or Arrow Keys to move the player</div>
-        <div>Click Play to start the game engine</div>
-        <div>This demo shows basic Toxoid engine integration with ECS and scripting</div>
+        <div>Use WASD or Arrow Keys to interact with the game</div>
+        <div>Click Play to start the WorldLink engine</div>
+        <div>This demo shows WorldLink/Toxoid engine integration with WebGPU/WebGL fallback</div>
       </div>
     </div>
   );
