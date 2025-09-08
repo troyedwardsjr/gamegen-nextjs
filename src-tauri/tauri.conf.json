@@ -1,0 +1,108 @@
+{
+  "productName": "GameGen",
+  "version": "1.0.0",
+  "identifier": "com.worldlinkgames.gamegen",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../out"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "GameGen - Pixel Art Game Creator",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "maximized": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "fullscreen": false,
+        "transparent": false,
+        "center": true,
+        "theme": "auto",
+        "titleBarStyle": "visible",
+        "hiddenTitle": false,
+        "acceptFirstMouse": false,
+        "tabbingIdentifier": "main",
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+        "focus": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' data: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: wss: blob: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob: data:; font-src 'self' data:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; worker-src 'self' blob:;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "msi", "deb", "appimage", "dmg"],
+    "category": "DeveloperTool",
+    "copyright": "© 2024 WorldLink Games. All rights reserved.",
+    "shortDescription": "AI-powered pixel art game creation platform",
+    "longDescription": "GameGen revolutionizes game development by combining intuitive pixel art creation tools with AI-powered assistance. Create stunning pixel art games, collaborate with others, and share your creations with the world. Perfect for indie developers, game designers, and creative enthusiasts.",
+    "externalBin": [],
+    "resources": [],
+    "macOS": {
+      "minimumSystemVersion": "10.13"
+    },
+    "windows": {},
+    "linux": {}
+  },
+  "plugins": {
+    "fs": {
+      "all": false,
+      "readFile": true,
+      "writeFile": true,
+      "readDir": true,
+      "copyFile": true,
+      "createDir": true,
+      "removeDir": true,
+      "removeFile": true,
+      "renameFile": true,
+      "exists": true,
+      "scope": ["$DESKTOP", "$DOCUMENTS", "$DOWNLOAD", "$PICTURE", "$VIDEO", "$AUDIO", "$APPDATA", "$APPLOCALDATA", "$APPCACHE", "$APPCONFIG", "$APPLOG"]
+    },
+    "dialog": {
+      "all": false,
+      "open": true,
+      "save": true,
+      "message": true,
+      "ask": true,
+      "confirm": true
+    },
+    "notification": {
+      "all": true
+    },
+    "os": {
+      "all": true
+    },
+    "shell": {
+      "all": false,
+      "open": "^https://|^http://|^mailto:|^tel:"
+    },
+    "http": {
+      "all": false,
+      "request": true,
+      "scope": [
+        "https://**",
+        "http://localhost:3000/**"
+      ]
+    },
+    "clipboard-manager": {
+      "all": false,
+      "readText": true,
+      "writeText": true
+    },
+    "global-shortcut": {
+      "all": true
+    },
+    "process": {
+      "all": false,
+      "exit": true,
+      "relaunch": true
+    }
+  }
+}
