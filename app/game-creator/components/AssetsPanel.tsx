@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { TabSystem, Tab } from "./TabSystem";
+
 import { AssetGrid } from "@/components/assets/AssetGrid";
 import { AssetSearch } from "@/components/assets/AssetSearch";
 import { AssetPreview } from "@/components/assets/AssetPreview";
@@ -13,12 +14,7 @@ import { AssetCollections } from "@/components/assets/AssetCollections";
 import { useAssets } from "@/hooks/useAssets";
 import { useAssetUpload } from "@/hooks/useAssetUpload";
 import { useAssetRecommendations } from "@/hooks/useAssetRecommendations";
-import { 
-  Asset, 
-  AssetSearchQuery, 
-  AssetType 
-} from "@/types/assets";
-
+import { Asset, AssetSearchQuery } from "@/types/assets";
 import {
   GlassmorphicCard,
   GameGenCardPresets,
@@ -30,13 +26,13 @@ import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
 // Features: Virtual scrolling, semantic search, AI recommendations, collections
 
 // Enhanced Sprites & Tilesets tab with AI features
-const SpritesTab = ({ 
-  assets, 
-  loading, 
-  onAssetClick, 
-  onAssetPreview, 
-  selectedAssetIds, 
-  onSelectionChange 
+const SpritesTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
 }: {
   assets: Asset[];
   loading: boolean;
@@ -48,14 +44,16 @@ const SpritesTab = ({
   const [showUpload, setShowUpload] = useState(false);
   const { upload } = useAssetUpload();
 
-  const sprites = useMemo(() => 
-    assets.filter(asset => 
-      asset.type === 'sprite' || asset.type === 'tileset'
-    ), [assets]
+  const sprites = useMemo(
+    () =>
+      assets.filter(
+        (asset) => asset.type === "sprite" || asset.type === "tileset",
+      ),
+    [assets],
   );
 
   const handleUploadComplete = useCallback((results: any[]) => {
-    console.log('Upload completed:', results);
+    console.log("Upload completed:", results);
     setShowUpload(false);
     // Refresh assets would be called here
   }, []);
@@ -71,9 +69,9 @@ const SpritesTab = ({
               {sprites.length} items
             </GlassmorphicBadge>
           </div>
-          <GlassmorphicButton 
-            size="sm" 
-            variant="gaming" 
+          <GlassmorphicButton
+            size="sm"
+            variant="gaming"
             onClick={() => setShowUpload(true)}
           >
             Upload
@@ -85,15 +83,15 @@ const SpritesTab = ({
       <div className="flex-1">
         <AssetGrid
           assets={sprites}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
           loading={loading}
           selectedIds={selectedAssetIds}
+          virtualScrolling={true}
           onAssetClick={onAssetClick}
           onAssetDoubleClick={onAssetPreview}
           onSelectionChange={onSelectionChange}
-          enableSelection={true}
-          enableDragDrop={true}
-          virtualScrolling={true}
-          itemSize="medium"
         />
       </div>
 
@@ -101,25 +99,27 @@ const SpritesTab = ({
       <AnimatePresence>
         {showUpload && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
             onClick={() => setShowUpload(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
               className="w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
             >
               <GlassmorphicCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white/90">Upload Sprites & Tilesets</h3>
-                  <GlassmorphicButton 
-                    size="sm" 
-                    variant="glass-ghost" 
+                  <h3 className="text-lg font-semibold text-white/90">
+                    Upload Sprites & Tilesets
+                  </h3>
+                  <GlassmorphicButton
+                    size="sm"
+                    variant="glass-ghost"
                     onClick={() => setShowUpload(false)}
                   >
                     ×
@@ -127,14 +127,14 @@ const SpritesTab = ({
                 </div>
                 <AssetUpload
                   config={{
-                    allowedFormats: ['png', 'jpg', 'webp', 'gif'],
-                    allowedTypes: ['sprite', 'tileset'],
+                    allowedFormats: ["png", "jpg", "webp", "gif"],
+                    allowedTypes: ["sprite", "tileset"],
                     maxFileSize: 10 * 1024 * 1024, // 10MB
                     autoOptimize: true,
                     generateThumbnail: true,
                   }}
-                  onUploadComplete={handleUploadComplete}
                   multiple={true}
+                  onUploadComplete={handleUploadComplete}
                 />
               </GlassmorphicCard>
             </motion.div>
@@ -146,13 +146,13 @@ const SpritesTab = ({
 };
 
 // Enhanced Audio tab with preview capabilities
-const SoundsTab = ({ 
-  assets, 
-  loading, 
-  onAssetClick, 
-  onAssetPreview, 
-  selectedAssetIds, 
-  onSelectionChange 
+const SoundsTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
 }: {
   assets: Asset[];
   loading: boolean;
@@ -164,14 +164,16 @@ const SoundsTab = ({
   const [showUpload, setShowUpload] = useState(false);
   const { upload } = useAssetUpload();
 
-  const audioAssets = useMemo(() => 
-    assets.filter(asset => 
-      asset.type === 'sound' || asset.type === 'music'
-    ), [assets]
+  const audioAssets = useMemo(
+    () =>
+      assets.filter(
+        (asset) => asset.type === "sound" || asset.type === "music",
+      ),
+    [assets],
   );
 
   const handleUploadComplete = useCallback((results: any[]) => {
-    console.log('Audio upload completed:', results);
+    console.log("Audio upload completed:", results);
     setShowUpload(false);
   }, []);
 
@@ -186,8 +188,8 @@ const SoundsTab = ({
               {audioAssets.length} items
             </GlassmorphicBadge>
           </div>
-          <GlassmorphicButton 
-            size="sm" 
+          <GlassmorphicButton
+            size="sm"
             variant="gaming"
             onClick={() => setShowUpload(true)}
           >
@@ -200,15 +202,15 @@ const SoundsTab = ({
       <div className="flex-1">
         <AssetGrid
           assets={audioAssets}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
           loading={loading}
           selectedIds={selectedAssetIds}
+          virtualScrolling={true}
           onAssetClick={onAssetClick}
           onAssetDoubleClick={onAssetPreview}
           onSelectionChange={onSelectionChange}
-          enableSelection={true}
-          enableDragDrop={true}
-          virtualScrolling={true}
-          itemSize="medium"
         />
       </div>
 
@@ -216,25 +218,27 @@ const SoundsTab = ({
       <AnimatePresence>
         {showUpload && (
           <motion.div
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
             onClick={() => setShowUpload(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
               className="w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
             >
               <GlassmorphicCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white/90">Upload Audio Assets</h3>
-                  <GlassmorphicButton 
-                    size="sm" 
-                    variant="glass-ghost" 
+                  <h3 className="text-lg font-semibold text-white/90">
+                    Upload Audio Assets
+                  </h3>
+                  <GlassmorphicButton
+                    size="sm"
+                    variant="glass-ghost"
                     onClick={() => setShowUpload(false)}
                   >
                     ×
@@ -242,14 +246,14 @@ const SoundsTab = ({
                 </div>
                 <AssetUpload
                   config={{
-                    allowedFormats: ['wav', 'mp3', 'ogg', 'flac'],
-                    allowedTypes: ['sound', 'music'],
+                    allowedFormats: ["wav", "mp3", "ogg", "flac"],
+                    allowedTypes: ["sound", "music"],
                     maxFileSize: 50 * 1024 * 1024, // 50MB
                     autoOptimize: true,
                     extractMetadata: true,
                   }}
-                  onUploadComplete={handleUploadComplete}
                   multiple={true}
+                  onUploadComplete={handleUploadComplete}
                 />
               </GlassmorphicCard>
             </motion.div>
@@ -261,13 +265,13 @@ const SoundsTab = ({
 };
 
 // Enhanced Animations tab
-const AnimationsTab = ({ 
-  assets, 
-  loading, 
-  onAssetClick, 
-  onAssetPreview, 
-  selectedAssetIds, 
-  onSelectionChange 
+const AnimationsTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
 }: {
   assets: Asset[];
   loading: boolean;
@@ -276,8 +280,9 @@ const AnimationsTab = ({
   selectedAssetIds: string[];
   onSelectionChange: (ids: string[]) => void;
 }) => {
-  const animations = useMemo(() => 
-    assets.filter(asset => asset.type === 'animation'), [assets]
+  const animations = useMemo(
+    () => assets.filter((asset) => asset.type === "animation"),
+    [assets],
   );
 
   return (
@@ -301,15 +306,15 @@ const AnimationsTab = ({
       <div className="flex-1">
         <AssetGrid
           assets={animations}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
           loading={loading}
           selectedIds={selectedAssetIds}
+          virtualScrolling={true}
           onAssetClick={onAssetClick}
           onAssetDoubleClick={onAssetPreview}
           onSelectionChange={onSelectionChange}
-          enableSelection={true}
-          enableDragDrop={true}
-          virtualScrolling={true}
-          itemSize="medium"
         />
       </div>
     </div>
@@ -317,37 +322,43 @@ const AnimationsTab = ({
 };
 
 // Enhanced Collections & Search tab
-const CollectionsTab = ({ 
-  selectedCollectionId, 
-  onCollectionSelect 
-}: { 
-  selectedCollectionId?: string; 
-  onCollectionSelect: (id: string) => void; 
+const CollectionsTab = ({
+  selectedCollectionId,
+  onCollectionSelect,
+}: {
+  selectedCollectionId?: string;
+  onCollectionSelect: (id: string) => void;
 }) => {
   return (
     <div className="h-full">
       <AssetCollections
         selectedCollectionId={selectedCollectionId}
+        onCollectionCreate={(data) => console.log("Create collection:", data)}
+        onCollectionDelete={(id) => console.log("Delete collection:", id)}
+        onCollectionEdit={(id, data) =>
+          console.log("Edit collection:", id, data)
+        }
         onCollectionSelect={onCollectionSelect}
-        onCollectionCreate={(data) => console.log('Create collection:', data)}
-        onCollectionEdit={(id, data) => console.log('Edit collection:', id, data)}
-        onCollectionDelete={(id) => console.log('Delete collection:', id)}
-        onCollectionShare={(id) => console.log('Share collection:', id)}
+        onCollectionShare={(id) => console.log("Share collection:", id)}
       />
     </div>
   );
 };
 
 // Smart Search tab with AI features
-const SmartSearchTab = ({ onSearch }: { onSearch: (query: AssetSearchQuery) => void }) => {
+const SmartSearchTab = ({
+  onSearch,
+}: {
+  onSearch: (query: AssetSearchQuery) => void;
+}) => {
   const { recommendations, getRecommendations } = useAssetRecommendations();
 
   useEffect(() => {
     // Get initial recommendations
     getRecommendations({
-      gameGenre: 'action',
-      gameStyle: 'pixel',
-      targetAudience: 'indie',
+      gameGenre: "action",
+      gameStyle: "pixel",
+      targetAudience: "indie",
     });
   }, [getRecommendations]);
 
@@ -356,21 +367,31 @@ const SmartSearchTab = ({ onSearch }: { onSearch: (query: AssetSearchQuery) => v
       {/* Advanced Search */}
       <div className="flex-shrink-0">
         <AssetSearch
-          onSearch={onSearch}
-          onClear={() => console.log('Clear search')}
-          suggestions={['cyberpunk theme', 'character sprites', 'background music']}
           loading={false}
           resultCount={0}
+          suggestions={[
+            "cyberpunk theme",
+            "character sprites",
+            "background music",
+          ]}
+          onClear={() => console.log("Clear search")}
+          onSearch={onSearch}
         />
       </div>
 
       {/* AI Recommendations */}
       {recommendations.length > 0 && (
         <div className="flex-1 space-y-3">
-          <h3 className="text-sm font-semibold text-white/90">AI Recommendations</h3>
+          <h3 className="text-sm font-semibold text-white/90">
+            AI Recommendations
+          </h3>
           <div className="space-y-2">
             {recommendations.slice(0, 5).map((rec) => (
-              <GlassmorphicCard key={rec.assetId} className="p-3" variant="subtle">
+              <GlassmorphicCard
+                key={rec.assetId}
+                className="p-3"
+                variant="subtle"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="text-sm font-medium text-white/90">
@@ -408,34 +429,42 @@ export function AssetsPanel() {
   const [activeTab, setActiveTab] = useState("sprites");
   const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | undefined>('system-all');
-  
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | undefined
+  >("system-all");
+
   // Hooks
   const { assets, loading, search, error } = useAssets();
   const { recommendations, getRecommendations } = useAssetRecommendations();
 
   // Handlers
   const handleAssetClick = useCallback((asset: Asset) => {
-    console.log('Asset clicked:', asset);
+    console.log("Asset clicked:", asset);
   }, []);
 
   const handleAssetPreview = useCallback((asset: Asset) => {
     setPreviewAsset(asset);
   }, []);
 
-  const handleSearch = useCallback((query: AssetSearchQuery) => {
-    search(query);
-  }, [search]);
+  const handleSearch = useCallback(
+    (query: AssetSearchQuery) => {
+      search(query);
+    },
+    [search],
+  );
 
   const handleSelectionChange = useCallback((ids: string[]) => {
     setSelectedAssetIds(ids);
   }, []);
 
-  const handleCollectionSelect = useCallback((collectionId: string) => {
-    setSelectedCollectionId(collectionId);
-    // Filter assets by collection
-    search({ collections: [collectionId] });
-  }, [search]);
+  const handleCollectionSelect = useCallback(
+    (collectionId: string) => {
+      setSelectedCollectionId(collectionId);
+      // Filter assets by collection
+      search({ collections: [collectionId] });
+    },
+    [search],
+  );
 
   // Tab configuration
   const tabs: Tab[] = [
@@ -449,13 +478,14 @@ export function AssetsPanel() {
         <SpritesTab
           assets={assets}
           loading={loading}
+          selectedAssetIds={selectedAssetIds}
           onAssetClick={handleAssetClick}
           onAssetPreview={handleAssetPreview}
-          selectedAssetIds={selectedAssetIds}
           onSelectionChange={handleSelectionChange}
         />
       ),
-      badge: assets.filter(a => a.type === 'sprite' || a.type === 'tileset').length,
+      badge: assets.filter((a) => a.type === "sprite" || a.type === "tileset")
+        .length,
     },
     {
       id: "audio",
@@ -467,13 +497,14 @@ export function AssetsPanel() {
         <SoundsTab
           assets={assets}
           loading={loading}
+          selectedAssetIds={selectedAssetIds}
           onAssetClick={handleAssetClick}
           onAssetPreview={handleAssetPreview}
-          selectedAssetIds={selectedAssetIds}
           onSelectionChange={handleSelectionChange}
         />
       ),
-      badge: assets.filter(a => a.type === 'sound' || a.type === 'music').length,
+      badge: assets.filter((a) => a.type === "sound" || a.type === "music")
+        .length,
     },
     {
       id: "animations",
@@ -485,13 +516,13 @@ export function AssetsPanel() {
         <AnimationsTab
           assets={assets}
           loading={loading}
+          selectedAssetIds={selectedAssetIds}
           onAssetClick={handleAssetClick}
           onAssetPreview={handleAssetPreview}
-          selectedAssetIds={selectedAssetIds}
           onSelectionChange={handleSelectionChange}
         />
       ),
-      badge: assets.filter(a => a.type === 'animation').length,
+      badge: assets.filter((a) => a.type === "animation").length,
     },
     {
       id: "collections",
@@ -529,10 +560,10 @@ export function AssetsPanel() {
           viewBox="0 0 24 24"
         >
           <path
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
       ),
@@ -543,7 +574,10 @@ export function AssetsPanel() {
 
   return (
     <>
-      <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="h-full">
+      <GlassmorphicCard
+        {...GameGenCardPresets.floatingPanel}
+        className="h-full"
+      >
         <TabSystem
           activeTab={activeTab}
           className="h-full"
@@ -558,17 +592,17 @@ export function AssetsPanel() {
       {/* Asset Preview Modal */}
       <AssetPreview
         asset={previewAsset}
+        enablePlayback={true}
+        enableZoom={true}
         isOpen={!!previewAsset}
-        onClose={() => setPreviewAsset(null)}
-        onEdit={(asset) => console.log('Edit asset:', asset)}
-        onDelete={(asset) => console.log('Delete asset:', asset)}
-        onDownload={(asset) => console.log('Download asset:', asset)}
-        onAddToCollection={(asset) => console.log('Add to collection:', asset)}
+        showAIInfo={true}
         showMetadata={true}
         showUsage={true}
-        showAIInfo={true}
-        enableZoom={true}
-        enablePlayback={true}
+        onAddToCollection={(asset) => console.log("Add to collection:", asset)}
+        onClose={() => setPreviewAsset(null)}
+        onDelete={(asset) => console.log("Delete asset:", asset)}
+        onDownload={(asset) => console.log("Download asset:", asset)}
+        onEdit={(asset) => console.log("Edit asset:", asset)}
       />
     </>
   );

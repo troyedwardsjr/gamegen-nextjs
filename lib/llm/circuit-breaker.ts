@@ -255,9 +255,11 @@ export class CircuitBreakerManager {
   getAllMetrics(): Record<string, CircuitBreakerMetrics> {
     const metrics: Record<string, CircuitBreakerMetrics> = {};
 
-    Array.from(this.circuitBreakers.entries()).forEach(([providerId, circuitBreaker]) => {
-      metrics[providerId] = circuitBreaker.getMetrics();
-    });
+    Array.from(this.circuitBreakers.entries()).forEach(
+      ([providerId, circuitBreaker]) => {
+        metrics[providerId] = circuitBreaker.getMetrics();
+      },
+    );
 
     return metrics;
   }
@@ -314,16 +316,18 @@ export class CircuitBreakerManager {
   getUnhealthyProviders(): string[] {
     const unhealthy: string[] = [];
 
-    Array.from(this.circuitBreakers.entries()).forEach(([providerId, circuitBreaker]) => {
-      const state = circuitBreaker.getState();
+    Array.from(this.circuitBreakers.entries()).forEach(
+      ([providerId, circuitBreaker]) => {
+        const state = circuitBreaker.getState();
 
-      if (
-        state === CircuitBreakerState.OPEN ||
-        state === CircuitBreakerState.HALF_OPEN
-      ) {
-        unhealthy.push(providerId);
-      }
-    });
+        if (
+          state === CircuitBreakerState.OPEN ||
+          state === CircuitBreakerState.HALF_OPEN
+        ) {
+          unhealthy.push(providerId);
+        }
+      },
+    );
 
     return unhealthy;
   }
@@ -333,7 +337,7 @@ export class CircuitBreakerManager {
    */
   hasAvailableProviders(): boolean {
     return Array.from(this.circuitBreakers.values()).some((circuitBreaker) =>
-      circuitBreaker.canExecute()
+      circuitBreaker.canExecute(),
     );
   }
 }

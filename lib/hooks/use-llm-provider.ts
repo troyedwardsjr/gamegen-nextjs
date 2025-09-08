@@ -12,11 +12,11 @@ import type {
   ProviderConfiguration,
   ProviderMetrics,
 } from "@/lib/llm/types";
-import { ProviderHealthStatus } from "@/lib/llm/types";
 import type { LLMSystemConfig } from "@/lib/llm/config";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
+import { ProviderHealthStatus } from "@/lib/llm/types";
 import { createClient } from "@/lib/supabase/client";
 
 export interface UseLLMProviderOptions {

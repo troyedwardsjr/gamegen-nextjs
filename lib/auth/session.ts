@@ -547,26 +547,38 @@ export class SessionManager {
   /**
    * Reset password for email
    */
-  async resetPasswordForEmail(email: string, options?: { redirectTo?: string }) {
+  async resetPasswordForEmail(
+    email: string,
+    options?: { redirectTo?: string },
+  ) {
     return this.supabase.auth.resetPasswordForEmail(email, options);
   }
 
   /**
    * Update user data
    */
-  async updateUser(attributes: { password?: string; email?: string; data?: object }) {
+  async updateUser(attributes: {
+    password?: string;
+    email?: string;
+    data?: object;
+  }) {
     return this.supabase.auth.updateUser(attributes);
   }
 
   /**
    * Resend verification email
    */
-  async resend(options: { type: "signup" | "recovery"; email?: string; phone?: string }) {
+  async resend(options: {
+    type: "signup" | "recovery";
+    email?: string;
+    phone?: string;
+  }) {
     if (options.type === "recovery") {
       // For password recovery, we need to use resetPasswordForEmail
       if (!options.email) {
         throw new Error("Email is required for password recovery");
       }
+
       return this.supabase.auth.resetPasswordForEmail(options.email);
     } else {
       // For signup verification

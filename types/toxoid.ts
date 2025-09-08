@@ -66,7 +66,12 @@ export interface ToxoidWasmModule {
   _cleanup: () => void;
   _update: (deltaTime: number) => void;
   _render: () => void;
-  ccall: (func: string, returnType: string, argTypes: string[], args: any[]) => any;
+  ccall: (
+    func: string,
+    returnType: string,
+    argTypes: string[],
+    args: any[],
+  ) => any;
   cwrap: (func: string, returnType: string, argTypes: string[]) => Function;
   HEAPU8: Uint8Array;
   HEAP32: Int32Array;
@@ -162,9 +167,9 @@ export interface MouseInputSingleton {
   rightButton: boolean;
   middleButton: boolean;
   wheelDelta: number;
-  isButtonPressed: (button: 'left' | 'right' | 'middle') => boolean;
-  isButtonJustPressed: (button: 'left' | 'right' | 'middle') => boolean;
-  isButtonJustReleased: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonPressed: (button: "left" | "right" | "middle") => boolean;
+  isButtonJustPressed: (button: "left" | "right" | "middle") => boolean;
+  isButtonJustReleased: (button: "left" | "right" | "middle") => boolean;
 }
 
 export interface GamepadInput extends ComponentData {

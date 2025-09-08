@@ -71,11 +71,14 @@ export async function GET(request: NextRequest) {
       .eq("is_public", true);
 
     const categories =
-      categoryCounts?.reduce((acc: Record<string, number>, { category }: any) => {
-        acc[category] = (acc[category] || 0) + 1;
+      categoryCounts?.reduce(
+        (acc: Record<string, number>, { category }: any) => {
+          acc[category] = (acc[category] || 0) + 1;
 
-        return acc;
-      }, {}) || {};
+          return acc;
+        },
+        {},
+      ) || {};
 
     return NextResponse.json({
       templates: templates || [],

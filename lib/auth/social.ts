@@ -282,14 +282,17 @@ export class SocialAuthManager {
       }
 
       // Get current user to find their identities
-      const { data: { user } } = await this.supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser();
+
       if (!user) {
         return false;
       }
 
       // Find the identity for this provider
       const identity = user.identities?.find(
-        (identity) => identity.provider === providerConfig.provider
+        (identity) => identity.provider === providerConfig.provider,
       );
 
       if (!identity) {
@@ -300,6 +303,7 @@ export class SocialAuthManager {
 
       if (error) {
         console.error(`${providerName} unlinking error:`, error);
+
         return false;
       }
 

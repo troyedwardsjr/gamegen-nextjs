@@ -71,11 +71,17 @@ export function LLMDashboard() {
       const aggregatedMetrics: LLMMetrics = {
         total_requests: requests?.length || 0,
         total_tokens:
-          requests?.reduce((sum: number, r: any) => sum + (r.tokens_used || 0), 0) || 0,
-        total_cost: requests?.reduce((sum: number, r: any) => sum + (r.cost || 0), 0) || 0,
+          requests?.reduce(
+            (sum: number, r: any) => sum + (r.tokens_used || 0),
+            0,
+          ) || 0,
+        total_cost:
+          requests?.reduce((sum: number, r: any) => sum + (r.cost || 0), 0) ||
+          0,
         success_rate: calculateSuccessRate(requests || []),
         avg_response_time: calculateAvgResponseTime(requests || []),
-        errors_today: requests?.filter((r: any) => r.status === "error").length || 0,
+        errors_today:
+          requests?.filter((r: any) => r.status === "error").length || 0,
         requests_by_provider: groupByProvider(requests || [], "count"),
         tokens_by_provider: groupByProvider(requests || [], "tokens"),
         hourly_requests: calculateHourlyRequests(requests || []),

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
-import { AssetCollection, Asset } from "@/types/assets";
+import { AssetCollection } from "@/types/assets";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
@@ -129,6 +129,7 @@ const CollectionItem = ({
     if (collection.isSystem) {
       return SYSTEM_ICONS[collection.id] || "📁";
     }
+
     return collection.icon || "📂";
   };
 
@@ -146,17 +147,20 @@ const CollectionItem = ({
       <GlassmorphicCard
         className={clsx(
           "relative cursor-pointer transition-all duration-200 p-4",
-          isSelected && "ring-2 ring-purple-400/60 bg-purple-500/10"
+          isSelected && "ring-2 ring-purple-400/60 bg-purple-500/10",
         )}
-        variant="subtle"
         hover={true}
+        variant="subtle"
         onClick={onClick}
       >
         {/* Collection Icon and Info */}
         <div className="flex items-start space-x-3">
           <div
             className="w-12 h-12 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
-            style={{ backgroundColor: `${getColor()}20`, border: `1px solid ${getColor()}40` }}
+            style={{
+              backgroundColor: `${getColor()}20`,
+              border: `1px solid ${getColor()}40`,
+            }}
           >
             <span>{getIcon()}</span>
           </div>
@@ -184,8 +188,18 @@ const CollectionItem = ({
                         onShare();
                       }}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                        />
                       </svg>
                     </GlassmorphicButton>
                   )}
@@ -198,8 +212,18 @@ const CollectionItem = ({
                         onEdit();
                       }}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                        />
                       </svg>
                     </GlassmorphicButton>
                   )}
@@ -212,8 +236,18 @@ const CollectionItem = ({
                         onDelete();
                       }}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                        />
                       </svg>
                     </GlassmorphicButton>
                   )}
@@ -298,10 +332,10 @@ const CollectionModal = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
         className="w-full max-w-md"
+        exit={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.9 }}
       >
         <GlassmorphicCard className="p-6">
           <div className="space-y-4">
@@ -309,7 +343,11 @@ const CollectionModal = ({
               <h2 className="text-xl font-semibold text-white/90">
                 {collection ? "Edit Collection" : "Create Collection"}
               </h2>
-              <GlassmorphicButton size="sm" variant="glass-ghost" onClick={onClose}>
+              <GlassmorphicButton
+                size="sm"
+                variant="glass-ghost"
+                onClick={onClose}
+              >
                 ×
               </GlassmorphicButton>
             </div>
@@ -320,10 +358,12 @@ const CollectionModal = ({
                 Collection Name
               </label>
               <GlassmorphicInput
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter collection name..."
                 className="w-full"
+                placeholder="Enter collection name..."
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
               />
             </div>
 
@@ -333,11 +373,16 @@ const CollectionModal = ({
                 Description
               </label>
               <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/50"
                 placeholder="Describe your collection..."
                 rows={3}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/50"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
               />
             </div>
 
@@ -347,16 +392,31 @@ const CollectionModal = ({
                 Icon
               </label>
               <div className="grid grid-cols-6 gap-2">
-                {["📂", "🎨", "🧱", "🔊", "🎵", "🎬", "⭐", "🔥", "💎", "🌟", "🎯", "🚀"].map((emoji) => (
+                {[
+                  "📂",
+                  "🎨",
+                  "🧱",
+                  "🔊",
+                  "🎵",
+                  "🎬",
+                  "⭐",
+                  "🔥",
+                  "💎",
+                  "🌟",
+                  "🎯",
+                  "🚀",
+                ].map((emoji) => (
                   <button
                     key={emoji}
-                    onClick={() => setFormData(prev => ({ ...prev, icon: emoji }))}
                     className={clsx(
                       "w-10 h-10 rounded-lg flex items-center justify-center text-lg transition-colors",
                       formData.icon === emoji
                         ? "bg-purple-500/30 border-2 border-purple-400"
-                        : "bg-white/10 hover:bg-white/20 border border-white/20"
+                        : "bg-white/10 hover:bg-white/20 border border-white/20",
                     )}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, icon: emoji }))
+                    }
                   >
                     {emoji}
                   </button>
@@ -373,12 +433,13 @@ const CollectionModal = ({
                 {COLLECTION_COLORS.map((color) => (
                   <button
                     key={color}
-                    onClick={() => setFormData(prev => ({ ...prev, color }))}
                     className={clsx(
                       "w-8 h-8 rounded-full transition-transform",
-                      formData.color === color && "ring-2 ring-white/50 scale-110"
+                      formData.color === color &&
+                        "ring-2 ring-white/50 scale-110",
                     )}
                     style={{ backgroundColor: color }}
+                    onClick={() => setFormData((prev) => ({ ...prev, color }))}
                   />
                 ))}
               </div>
@@ -387,20 +448,26 @@ const CollectionModal = ({
             {/* Public Toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-white/80">Make Public</label>
-                <p className="text-xs text-white/60">Allow others to discover this collection</p>
+                <label className="text-sm font-medium text-white/80">
+                  Make Public
+                </label>
+                <p className="text-xs text-white/60">
+                  Allow others to discover this collection
+                </p>
               </div>
               <button
-                onClick={() => setFormData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
                 className={clsx(
                   "relative w-11 h-6 rounded-full transition-colors",
-                  formData.isPublic ? "bg-purple-500" : "bg-white/20"
+                  formData.isPublic ? "bg-purple-500" : "bg-white/20",
                 )}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, isPublic: !prev.isPublic }))
+                }
               >
                 <div
                   className={clsx(
                     "absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform",
-                    formData.isPublic ? "translate-x-5" : "translate-x-0.5"
+                    formData.isPublic ? "translate-x-5" : "translate-x-0.5",
                   )}
                 />
               </button>
@@ -408,14 +475,18 @@ const CollectionModal = ({
 
             {/* Actions */}
             <div className="flex space-x-3 pt-4">
-              <GlassmorphicButton variant="glass" onClick={onClose} className="flex-1">
+              <GlassmorphicButton
+                className="flex-1"
+                variant="glass"
+                onClick={onClose}
+              >
                 Cancel
               </GlassmorphicButton>
-              <GlassmorphicButton 
-                variant="gaming" 
-                onClick={handleSave}
+              <GlassmorphicButton
                 className="flex-1"
                 disabled={!formData.name.trim()}
+                variant="gaming"
+                onClick={handleSave}
               >
                 {collection ? "Save Changes" : "Create Collection"}
               </GlassmorphicButton>
@@ -446,25 +517,32 @@ export function AssetCollections({
   onCollectionShare,
   className,
 }: AssetCollectionsProps) {
-  const [collections, setCollections] = useState<AssetCollection[]>(mockCollections);
+  const [collections, setCollections] =
+    useState<AssetCollection[]>(mockCollections);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<AssetCollection | null>(null);
+  const [editingCollection, setEditingCollection] =
+    useState<AssetCollection | null>(null);
 
   // Filter collections based on search
   const filteredCollections = useMemo(() => {
     if (!searchTerm.trim()) return collections;
-    
-    return collections.filter(collection =>
-      collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collection.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collection.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+
+    return collections.filter(
+      (collection) =>
+        collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        collection.description
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        collection.tags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase()),
+        ),
     );
   }, [collections, searchTerm]);
 
   // Separate system and user collections
-  const systemCollections = filteredCollections.filter(c => c.isSystem);
-  const userCollections = filteredCollections.filter(c => !c.isSystem);
+  const systemCollections = filteredCollections.filter((c) => c.isSystem);
+  const userCollections = filteredCollections.filter((c) => !c.isSystem);
 
   const handleCreateCollection = useCallback(() => {
     setEditingCollection(null);
@@ -476,53 +554,71 @@ export function AssetCollections({
     setShowModal(true);
   }, []);
 
-  const handleSaveCollection = useCallback((data: Partial<AssetCollection>) => {
-    if (editingCollection) {
-      // Edit existing collection
-      const updated = { ...editingCollection, ...data, updatedAt: new Date() };
-      setCollections(prev => prev.map(c => c.id === editingCollection.id ? updated : c));
-      onCollectionEdit?.(editingCollection.id, data);
-    } else {
-      // Create new collection
-      const newCollection: AssetCollection = {
-        id: `user-${Date.now()}`,
-        ...data,
-        isSystem: false,
-        ownerId: "user-1",
-        assetIds: [],
-        tags: data.tags || [],
-        isPublic: data.isPublic || false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        assetCount: 0,
-      } as AssetCollection;
-      
-      setCollections(prev => [...prev, newCollection]);
-      onCollectionCreate?.(newCollection);
-    }
-  }, [editingCollection, onCollectionCreate, onCollectionEdit]);
+  const handleSaveCollection = useCallback(
+    (data: Partial<AssetCollection>) => {
+      if (editingCollection) {
+        // Edit existing collection
+        const updated = {
+          ...editingCollection,
+          ...data,
+          updatedAt: new Date(),
+        };
 
-  const handleDeleteCollection = useCallback((id: string) => {
-    if (confirm("Are you sure you want to delete this collection?")) {
-      setCollections(prev => prev.filter(c => c.id !== id));
-      onCollectionDelete?.(id);
-      
-      // Select first available collection if deleted collection was selected
-      if (selectedCollectionId === id) {
-        const remaining = collections.filter(c => c.id !== id);
-        if (remaining.length > 0) {
-          onCollectionSelect(remaining[0].id);
+        setCollections((prev) =>
+          prev.map((c) => (c.id === editingCollection.id ? updated : c)),
+        );
+        onCollectionEdit?.(editingCollection.id, data);
+      } else {
+        // Create new collection
+        const newCollection: AssetCollection = {
+          id: `user-${Date.now()}`,
+          ...data,
+          isSystem: false,
+          ownerId: "user-1",
+          assetIds: [],
+          tags: data.tags || [],
+          isPublic: data.isPublic || false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          assetCount: 0,
+        } as AssetCollection;
+
+        setCollections((prev) => [...prev, newCollection]);
+        onCollectionCreate?.(newCollection);
+      }
+    },
+    [editingCollection, onCollectionCreate, onCollectionEdit],
+  );
+
+  const handleDeleteCollection = useCallback(
+    (id: string) => {
+      if (confirm("Are you sure you want to delete this collection?")) {
+        setCollections((prev) => prev.filter((c) => c.id !== id));
+        onCollectionDelete?.(id);
+
+        // Select first available collection if deleted collection was selected
+        if (selectedCollectionId === id) {
+          const remaining = collections.filter((c) => c.id !== id);
+
+          if (remaining.length > 0) {
+            onCollectionSelect(remaining[0].id);
+          }
         }
       }
-    }
-  }, [collections, selectedCollectionId, onCollectionSelect, onCollectionDelete]);
+    },
+    [collections, selectedCollectionId, onCollectionSelect, onCollectionDelete],
+  );
 
   return (
     <div className={clsx("space-y-4", className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white/90">Collections</h2>
-        <GlassmorphicButton size="sm" variant="gaming" onClick={handleCreateCollection}>
+        <GlassmorphicButton
+          size="sm"
+          variant="gaming"
+          onClick={handleCreateCollection}
+        >
           + New
         </GlassmorphicButton>
       </div>
@@ -530,23 +626,25 @@ export function AssetCollections({
       {/* Search */}
       <GlassmorphicInput
         placeholder="Search collections..."
+        size="sm"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        size="sm"
       />
 
       {/* System Collections */}
       {systemCollections.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-white/70 px-2">Quick Access</h3>
+          <h3 className="text-sm font-medium text-white/70 px-2">
+            Quick Access
+          </h3>
           <div className="space-y-2">
             {systemCollections.map((collection) => (
               <CollectionItem
                 key={collection.id}
                 collection={collection}
                 isSelected={selectedCollectionId === collection.id}
-                onClick={() => onCollectionSelect(collection.id)}
                 showOptions={false}
+                onClick={() => onCollectionSelect(collection.id)}
               />
             ))}
           </div>
@@ -556,18 +654,24 @@ export function AssetCollections({
       {/* User Collections */}
       {userCollections.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-white/70 px-2">My Collections</h3>
+          <h3 className="text-sm font-medium text-white/70 px-2">
+            My Collections
+          </h3>
           <div className="space-y-2">
             {userCollections.map((collection) => (
               <CollectionItem
                 key={collection.id}
                 collection={collection}
                 isSelected={selectedCollectionId === collection.id}
-                onClick={() => onCollectionSelect(collection.id)}
-                onEdit={() => handleEditCollection(collection)}
-                onDelete={() => handleDeleteCollection(collection.id)}
-                onShare={onCollectionShare ? () => onCollectionShare(collection.id) : undefined}
                 showOptions={true}
+                onClick={() => onCollectionSelect(collection.id)}
+                onDelete={() => handleDeleteCollection(collection.id)}
+                onEdit={() => handleEditCollection(collection)}
+                onShare={
+                  onCollectionShare
+                    ? () => onCollectionShare(collection.id)
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -582,13 +686,15 @@ export function AssetCollections({
             {searchTerm ? "No collections found" : "No collections yet"}
           </h3>
           <p className="text-sm text-white/60 mb-4">
-            {searchTerm 
-              ? "Try adjusting your search terms" 
-              : "Create your first collection to organize your assets"
-            }
+            {searchTerm
+              ? "Try adjusting your search terms"
+              : "Create your first collection to organize your assets"}
           </p>
           {!searchTerm && (
-            <GlassmorphicButton variant="gaming" onClick={handleCreateCollection}>
+            <GlassmorphicButton
+              variant="gaming"
+              onClick={handleCreateCollection}
+            >
               Create Collection
             </GlassmorphicButton>
           )}

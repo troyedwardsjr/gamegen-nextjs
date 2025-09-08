@@ -288,7 +288,9 @@ export class BillingTracker {
     const currentBalance = await this.getCreditBalance(userId);
     const newBalance = currentBalance.balance + amount;
 
-    const { data, error } = await (await this.supabase)
+    const { data, error } = await (
+      await this.supabase
+    )
       .from("user_credit_balances")
       .upsert({
         user_id: userId,
@@ -393,7 +395,9 @@ export class BillingTracker {
     limit: number = 100,
     offset: number = 0,
   ): Promise<{ records: BillingRecord[]; total_count: number }> {
-    const { data, error, count } = await (await this.supabase)
+    const { data, error, count } = await (
+      await this.supabase
+    )
       .from("llm_billing_records")
       .select("*", { count: "exact" })
       .eq("user_id", userId)
@@ -465,7 +469,9 @@ export class BillingTracker {
     const newBalance = currentBalance.balance - amount;
     const newReserved = Math.max(0, currentBalance.reserved - amount);
 
-    const { error } = await (await this.supabase)
+    const { error } = await (
+      await this.supabase
+    )
       .from("user_credit_balances")
       .update({
         balance: newBalance,
@@ -505,7 +511,9 @@ export class BillingTracker {
     const currentBalance = await this.getCreditBalance(userId);
     const newReserved = Math.max(0, currentBalance.reserved + amount);
 
-    const { error } = await (await this.supabase)
+    const { error } = await (
+      await this.supabase
+    )
       .from("user_credit_balances")
       .update({
         reserved: newReserved,
@@ -540,14 +548,16 @@ export class BillingTracker {
     type: "credit" | "debit",
     source: string,
   ): Promise<void> {
-    const { error } = await (await this.supabase).from("credit_transactions").insert({
-      id: this.generateTransactionId(),
-      user_id: userId,
-      amount,
-      type,
-      source,
-      timestamp: new Date().toISOString(),
-    });
+    const { error } = await (await this.supabase)
+      .from("credit_transactions")
+      .insert({
+        id: this.generateTransactionId(),
+        user_id: userId,
+        amount,
+        type,
+        source,
+        timestamp: new Date().toISOString(),
+      });
 
     if (error) {
       console.error(

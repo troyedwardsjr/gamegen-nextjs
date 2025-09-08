@@ -235,7 +235,10 @@ async function calculateAchievementProgress(
           .eq("creator_id", userId);
 
         const totalLikes =
-          games?.reduce((sum: number, game: any) => sum + (game.like_count || 0), 0) || 0;
+          games?.reduce(
+            (sum: number, game: any) => sum + (game.like_count || 0),
+            0,
+          ) || 0;
 
         return Math.min(100, (totalLikes / conditions.threshold) * 100);
       }

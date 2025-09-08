@@ -54,6 +54,7 @@ export class MFAManager {
         // SMS MFA requires a phone number
         if (!phoneNumber) {
           console.error("Phone number is required for SMS MFA");
+
           return false;
         }
 
@@ -66,6 +67,7 @@ export class MFAManager {
 
         if (error) {
           console.error("MFA enrollment error:", error);
+
           return false;
         }
 
@@ -82,6 +84,7 @@ export class MFAManager {
         // Email MFA is not directly supported by Supabase Auth
         // This would need to be implemented as a custom solution
         console.warn("Email MFA is not supported by Supabase Auth API");
+
         return false;
       }
 
@@ -445,16 +448,18 @@ export class MFAManager {
     userId: string,
     config: MFAConfiguration,
   ): Promise<void> {
-    const { error } = await (this.supabase as any).from("mfa_configurations").upsert({
-      user_id: userId,
-      enabled: config.enabled,
-      methods: config.methods,
-      backup_codes: config.backup_codes,
-      enforce_for_tier: config.enforce_for_tier,
-      last_verified: config.last_verified?.toISOString(),
-      totp_secret: config.totp_secret,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await (this.supabase as any)
+      .from("mfa_configurations")
+      .upsert({
+        user_id: userId,
+        enabled: config.enabled,
+        methods: config.methods,
+        backup_codes: config.backup_codes,
+        enforce_for_tier: config.enforce_for_tier,
+        last_verified: config.last_verified?.toISOString(),
+        totp_secret: config.totp_secret,
+        updated_at: new Date().toISOString(),
+      });
 
     if (error) {
       console.error("Error updating MFA configuration:", error);

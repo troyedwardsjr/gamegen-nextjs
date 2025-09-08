@@ -472,8 +472,10 @@ export class AccountSecurityManager {
 
       // Clean up expired lockouts
       const entries = Array.from(securityState.lockedAccounts.entries());
+
       for (let i = 0; i < entries.length; i++) {
         const [key, lockInfo] = entries[i];
+
         if (now >= lockInfo.lockedUntil) {
           securityState.lockedAccounts.delete(key);
         }
@@ -482,9 +484,13 @@ export class AccountSecurityManager {
       // Clean up old failed attempts
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
 
-      const attemptsEntries = Array.from(securityState.failedAttempts.entries());
+      const attemptsEntries = Array.from(
+        securityState.failedAttempts.entries(),
+      );
+
       for (let i = 0; i < attemptsEntries.length; i++) {
         const [key, attempts] = attemptsEntries[i];
+
         attempts.attempts = attempts.attempts.filter(
           (attempt) => attempt > cutoff,
         );

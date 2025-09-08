@@ -72,8 +72,10 @@ class MemoryStore {
     const now = Date.now();
 
     const entries = Array.from(this.store.entries());
+
     for (let i = 0; i < entries.length; i++) {
       const [key, entry] = entries[i];
+
       if (now > entry.reset) {
         this.store.delete(key);
       }
@@ -344,6 +346,7 @@ export class SlidingWindowRateLimiter {
     const windowMs = this.config.window * 1000;
 
     const entries = Array.from(this.windows.entries());
+
     for (let i = 0; i < entries.length; i++) {
       const [key, timestamps] = entries[i];
       const validTimestamps = timestamps.filter(

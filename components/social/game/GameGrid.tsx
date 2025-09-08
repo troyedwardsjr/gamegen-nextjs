@@ -206,9 +206,7 @@ export function GameGrid({
           case "featured":
             return game.is_featured;
           case "educational":
-            return (
-                            game.tags?.includes("educational")
-            );
+            return game.tags?.includes("educational");
           case "arcade":
             return game.tags?.includes("arcade");
           case "puzzle":
@@ -216,9 +214,7 @@ export function GameGrid({
           case "rpg":
             return game.tags?.includes("rpg");
           case "strategy":
-            return (
-              game.tags?.includes("strategy")
-            );
+            return game.tags?.includes("strategy");
           default:
             return true;
         }

@@ -46,7 +46,9 @@ export async function GET(
     let messages = null;
 
     if (includeMessages) {
-      const { data: messagesData, error: messagesError } = await (supabase as any)
+      const { data: messagesData, error: messagesError } = await (
+        supabase as any
+      )
         .from("chat_messages")
         .select("*")
         .eq("session_id", sessionId)
