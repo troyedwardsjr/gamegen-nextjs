@@ -113,7 +113,7 @@ describe('Auth Utils', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Password must be at least 8 characters long');
       expect(result.errors.some(error => 
-        error.includes('must contain at least 3 of these 4 types')
+        error.includes('must contain all of these 4 types')
       )).toBe(true);
     });
 

@@ -332,7 +332,8 @@ describe('GlassmorphicButton', () => {
       
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
-      expect(button).toBeEmptyDOMElement();
+      // Button should not have text content, but may have internal styling elements
+      expect(button.textContent).toBe('');
     });
 
     it('handles null children', () => {

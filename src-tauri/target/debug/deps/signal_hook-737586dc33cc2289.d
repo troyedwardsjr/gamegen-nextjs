@@ -1,9 +1,0 @@
-/Users/troyedwards/dev/gamegen_nextjs/src-tauri/target/debug/deps/signal_hook-737586dc33cc2289.d: /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/lib.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/flag.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/mod.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/pipe.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/signal_details.rs
-
-/Users/troyedwards/dev/gamegen_nextjs/src-tauri/target/debug/deps/libsignal_hook-737586dc33cc2289.rmeta: /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/lib.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/flag.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/mod.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/pipe.rs /Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/signal_details.rs
-
-/Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/lib.rs:
-/Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/flag.rs:
-/Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/mod.rs:
-/Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/pipe.rs:
-/Users/troyedwards/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signal-hook-0.3.18/src/low_level/signal_details.rs:
