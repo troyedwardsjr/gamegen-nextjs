@@ -7,17 +7,15 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Button,
-  Select,
-  SelectItem,
-  Switch,
-  Input,
-  Card,
-  CardBody,
-  Progress,
-  Chip,
-  Divider,
-} from '@heroui/react';
+} from '@heroui/modal';
+import { Button } from '@heroui/button';
+import { Select, SelectItem } from '@heroui/select';
+import { Switch } from '@heroui/switch';
+import { Input } from '@heroui/input';
+import { Card, CardBody } from '@heroui/card';
+import { Progress } from '@heroui/progress';
+import { Chip } from '@heroui/chip';
+import { Divider } from '@heroui/divider';
 import { Download, FolderOpen, Settings, Package, Zap } from 'lucide-react';
 import { useDesktop, useDesktopExport } from '@/hooks/useDesktop';
 import type { ExportOptions } from '@/lib/desktop/api';
@@ -287,7 +285,6 @@ export const DesktopExportDialog: React.FC<DesktopExportDialogProps> = ({
                   {PLATFORM_TARGETS.map((platform) => (
                     <SelectItem
                       key={platform.value}
-                      value={platform.value}
                       startContent={<span className="text-lg">{platform.icon}</span>}
                     >
                       {platform.label}
@@ -309,7 +306,7 @@ export const DesktopExportDialog: React.FC<DesktopExportDialogProps> = ({
                     placeholder="Select optimization level"
                   >
                     {OPTIMIZATION_LEVELS.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
+                      <SelectItem key={level.value}>
                         <div>
                           <div className="font-medium">{level.label}</div>
                           <div className="text-sm text-default-500">{level.description}</div>

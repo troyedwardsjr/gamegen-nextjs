@@ -1,15 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardBody,
-  Switch,
-  Button,
-  Divider,
-  Progress,
-  Badge,
-} from '@heroui/react';
+import { Card, CardBody } from '@heroui/card';
+import { Switch } from '@heroui/switch';
+import { Button } from '@heroui/button';
+import { Divider } from '@heroui/divider';
+import { Progress } from '@heroui/progress';
+import { Badge } from '@heroui/badge';
 import { Settings, Download, Shield, Keyboard, FolderOpen, ExternalLink } from 'lucide-react';
 import { useDesktop, useDesktopUpdater } from '@/hooks/useDesktop';
 import { DesktopAPI } from '@/lib/desktop/api';

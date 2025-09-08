@@ -327,9 +327,9 @@ export class UpdaterAPI {
  * Desktop Event Listeners
  */
 export class DesktopEventsAPI {
-  private static listeners = new Map<string, Function[]>();
+  private static listeners = new Map<string, ((event: any) => void)[]>();
 
-  static async listen(event: string, handler: Function): Promise<() => void> {
+  static async listen(event: string, handler: (event: any) => void): Promise<() => void> {
     if (!isDesktop()) {
       return () => {}; // No-op unsubscribe function
     }
