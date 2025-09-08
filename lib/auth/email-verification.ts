@@ -281,7 +281,9 @@ export class EmailVerificationManager {
       const expiryCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
 
       // Clean up in-memory cooldowns
-      for (const [userId, timestamp] of verificationCooldowns.entries()) {
+      const entries = Array.from(verificationCooldowns.entries());
+      for (let i = 0; i < entries.length; i++) {
+        const [userId, timestamp] = entries[i];
         if (timestamp < expiryCutoff) {
           verificationCooldowns.delete(userId);
         }

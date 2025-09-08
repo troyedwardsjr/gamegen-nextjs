@@ -166,7 +166,9 @@ export class ClaudeProvider extends BaseProvider {
 
       return response.content.length > 0;
     } catch (error) {
-      this.log("warn", "Health check failed", { error: error.message });
+      this.log("warn", "Health check failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
 
       return false;
     }
@@ -191,7 +193,7 @@ export class ClaudeProvider extends BaseProvider {
    */
   private formatClaudeContent(
     content: string | LLMContentBlock[],
-  ): string | Anthropic.ContentBlock[] {
+  ): string | any[] {
     if (typeof content === "string") {
       return content;
     }

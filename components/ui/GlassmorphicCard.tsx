@@ -155,7 +155,7 @@ export function GlassmorphicCard({
     <CardComponent
       className={glassClasses}
       {...(animated ? motionProps : {})}
-      {...props}
+      {...(props as any)}
     >
       {pattern && (
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-cyan-500/5 pointer-events-none" />

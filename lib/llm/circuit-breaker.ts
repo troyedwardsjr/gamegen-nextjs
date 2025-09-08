@@ -255,9 +255,9 @@ export class CircuitBreakerManager {
   getAllMetrics(): Record<string, CircuitBreakerMetrics> {
     const metrics: Record<string, CircuitBreakerMetrics> = {};
 
-    for (const [providerId, circuitBreaker] of this.circuitBreakers) {
+    Array.from(this.circuitBreakers.entries()).forEach(([providerId, circuitBreaker]) => {
       metrics[providerId] = circuitBreaker.getMetrics();
-    }
+    });
 
     return metrics;
   }
@@ -275,7 +275,7 @@ export class CircuitBreakerManager {
     let halfOpen = 0;
     let closed = 0;
 
-    for (const circuitBreaker of this.circuitBreakers.values()) {
+    Array.from(this.circuitBreakers.values()).forEach((circuitBreaker) => {
       switch (circuitBreaker.getState()) {
         case CircuitBreakerState.OPEN:
           open++;
@@ -287,7 +287,7 @@ export class CircuitBreakerManager {
           closed++;
           break;
       }
-    }
+    });
 
     return {
       total_breakers: this.circuitBreakers.size,
@@ -301,9 +301,9 @@ export class CircuitBreakerManager {
    * Reset all circuit breakers
    */
   resetAll(): void {
-    for (const circuitBreaker of this.circuitBreakers.values()) {
+    Array.from(this.circuitBreakers.values()).forEach((circuitBreaker) => {
       circuitBreaker.reset();
-    }
+    });
 
     console.info("[CircuitBreakerManager] All circuit breakers reset");
   }
@@ -314,7 +314,7 @@ export class CircuitBreakerManager {
   getUnhealthyProviders(): string[] {
     const unhealthy: string[] = [];
 
-    for (const [providerId, circuitBreaker] of this.circuitBreakers) {
+    Array.from(this.circuitBreakers.entries()).forEach(([providerId, circuitBreaker]) => {
       const state = circuitBreaker.getState();
 
       if (
@@ -323,7 +323,7 @@ export class CircuitBreakerManager {
       ) {
         unhealthy.push(providerId);
       }
-    }
+    });
 
     return unhealthy;
   }
@@ -332,12 +332,8 @@ export class CircuitBreakerManager {
    * Check if any providers are available (not open)
    */
   hasAvailableProviders(): boolean {
-    for (const circuitBreaker of this.circuitBreakers.values()) {
-      if (circuitBreaker.canExecute()) {
-        return true;
-      }
-    }
-
-    return false;
+    return Array.from(this.circuitBreakers.values()).some((circuitBreaker) =>
+      circuitBreaker.canExecute()
+    );
   }
 }

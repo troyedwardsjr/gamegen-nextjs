@@ -68,7 +68,7 @@ export interface UsageSummary {
 
 export class BillingTracker {
   private config: BillingConfig;
-  private supabase: SupabaseClient;
+  private supabase: Promise<SupabaseClient>;
   private creditReservations = new Map<string, number>(); // user_id -> reserved_credits
 
   constructor(config: BillingConfig) {
@@ -253,7 +253,7 @@ export class BillingTracker {
    * Get user's current credit balance
    */
   async getCreditBalance(userId: string): Promise<CreditBalance> {
-    const { data, error } = await this.supabase
+    const { data, error } = await (await this.supabase)
       .from("user_credit_balances")
       .select("*")
       .eq("user_id", userId)
@@ -288,7 +288,7 @@ export class BillingTracker {
     const currentBalance = await this.getCreditBalance(userId);
     const newBalance = currentBalance.balance + amount;
 
-    const { data, error } = await this.supabase
+    const { data, error } = await (await this.supabase)
       .from("user_credit_balances")
       .upsert({
         user_id: userId,
@@ -330,7 +330,7 @@ export class BillingTracker {
     endDate: Date,
   ): Promise<UsageSummary> {
     // Get billing records for the period
-    const { data: billingRecords, error } = await this.supabase
+    const { data: billingRecords, error } = await (await this.supabase)
       .from("llm_billing_records")
       .select("*")
       .eq("user_id", userId)
@@ -393,7 +393,7 @@ export class BillingTracker {
     limit: number = 100,
     offset: number = 0,
   ): Promise<{ records: BillingRecord[]; total_count: number }> {
-    const { data, error, count } = await this.supabase
+    const { data, error, count } = await (await this.supabase)
       .from("llm_billing_records")
       .select("*", { count: "exact" })
       .eq("user_id", userId)
@@ -465,7 +465,7 @@ export class BillingTracker {
     const newBalance = currentBalance.balance - amount;
     const newReserved = Math.max(0, currentBalance.reserved - amount);
 
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("user_credit_balances")
       .update({
         balance: newBalance,
@@ -505,7 +505,7 @@ export class BillingTracker {
     const currentBalance = await this.getCreditBalance(userId);
     const newReserved = Math.max(0, currentBalance.reserved + amount);
 
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("user_credit_balances")
       .update({
         reserved: newReserved,
@@ -522,7 +522,7 @@ export class BillingTracker {
    * Store billing record in database
    */
   private async storeBillingRecord(record: BillingRecord): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("llm_billing_records")
       .insert(record);
 
@@ -540,7 +540,7 @@ export class BillingTracker {
     type: "credit" | "debit",
     source: string,
   ): Promise<void> {
-    const { error } = await this.supabase.from("credit_transactions").insert({
+    const { error } = await (await this.supabase).from("credit_transactions").insert({
       id: this.generateTransactionId(),
       user_id: userId,
       amount,
@@ -568,7 +568,7 @@ export class BillingTracker {
       last_updated: new Date().toISOString(),
     };
 
-    const { error } = await this.supabase
+    const { error } = await (await this.supabase)
       .from("user_credit_balances")
       .insert(defaultBalance);
 

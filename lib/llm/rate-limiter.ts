@@ -337,7 +337,7 @@ export class RateLimiter {
     const cutoff = now.getTime() - this.windowSizeMs * 2; // Keep 2 minutes of history
 
     // Clean up user windows
-    for (const [userId, userLimit] of this.userLimits.entries()) {
+    Array.from(this.userLimits.entries()).forEach(([userId, userLimit]) => {
       userLimit.windows = userLimit.windows.filter(
         (window) => window.start.getTime() > cutoff,
       );
@@ -349,7 +349,7 @@ export class RateLimiter {
       ) {
         this.userLimits.delete(userId);
       }
-    }
+    });
   }
 
   /**
@@ -388,9 +388,9 @@ export class RateLimiter {
     const globalStats = this.getStatus();
     let totalWindows = 1; // Global window
 
-    for (const userLimit of this.userLimits.values()) {
+    Array.from(this.userLimits.values()).forEach((userLimit) => {
       totalWindows += userLimit.windows.length + 1; // Current window
-    }
+    });
 
     return {
       global: globalStats,
@@ -411,10 +411,10 @@ export class RateLimiter {
     usage += 100;
 
     // User limits
-    for (const userLimit of this.userLimits.values()) {
+    Array.from(this.userLimits.values()).forEach((userLimit) => {
       usage += 50; // User limit object
       usage += userLimit.windows.length * 50; // Each window
-    }
+    });
 
     return usage;
   }

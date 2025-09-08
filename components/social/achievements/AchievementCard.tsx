@@ -152,8 +152,7 @@ export function AchievementCard({
     onClick?.(achievement);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleShare = () => {
     onShare?.(achievement);
   };
 

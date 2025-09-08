@@ -3,8 +3,8 @@ import type { Database } from "../supabase/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export const createAuthServerClient = () => {
-  const cookieStore = cookies();
+export const createAuthServerClient = async () => {
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

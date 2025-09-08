@@ -77,9 +77,9 @@ interface APICallInfo {
 }
 
 export class ToxoidScriptOptimizer {
-  private optimizationPasses: OptimizationPass[];
-  private quickJSOptimizations: OptimizationPass[];
-  private performanceOptimizations: OptimizationPass[];
+  private optimizationPasses!: OptimizationPass[];
+  private quickJSOptimizations!: OptimizationPass[];
+  private performanceOptimizations!: OptimizationPass[];
 
   constructor() {
     this.initializeOptimizationPasses();
@@ -240,7 +240,7 @@ export class ToxoidScriptOptimizer {
       /function\s+(\w+)\s*\([^)]*\)\s*{[^}]*}/g,
     );
 
-    for (const match of functionMatches) {
+    Array.from(functionMatches).forEach((match) => {
       const functionBody = match[0];
       const functionName = match[1];
       const lineCount = functionBody.split("\n").length;
@@ -257,7 +257,7 @@ export class ToxoidScriptOptimizer {
         ),
         isRecursive: functionBody.includes(functionName + "("),
       });
-    }
+    });
 
     // Analyze variables
     const variablePatterns = [
@@ -267,7 +267,7 @@ export class ToxoidScriptOptimizer {
     variablePatterns.forEach(({ pattern }) => {
       const matches = context.originalScript.matchAll(pattern);
 
-      for (const match of matches) {
+      Array.from(matches).forEach((match) => {
         const varType = match[1] as "var" | "let" | "const";
         const varName = match[2];
 
@@ -282,7 +282,7 @@ export class ToxoidScriptOptimizer {
             varType,
           ),
         });
-      }
+      });
     });
 
     // Analyze loops
@@ -295,7 +295,7 @@ export class ToxoidScriptOptimizer {
     loopPatterns.forEach(({ pattern, type }) => {
       const matches = context.originalScript.matchAll(pattern);
 
-      for (const match of matches) {
+      Array.from(matches).forEach((match) => {
         loops.push({
           type,
           line: this.findLineNumber(context.originalScript, match.index!),
@@ -306,7 +306,7 @@ export class ToxoidScriptOptimizer {
             match.index!,
           ),
         });
-      }
+      });
     });
 
     // Analyze API calls

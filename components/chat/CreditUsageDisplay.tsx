@@ -81,7 +81,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       setError(null);
 
       // Get user's billing info
-      const { data: billing, error: billingError } = await supabase
+      const { data: billing, error: billingError } = await (supabase as any)
         .from("user_billing")
         .select("*")
         .eq("user_id", user.id)
@@ -96,7 +96,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       const thisMonth = new Date().toISOString().slice(0, 7);
 
       // Daily usage
-      const { data: dailyUsage, error: dailyError } = await supabase
+      const { data: dailyUsage, error: dailyError } = await (supabase as any)
         .from("usage_tracking")
         .select("tokens_used, cost_cents, feature_type")
         .eq("user_id", user.id)
@@ -106,7 +106,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       if (dailyError) throw dailyError;
 
       // Monthly usage
-      const { data: monthlyUsage, error: monthlyError } = await supabase
+      const { data: monthlyUsage, error: monthlyError } = await (supabase as any)
         .from("usage_tracking")
         .select("tokens_used, cost_cents, feature_type")
         .eq("user_id", user.id)
@@ -115,7 +115,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       if (monthlyError) throw monthlyError;
 
       // Recent usage for breakdown
-      const { data: recentUsage, error: recentError } = await supabase
+      const { data: recentUsage, error: recentError } = await (supabase as any)
         .from("usage_tracking")
         .select("created_at, tokens_used, cost_cents, feature_type, metadata")
         .eq("user_id", user.id)
@@ -126,15 +126,15 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
       // Calculate totals
       const dailyCostCents =
-        dailyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) || 0;
+        dailyUsage?.reduce((sum: number, item: any) => sum + (item.cost_cents || 0), 0) || 0;
       const monthlyCostCents =
-        monthlyUsage?.reduce((sum, item) => sum + (item.cost_cents || 0), 0) ||
+        monthlyUsage?.reduce((sum: number, item: any) => sum + (item.cost_cents || 0), 0) ||
         0;
 
       // Feature breakdown
       const costBreakdown =
         monthlyUsage?.reduce(
-          (acc, item) => {
+          (acc: Record<string, number>, item: any) => {
             const feature = item.feature_type || "other";
 
             acc[feature] = (acc[feature] || 0) + (item.cost_cents || 0);
@@ -161,7 +161,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           chat: costBreakdown.chat_completion || 0,
           artGeneration: costBreakdown.art_generation || 0,
           codeHelp: costBreakdown.code_help || 0,
-          other: Object.keys(costBreakdown).reduce((sum, key) => {
+          other: Object.keys(costBreakdown).reduce((sum: number, key: string) => {
             return !["chat_completion", "art_generation", "code_help"].includes(
               key,
             )
@@ -170,7 +170,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           }, 0),
         },
         recentUsage:
-          recentUsage?.map((item) => ({
+          recentUsage?.map((item: any) => ({
             date: item.created_at,
             amount: item.tokens_used || 0,
             feature: item.feature_type || "other",
@@ -259,7 +259,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
         <span className="text-sm">Credit info unavailable</span>
       </div>
     ) : (
-      <GlassmorphicCard className="p-4" variant="glass-danger">
+      <GlassmorphicCard className="p-4" variant="accent-rose">
         <div className="text-center text-red-400">
           <p className="font-medium">Failed to load credit information</p>
           <GlassmorphicButton
@@ -314,7 +314,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
         <GlassmorphicButton
           className="text-white/60 hover:text-white"
           disabled={refreshing}
-          size="xs"
+          size="sm"
           title="Refresh credit usage"
           variant="glass-ghost"
           onClick={fetchCreditUsage}
@@ -336,7 +336,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
   return (
     <div className={clsx("space-y-4", className)}>
-      <GlassmorphicCard className="p-4" variant="glass-subtle">
+      <GlassmorphicCard className="p-4" variant="subtle">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
@@ -438,7 +438,7 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
             initial={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <GlassmorphicCard className="p-4" variant="glass-subtle">
+            <GlassmorphicCard className="p-4" variant="subtle">
               <h4 className="text-md font-medium text-white mb-3 flex items-center space-x-2">
                 <span>📊</span>
                 <span>Usage Breakdown</span>

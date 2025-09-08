@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -32,7 +32,7 @@ export async function GET(
     const messageOffset = parseInt(searchParams.get("messageOffset") || "0");
 
     // Fetch session
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await (supabase as any)
       .from("chat_sessions")
       .select("*")
       .eq("id", sessionId)
@@ -46,7 +46,7 @@ export async function GET(
     let messages = null;
 
     if (includeMessages) {
-      const { data: messagesData, error: messagesError } = await supabase
+      const { data: messagesData, error: messagesError } = await (supabase as any)
         .from("chat_messages")
         .select("*")
         .eq("session_id", sessionId)
@@ -88,7 +88,7 @@ export async function PUT(
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -118,7 +118,7 @@ export async function PUT(
     if (settings !== undefined) updates.settings = settings;
 
     // Update session
-    const { data: session, error } = await supabase
+    const { data: session, error } = await (supabase as any)
       .from("chat_sessions")
       .update(updates)
       .eq("id", sessionId)
@@ -158,7 +158,7 @@ export async function DELETE(
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -171,7 +171,7 @@ export async function DELETE(
     const { sessionId } = await params;
 
     // Verify ownership before deletion
-    const { data: session, error: verifyError } = await supabase
+    const { data: session, error: verifyError } = await (supabase as any)
       .from("chat_sessions")
       .select("id")
       .eq("id", sessionId)
@@ -183,7 +183,7 @@ export async function DELETE(
     }
 
     // Delete session (messages will be deleted by CASCADE)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from("chat_sessions")
       .delete()
       .eq("id", sessionId)

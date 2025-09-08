@@ -124,21 +124,9 @@ const SpritesTab = () => {
           />
 
           <div className="flex items-center space-x-2">
-            <GlassmorphicDropdown
-              items={[
-                { id: "name", label: "Name" },
-                { id: "date", label: "Date Modified" },
-                { id: "size", label: "Size" },
-                { id: "usage", label: "Usage" },
-              ]}
-              trigger={
-                <GlassmorphicButton size="sm" variant="glass">
-                  Sort: {sortBy}
-                </GlassmorphicButton>
-              }
-              value={sortBy}
-              onSelect={setSortBy}
-            />
+            <GlassmorphicButton size="sm" variant="glass">
+              Sort: {sortBy}
+            </GlassmorphicButton>
 
             <GlassmorphicBadge size="sm" variant="gaming">
               {sprites.length} items
@@ -481,7 +469,7 @@ const LibraryTab = () => {
               onClick={() => setSelectedCategory(category.id)}
             >
               <span>{category.label}</span>
-              <GlassmorphicBadge size="sm" variant="subtle">
+              <GlassmorphicBadge size="sm" variant="default">
                 {category.count}
               </GlassmorphicBadge>
             </GlassmorphicButton>

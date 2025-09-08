@@ -45,20 +45,27 @@ export class MFAManager {
   async enableMFA(
     userId: string,
     method: "totp" | "sms" | "email",
+    phoneNumber?: string,
   ): Promise<TOTPSetupData | boolean> {
     try {
       if (method === "totp") {
         return await this.setupTOTP(userId);
-      } else {
-        // Enable SMS/Email MFA
+      } else if (method === "sms") {
+        // SMS MFA requires a phone number
+        if (!phoneNumber) {
+          console.error("Phone number is required for SMS MFA");
+          return false;
+        }
+
+        // Enable SMS MFA
         const { error } = await this.supabase.auth.mfa.enroll({
-          factorType: method === "sms" ? "phone" : "email",
-          friendlyName: method === "sms" ? "Phone" : "Email",
+          factorType: "phone",
+          friendlyName: "Phone",
+          phone: phoneNumber,
         });
 
         if (error) {
           console.error("MFA enrollment error:", error);
-
           return false;
         }
 
@@ -71,7 +78,15 @@ export class MFAManager {
         });
 
         return true;
+      } else if (method === "email") {
+        // Email MFA is not directly supported by Supabase Auth
+        // This would need to be implemented as a custom solution
+        console.warn("Email MFA is not supported by Supabase Auth API");
+        return false;
       }
+
+      // Fallback for unexpected method
+      return false;
     } catch (error) {
       console.error("Error enabling MFA:", error);
 
@@ -219,7 +234,7 @@ export class MFAManager {
       }
 
       // Remove MFA configuration
-      const { error } = await this.supabase
+      const { error } = await (this.supabase as any)
         .from("mfa_configurations")
         .delete()
         .eq("user_id", userId);
@@ -401,7 +416,7 @@ export class MFAManager {
     userId: string,
   ): Promise<MFAConfiguration | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await (this.supabase as any)
         .from("mfa_configurations")
         .select("*")
         .eq("user_id", userId)
@@ -430,7 +445,7 @@ export class MFAManager {
     userId: string,
     config: MFAConfiguration,
   ): Promise<void> {
-    const { error } = await this.supabase.from("mfa_configurations").upsert({
+    const { error } = await (this.supabase as any).from("mfa_configurations").upsert({
       user_id: userId,
       enabled: config.enabled,
       methods: config.methods,
@@ -448,7 +463,7 @@ export class MFAManager {
   }
 
   private async updateLastVerified(userId: string): Promise<void> {
-    await this.supabase
+    await (this.supabase as any)
       .from("mfa_configurations")
       .update({ last_verified: new Date().toISOString() })
       .eq("user_id", userId);

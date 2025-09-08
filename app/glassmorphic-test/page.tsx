@@ -111,12 +111,12 @@ export default function GlassmorphicTestPage() {
           <h2 className="text-2xl font-semibold text-white mb-4">Alerts</h2>
           <div className="space-y-4">
             <GlassmorphicAlert
-              description="Your game has been saved successfully!"
+              message="Your game has been saved successfully!"
               title="Success Alert"
               variant="success"
             />
             <GlassmorphicAlert
-              description="New achievement unlocked!"
+              message="New achievement unlocked!"
               title="Gaming Alert"
               variant="gaming"
             />

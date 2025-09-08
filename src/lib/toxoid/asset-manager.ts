@@ -226,7 +226,7 @@ export class ToxoidAssetManager implements AssetManager {
     const maxAge = 5 * 60 * 1000; // 5 minutes
     let cleanedUp = 0;
 
-    for (const [id, asset] of this.assets.entries()) {
+    Array.from(this.assets.entries()).forEach(([id, asset]) => {
       const shouldCleanup =
         forceCleanup ||
         (asset.refCount === 0 && now - asset.lastAccessed > maxAge) ||
@@ -236,7 +236,7 @@ export class ToxoidAssetManager implements AssetManager {
         this.unloadAsset(id);
         cleanedUp++;
       }
-    }
+    });
 
     if (cleanedUp > 0) {
       console.log(`[ToxoidAssets] Cleaned up ${cleanedUp} unused assets`);
@@ -247,9 +247,9 @@ export class ToxoidAssetManager implements AssetManager {
    * Destroy the asset manager and clean up all resources
    */
   destroy(): void {
-    for (const [id] of this.assets.entries()) {
+    Array.from(this.assets.entries()).forEach(([id]) => {
       this.unloadAsset(id);
-    }
+    });
 
     this.assets.clear();
     this.loadingAssets.clear();

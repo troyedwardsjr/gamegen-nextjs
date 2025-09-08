@@ -8,11 +8,11 @@ export async function POST(
   { params }: { params: Promise<{ templateId: string }> },
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { templateId } = await params;
 
     // Get the template
-    const { data: template, error: fetchError } = await supabase
+    const { data: template, error: fetchError } = await (supabase as any)
       .from("chat_prompt_templates")
       .select("*")
       .eq("id", templateId)
@@ -38,7 +38,7 @@ export async function POST(
     }
 
     // Increment usage count
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from("chat_prompt_templates")
       .update({
         usage_count: template.usage_count + 1,

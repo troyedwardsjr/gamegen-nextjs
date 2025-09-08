@@ -281,13 +281,25 @@ export class SocialAuthManager {
         return false;
       }
 
-      const { error } = await this.supabase.auth.unlinkIdentity({
-        provider: providerConfig.provider,
-      });
+      // Get current user to find their identities
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user) {
+        return false;
+      }
+
+      // Find the identity for this provider
+      const identity = user.identities?.find(
+        (identity) => identity.provider === providerConfig.provider
+      );
+
+      if (!identity) {
+        return false; // No identity found for this provider
+      }
+
+      const { error } = await this.supabase.auth.unlinkIdentity(identity);
 
       if (error) {
         console.error(`${providerName} unlinking error:`, error);
-
         return false;
       }
 
@@ -354,7 +366,7 @@ export class SocialAuthManager {
     status: "SUCCESS" | "FAILED",
   ): Promise<void> {
     try {
-      await this.supabase.from("security_events").insert({
+      await (this.supabase as any).from("security_events").insert({
         event_type: `SOCIAL_AUTH_${status}`,
         user_id: userId,
         metadata: { provider },

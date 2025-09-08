@@ -271,7 +271,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (email: string): Promise<AuthResult> => {
       try {
         const { error } =
-          await sessionManager.supabase.auth.resetPasswordForEmail(email, {
+          await sessionManager.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password`,
           });
 
@@ -294,7 +294,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updatePassword = useCallback(
     async (newPassword: string): Promise<AuthResult> => {
       try {
-        const { error } = await sessionManager.supabase.auth.updateUser({
+        const { error } = await sessionManager.updateUser({
           password: newPassword,
         });
 
@@ -318,7 +318,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateProfile = useCallback(
     async (updates: Record<string, any>): Promise<AuthResult> => {
       try {
-        const { error } = await sessionManager.supabase.auth.updateUser({
+        const { error } = await sessionManager.updateUser({
           data: updates,
         });
 
@@ -347,7 +347,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { success: false, error: "No email address found" };
       }
 
-      const { error } = await sessionManager.supabase.auth.resend({
+      const { error } = await sessionManager.resend({
         type: "signup",
         email: state.user.email,
       });

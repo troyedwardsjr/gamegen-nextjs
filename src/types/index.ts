@@ -23,7 +23,7 @@ export * from "./auth";
 // =========================
 // User Types
 // =========================
-export {
+export type {
   UserDisplayPreferences,
   UserNotificationPreferences,
   UserPrivacySettings,
@@ -48,6 +48,9 @@ export {
   SearchUsersResponse,
   GameEditorPreferences,
   AssetManagerPreferences,
+} from "./user";
+
+export {
   isCompleteUserProfile,
   hasAchievement,
   calculateCreatorLevel,
@@ -60,7 +63,7 @@ export type { UserProfile } from "./database";
 // =========================
 // Subscription & Billing Types
 // =========================
-export {
+export type {
   PlanTier,
   SubscriptionStatus,
   AIOperationType,
@@ -85,6 +88,9 @@ export {
   CreateSubscriptionResponse,
   UpdateSubscriptionResponse,
   PurchaseCreditsResponse,
+} from "./subscription";
+
+export {
   isActiveSubscription,
   hasFeature,
   canUpgradeTo,

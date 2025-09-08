@@ -34,7 +34,7 @@ const getClientIP = (request?: NextRequest): string => {
     return real.trim();
   }
 
-  return request.ip || "unknown";
+  return "unknown";
 };
 
 export interface SecurityEventType {
@@ -471,7 +471,9 @@ export class AccountSecurityManager {
       const now = new Date();
 
       // Clean up expired lockouts
-      for (const [key, lockInfo] of securityState.lockedAccounts.entries()) {
+      const entries = Array.from(securityState.lockedAccounts.entries());
+      for (let i = 0; i < entries.length; i++) {
+        const [key, lockInfo] = entries[i];
         if (now >= lockInfo.lockedUntil) {
           securityState.lockedAccounts.delete(key);
         }
@@ -480,7 +482,9 @@ export class AccountSecurityManager {
       // Clean up old failed attempts
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
 
-      for (const [key, attempts] of securityState.failedAttempts.entries()) {
+      const attemptsEntries = Array.from(securityState.failedAttempts.entries());
+      for (let i = 0; i < attemptsEntries.length; i++) {
+        const [key, attempts] = attemptsEntries[i];
         attempts.attempts = attempts.attempts.filter(
           (attempt) => attempt > cutoff,
         );

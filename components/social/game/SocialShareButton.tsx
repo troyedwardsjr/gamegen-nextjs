@@ -36,7 +36,7 @@ interface SocialShareButtonProps {
     tags?: string[] | null;
   };
   shareData?: SocialShareData;
-  variant?: "default" | "flat" | "ghost" | "solid";
+  variant?: "flat" | "solid" | "shadow" | "light" | "bordered" | "faded" | "ghost";
   size?: "sm" | "md" | "lg";
   isIconOnly?: boolean;
   className?: string;
@@ -209,7 +209,7 @@ export function SocialShareButton({
   // Use native Web Share API if available and on mobile
   const useNativeShare =
     typeof navigator !== "undefined" &&
-    navigator.share &&
+    typeof navigator.share !== "undefined" &&
     /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent,
     );

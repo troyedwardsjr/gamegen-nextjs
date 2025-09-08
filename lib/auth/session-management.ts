@@ -280,14 +280,23 @@ export class ClientSessionManager {
    */
   private clearLocalSession() {
     try {
-      if (this.options.storage === "localStorage") {
-        localStorage.removeItem("sb-auth-token");
-      } else if (this.options.storage === "sessionStorage") {
-        sessionStorage.removeItem("sb-auth-token");
+      if (typeof window === "undefined") return;
+      
+      if (this.options.storage === "localStorage" && window.localStorage) {
+        window.localStorage.removeItem("sb-auth-token");
+      } else if (this.options.storage === "sessionStorage" && window.sessionStorage) {
+        window.sessionStorage.removeItem("sb-auth-token");
       }
     } catch (error) {
       console.error("Failed to clear local session:", error);
     }
+  }
+
+  /**
+   * Reset password for email
+   */
+  async resetPasswordForEmail(email: string, options?: { redirectTo?: string }) {
+    return this.supabase.auth.resetPasswordForEmail(email, options);
   }
 
   /**

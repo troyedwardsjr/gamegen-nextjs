@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, Divider } from "@heroui/react";
+import { Button } from "@heroui/button";
+import { Divider } from "@heroui/divider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
@@ -111,14 +112,14 @@ export function GameSocialPanel({
           .eq("game_id", game.id)
           .eq("is_deleted", false),
 
-        supabase.from("game_ratings").select("rating").eq("game_id", game.id),
+        (supabase as any).from("game_ratings").select("rating").eq("game_id", game.id),
       ]);
 
       const commentCount = commentsResult.count || 0;
       const ratings = ratingsResult.data || [];
       const avgRating =
         ratings.length > 0
-          ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+          ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
           : 0;
 
       setSocialStats((prev) => ({
@@ -160,7 +161,7 @@ export function GameSocialPanel({
         if (error) throw error;
 
         // Create activity
-        await supabase.from("activities").insert({
+        await (supabase as any).from("activities").insert({
           user_id: currentUserId,
           activity_type: "game_liked",
           target_game_id: game.id,
@@ -180,7 +181,7 @@ export function GameSocialPanel({
             .single();
 
           if (userProfile) {
-            await supabase.from("notifications").insert({
+            await (supabase as any).from("notifications").insert({
               recipient_id: game.creator_id,
               sender_id: currentUserId,
               notification_type: "game_like",

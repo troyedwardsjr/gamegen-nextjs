@@ -29,7 +29,7 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
     private isServer: boolean = false,
   ) {}
 
-  private getClient() {
+  protected getClient() {
     if (this.isServer) {
       return createServerClient();
     }
@@ -38,8 +38,8 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
   }
 
   async findById(id: string): Promise<Tables<T> | null> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const supabase = await this.getClient();
+    const { data, error } = await (supabase as any)
       .from(this.tableName)
       .select("*")
       .eq("id", id)
@@ -57,7 +57,7 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
       );
     }
 
-    return data;
+    return data as any;
   }
 
   async findMany(
@@ -68,7 +68,7 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
       offset?: number;
     } = {},
   ): Promise<Tables<T>[]> {
-    const supabase = this.getClient();
+    const supabase = await this.getClient();
     let query = supabase.from(this.tableName).select("*");
 
     // Apply filters
@@ -107,12 +107,12 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
       );
     }
 
-    return data || [];
+    return (data || []) as Tables<T>[];
   }
 
   async create(input: TablesInsert<T>): Promise<Tables<T>> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const supabase = await this.getClient();
+    const { data, error } = await (supabase as any)
       .from(this.tableName)
       .insert(input)
       .select()
@@ -127,12 +127,12 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
       );
     }
 
-    return data;
+    return data as any;
   }
 
   async update(id: string, input: TablesUpdate<T>): Promise<Tables<T>> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const supabase = await this.getClient();
+    const { data, error } = await (supabase as any)
       .from(this.tableName)
       .update(input)
       .eq("id", id)
@@ -148,12 +148,12 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
       );
     }
 
-    return data;
+    return data as any;
   }
 
   async delete(id: string): Promise<void> {
-    const supabase = this.getClient();
-    const { error } = await supabase.from(this.tableName).delete().eq("id", id);
+    const supabase = await this.getClient();
+    const { error } = await (supabase as any).from(this.tableName).delete().eq("id", id);
 
     if (error) {
       throw new DatabaseError(
@@ -166,7 +166,7 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
   }
 
   async count(filters?: Record<string, any>): Promise<number> {
-    const supabase = this.getClient();
+    const supabase = await this.getClient();
     let query = supabase
       .from(this.tableName)
       .select("*", { count: "exact", head: true });
@@ -206,7 +206,7 @@ export class GameService extends SupabaseService<"games"> {
       search?: string;
     } = {},
   ): Promise<Tables<"games">[]> {
-    const supabase = this.getClient();
+    const supabase = await this.getClient();
     let query = supabase
       .from("games")
       .select(
@@ -219,7 +219,7 @@ export class GameService extends SupabaseService<"games"> {
       .order("published_at", { ascending: false });
 
     if (options.genre) {
-      query = query.eq("genre", options.genre);
+      query = query.eq("genre", options.genre as any);
     }
 
     if (options.search) {
@@ -248,14 +248,14 @@ export class GameService extends SupabaseService<"games"> {
       );
     }
 
-    return data || [];
+    return (data || []) as Tables<"games">[];
   }
 
   async findUserGames(
     userId: string,
     includePrivate: boolean = true,
   ): Promise<Tables<"games">[]> {
-    const supabase = this.getClient();
+    const supabase = await this.getClient();
     let query = supabase
       .from("games")
       .select("*")
@@ -277,12 +277,12 @@ export class GameService extends SupabaseService<"games"> {
       );
     }
 
-    return data || [];
+    return (data || []) as Tables<"games">[];
   }
 
   async incrementPlayCount(gameId: string): Promise<void> {
-    const supabase = this.getClient();
-    const { error } = await supabase.rpc("increment_play_count", {
+    const supabase = await this.getClient();
+    const { error } = await (supabase as any).rpc("increment_play_count", {
       game_id: gameId,
     });
 
@@ -303,8 +303,8 @@ export class ProfileService extends SupabaseService<"profiles"> {
   }
 
   async findByUsername(username: string): Promise<Tables<"profiles"> | null> {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const supabase = await this.getClient();
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .select("*")
       .eq("username", username)
@@ -322,14 +322,14 @@ export class ProfileService extends SupabaseService<"profiles"> {
       );
     }
 
-    return data;
+    return data as any;
   }
 
   async updateCredits(
     userId: string,
     creditsUsed: number,
   ): Promise<Tables<"profiles">> {
-    const supabase = this.getClient();
+    const supabase = await this.getClient();
 
     // Check if we need to reset daily credits
     const { data: profile } = await supabase
@@ -341,7 +341,7 @@ export class ProfileService extends SupabaseService<"profiles"> {
     const today = new Date().toISOString().split("T")[0];
     const shouldReset = profile && profile.credits_reset_date !== today;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .update({
         credits_remaining: shouldReset
@@ -365,7 +365,7 @@ export class ProfileService extends SupabaseService<"profiles"> {
       );
     }
 
-    return data;
+    return data as any;
   }
 }
 
@@ -376,7 +376,7 @@ export class MigrationRunner {
   async runMigration(migrationName: string, sql: string): Promise<void> {
     try {
       // Check if migration already ran
-      const { data: existingMigration } = await this.adminClient
+      const { data: existingMigration } = await (this.adminClient as any)
         .from("_migration_log")
         .select("migration_name")
         .eq("migration_name", migrationName)
@@ -389,7 +389,7 @@ export class MigrationRunner {
       }
 
       // Run the migration
-      const { error: migrationError } = await this.adminClient.rpc("exec_sql", {
+      const { error: migrationError } = await (this.adminClient as any).rpc("exec_sql", {
         sql: sql,
       });
 
@@ -445,7 +445,7 @@ export function withErrorHandling<T extends any[], R>(
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     const supabase = createClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("profiles")
       .select("id")
       .limit(1);

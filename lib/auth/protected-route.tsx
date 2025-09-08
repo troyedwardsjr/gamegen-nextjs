@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Spinner } from "@nextui-org/react";
+import { Spinner } from "@heroui/spinner";
 
 import { useAuth } from "./context";
 
@@ -139,7 +139,7 @@ export function ProtectedRoute({
             const userTier = getUserTier();
             const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 };
 
-            if (tierHierarchy[userTier] < tierHierarchy[requiredTier]) {
+            if (tierHierarchy[userTier as keyof typeof tierHierarchy] < tierHierarchy[requiredTier as keyof typeof tierHierarchy]) {
               setGuardState({
                 loading: false,
                 authorized: false,
@@ -340,7 +340,7 @@ export function useRouteAccess(options: Omit<ProtectedRouteProps, "children">) {
           const userTier = getUserTier();
           const tierHierarchy = { free: 0, pro: 1, educational: 2, max: 3 };
 
-          if (tierHierarchy[userTier] < tierHierarchy[options.requiredTier]) {
+          if (tierHierarchy[userTier as keyof typeof tierHierarchy] < tierHierarchy[options.requiredTier as keyof typeof tierHierarchy]) {
             canAccess = false;
             reason = `${options.requiredTier} subscription required`;
           }

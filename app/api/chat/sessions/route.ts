@@ -19,7 +19,7 @@ interface UpdateSessionRequest {
 // GET /api/chat/sessions - List user's chat sessions
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
 
-    let query = supabase
+    let query = (supabase as any)
       .from("chat_sessions")
       .select(
         `
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 // POST /api/chat/sessions - Create new chat session
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session
-    const { data: session, error } = await supabase
+    const { data: session, error } = await (supabase as any)
       .from("chat_sessions")
       .insert({
         user_id: user.id,

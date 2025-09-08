@@ -1,18 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Button,
-  Input,
-  Textarea,
-  Select,
-  SelectItem,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@heroui/react";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Textarea } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { motion } from "framer-motion";
 import { Upload, Send, FileText, Link, Check } from "lucide-react";
 import { toast } from "sonner";

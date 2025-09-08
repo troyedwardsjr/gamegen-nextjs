@@ -70,7 +70,7 @@ export function ActivityFeed({
           setError(null);
         }
 
-        let query = supabase.rpc("get_user_activity_feed", {
+        let query = (supabase as any).rpc("get_user_activity_feed", {
           user_id: userId,
           limit_count: ITEMS_PER_PAGE,
           offset_count: offset,
@@ -363,7 +363,7 @@ export function CompactActivityFeed({
   useEffect(() => {
     const fetchRecentActivities = async () => {
       try {
-        const { data, error } = await supabase.rpc("get_user_activity_feed", {
+        const { data, error } = await (supabase as any).rpc("get_user_activity_feed", {
           user_id: userId,
           limit_count: limit,
           offset_count: 0,

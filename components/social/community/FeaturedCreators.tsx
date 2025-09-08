@@ -243,10 +243,10 @@ export function FeaturedCreators({
 
         if (error) throw error;
 
-        setFollowingIds((prev) => new Set([...prev, creatorId]));
+        setFollowingIds((prev) => new Set([...Array.from(prev), creatorId]));
 
         // Create activity
-        await supabase.from("activities").insert({
+        await (supabase as any).from("activities").insert({
           user_id: currentUserId,
           activity_type: "user_followed",
           target_user_id: creatorId,

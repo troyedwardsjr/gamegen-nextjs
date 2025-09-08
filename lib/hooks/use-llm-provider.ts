@@ -10,10 +10,10 @@
 import type {
   ProviderStatus,
   ProviderConfiguration,
-  LLMSystemConfig,
   ProviderMetrics,
-  ProviderHealthStatus,
 } from "@/lib/llm/types";
+import { ProviderHealthStatus } from "@/lib/llm/types";
+import type { LLMSystemConfig } from "@/lib/llm/config";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
@@ -460,12 +460,12 @@ export function useProviderHealth() {
 
   const overallStatus: ProviderHealthStatus =
     healthSummary.available === 0
-      ? "offline"
+      ? ProviderHealthStatus.OFFLINE
       : healthPercentage >= 80
-        ? "healthy"
+        ? ProviderHealthStatus.HEALTHY
         : healthPercentage >= 50
-          ? "degraded"
-          : "unhealthy";
+          ? ProviderHealthStatus.DEGRADED
+          : ProviderHealthStatus.UNHEALTHY;
 
   return {
     providers,

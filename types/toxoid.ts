@@ -6,6 +6,75 @@
  * system registration, observers, and rendering functions.
  */
 
+// Game Script Interface
+export interface GameScript {
+  id: string;
+  name: string;
+  content: string;
+  isEnabled: boolean;
+  hasErrors: boolean;
+  errorMessage?: string;
+  lastModified: Date;
+}
+
+// Toxoid Engine Configuration
+export interface ToxoidInitConfig {
+  canvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  enableScripting?: boolean;
+  debugMode?: boolean;
+  memoryLimit?: number;
+  stackSize?: number;
+  assetPath?: string;
+  onReady?: () => void;
+  onUpdate?: (deltaTime: number) => void;
+  onError?: (error: string) => void;
+  onProgress?: (progress: number) => void;
+}
+
+// Toxoid Engine Interface
+export interface ToxoidEngine {
+  start(): void;
+  stop(): void;
+  pause(): void;
+  resume(): void;
+  destroy(): void;
+  getGameState(): ToxoidGameState;
+  setGameData?(data: any): void;
+  loadScript?(script: string): void;
+  API: ToxoidAPI & {
+    // Additional engine-specific methods beyond the core API
+    [key: string]: any;
+  };
+}
+
+// Game State Interface
+export interface ToxoidGameState {
+  isRunning: boolean;
+  isPaused: boolean;
+  fps: number;
+  frameTime: number;
+  entityCount: number;
+  systemCount: number;
+  memoryUsage: number;
+}
+
+// WASM Module Interface
+export interface ToxoidWasmModule {
+  _initialize: () => void;
+  _cleanup: () => void;
+  _update: (deltaTime: number) => void;
+  _render: () => void;
+  ccall: (func: string, returnType: string, argTypes: string[], args: any[]) => any;
+  cwrap: (func: string, returnType: string, argTypes: string[]) => Function;
+  HEAPU8: Uint8Array;
+  HEAP32: Int32Array;
+  _malloc: (size: number) => number;
+  _free: (ptr: number) => void;
+  ready: Promise<ToxoidWasmModule>;
+}
+
 // Core ECS Types
 export interface EntityId extends Number {
   readonly brand: unique symbol;
@@ -67,6 +136,53 @@ export interface KeyboardInput extends ComponentData {
   ctrl: boolean;
   alt: boolean;
   [key: string]: boolean;
+}
+
+export interface KeyboardInputSingleton {
+  pressedKeys: Set<string>;
+  keys: { [key: string]: boolean };
+  isKeyPressed: (key: string) => boolean;
+  isKeyJustPressed: (key: string) => boolean;
+  isKeyJustReleased: (key: string) => boolean;
+}
+
+export interface MouseInput extends ComponentData {
+  x: number;
+  y: number;
+  leftButton: boolean;
+  rightButton: boolean;
+  middleButton: boolean;
+  wheelDelta: number;
+}
+
+export interface MouseInputSingleton {
+  position: { x: number; y: number };
+  previousPosition: { x: number; y: number };
+  leftButton: boolean;
+  rightButton: boolean;
+  middleButton: boolean;
+  wheelDelta: number;
+  isButtonPressed: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonJustPressed: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonJustReleased: (button: 'left' | 'right' | 'middle') => boolean;
+}
+
+export interface GamepadInput extends ComponentData {
+  leftStick: { x: number; y: number };
+  rightStick: { x: number; y: number };
+  buttons: { [key: string]: boolean };
+  triggers: { left: number; right: number };
+}
+
+export interface GamepadInputSingleton {
+  gamepads: GamepadInput[];
+  buttons: boolean[];
+  axes: number[];
+  connected: boolean;
+  getGamepad: (index: number) => GamepadInput | null;
+  isConnected: (index: number) => boolean;
+  getButtonValue: (gamepadIndex: number, button: string) => number;
+  isButtonPressed: (gamepadIndex: number, button: string) => boolean;
 }
 
 // Color interface for rendering
@@ -266,7 +382,7 @@ export interface Toxoid {
   readonly Observer: ToxoidObserver;
   readonly ObserverEvents: ToxoidObserverEvents;
   readonly Query: ToxoidQueryNamespace;
-  readonly Entity: typeof ToxoidEntity;
+  readonly Entity: ToxoidEntity;
   readonly Phases: typeof ToxoidPhases;
   readonly Events: typeof ToxoidEvents;
 }
@@ -507,11 +623,38 @@ export interface OptimizationSuggestion {
   estimatedGain: string;
 }
 
+// Asset Management Types
+export interface AssetInfo {
+  id: string;
+  name: string;
+  type: "sprite" | "audio" | "spine" | "script";
+  path: string;
+  size: number;
+  isLoaded: boolean;
+}
+
+export interface SpriteLoadResult {
+  id: number;
+  width: number;
+  height: number;
+  success: boolean;
+}
+
+export interface AssetManager {
+  loadAsset(path: string, type: AssetInfo["type"]): Promise<AssetInfo>;
+  preloadAssets(paths: string[]): Promise<AssetInfo[]>;
+  getAsset(id: string): AssetInfo | null;
+  unloadAsset(id: string): boolean;
+  getLoadedAssets(): AssetInfo[];
+  getMemoryUsage(): number;
+  cleanup(forceCleanup?: boolean): void;
+  destroy(): void;
+}
+
 // Export everything for easy importing
 export default Toxoid;
 
 // Global declarations for script runtime
 declare global {
   const Toxoid: Toxoid;
-  const console: Console;
 }

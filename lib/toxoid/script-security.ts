@@ -42,12 +42,12 @@ interface SandboxLimits {
 }
 
 export class ToxoidScriptSecurity {
-  private securityChecks: SecurityCheck[];
-  private criticalPatterns: RegExp[];
-  private suspiciousPatterns: RegExp[];
-  private sandboxLimits: SandboxLimits;
-  private allowedGlobals: Set<string>;
-  private forbiddenConstructors: Set<string>;
+  private securityChecks!: SecurityCheck[];
+  private criticalPatterns!: RegExp[];
+  private suspiciousPatterns!: RegExp[];
+  private sandboxLimits!: SandboxLimits;
+  private allowedGlobals!: Set<string>;
+  private forbiddenConstructors!: Set<string>;
 
   constructor() {
     this.initializeSecurityChecks();

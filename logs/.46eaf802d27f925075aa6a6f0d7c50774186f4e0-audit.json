@@ -14,6 +14,11 @@
             "date": 1757144705265,
             "name": "/Users/troyedwards/dev/gamegen_nextjs/logs/mcp-puppeteer-2025-09-06.log",
             "hash": "8413ce4bab45f09969e3516a95c8019ca957ddccf087a9c6cbdbe075a4cff633"
+        },
+        {
+            "date": 1757320926711,
+            "name": "/Users/troyedwards/dev/gamegen_nextjs/logs/mcp-puppeteer-2025-09-08.log",
+            "hash": "aef5f395d39e3dcb6520e0dbd48e0ec3cde5101ad726ad5eabdc07ac2558ca02"
         }
     ],
     "hashType": "sha256"

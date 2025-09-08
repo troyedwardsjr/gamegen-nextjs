@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
-import { GlassmorphicAlert } from "@/components/ui/GlassmorphicAlert";
+// Temporarily removed missing GlassmorphicAlert import
 import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import { GameScript } from "@/types/toxoid";
 
@@ -608,19 +608,19 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({
 
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {errors.map((error, i) => (
-                    <GlassmorphicAlert
+                    <div
                       key={i}
-                      description={error.message}
-                      size="sm"
-                      title={`Line ${error.line}`}
-                      variant={
+                      className={`p-2 rounded border ${
                         error.type === "error"
-                          ? "danger"
+                          ? "border-red-500 bg-red-50"
                           : error.type === "warning"
-                            ? "warning"
-                            : "info"
-                      }
-                    />
+                            ? "border-yellow-500 bg-yellow-50"
+                            : "border-blue-500 bg-blue-50"
+                      }`}
+                    >
+                      <div className="font-semibold">Line {error.line}</div>
+                      <div className="text-sm">{error.message}</div>
+                    </div>
                   ))}
                 </div>
               </div>

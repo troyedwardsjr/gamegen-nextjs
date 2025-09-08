@@ -18,7 +18,8 @@ export function toBase32(bytes: Uint8Array): string {
   let buffer = 0;
   let bufferLength = 0;
 
-  for (const byte of bytes) {
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i];
     buffer = (buffer << 8) | byte;
     bufferLength += 8;
 

@@ -204,7 +204,7 @@ export class ToxoidScriptValidator {
       });
     } catch (syntaxError) {
       // Create minimal AST for error reporting
-      ast = { type: "Program", body: [] } as Node;
+      ast = { type: "Program", body: [] } as unknown as Node;
     }
 
     return {
@@ -259,7 +259,7 @@ export class ToxoidScriptValidator {
       this.toxoidAPIPatterns.forEach((pattern) => {
         const matches = line.matchAll(pattern);
 
-        for (const match of matches) {
+        Array.from(matches).forEach((match) => {
           const apiCall = match[0];
 
           if (!apiUsage[apiCall]) {
@@ -267,7 +267,7 @@ export class ToxoidScriptValidator {
           }
           apiUsage[apiCall].count++;
           apiUsage[apiCall].lines.push(lineNumber);
-        }
+        });
       });
 
       // Check for common Toxoid patterns

@@ -216,7 +216,7 @@ const MessageActions: React.FC<{
       {onCopy && (
         <GlassmorphicButton
           className="text-white/60 hover:text-white"
-          size="xs"
+          size="sm"
           title="Copy message"
           variant="glass-ghost"
           onClick={() => onCopy(message.id)}
@@ -234,7 +234,7 @@ const MessageActions: React.FC<{
               ? "text-yellow-400 hover:text-yellow-300"
               : "text-white/60 hover:text-white",
           )}
-          size="xs"
+          size="sm"
           title={
             message.is_favorite ? "Remove from favorites" : "Add to favorites"
           }
@@ -250,7 +250,7 @@ const MessageActions: React.FC<{
         <GlassmorphicButton
           className="text-white/60 hover:text-white"
           disabled={message.status === "regenerating"}
-          size="xs"
+          size="sm"
           title="Regenerate response"
           variant="glass-ghost"
           onClick={() => onRegenerate(message.id)}
@@ -273,7 +273,7 @@ const MessageActions: React.FC<{
       <div className="relative">
         <GlassmorphicButton
           className="text-white/60 hover:text-white"
-          size="xs"
+          size="sm"
           title="Add reaction"
           variant="glass-ghost"
           onClick={() => setShowReactions(!showReactions)}
@@ -289,7 +289,7 @@ const MessageActions: React.FC<{
               exit={{ opacity: 0, scale: 0.8, y: 10 }}
               initial={{ opacity: 0, scale: 0.8, y: 10 }}
             >
-              <GlassmorphicCard className="p-2" variant="glass-subtle">
+              <GlassmorphicCard className="p-2" variant="subtle">
                 <div className="flex space-x-1">
                   {reactions.map((reaction) => (
                     <button

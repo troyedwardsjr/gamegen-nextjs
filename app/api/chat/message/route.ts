@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { ProviderManager } from "@/lib/llm/providers/manager";
-import { ChatCompletionRequest, LLMCapability } from "@/lib/llm/types";
+import { GenerationRequest, LLMCapability } from "@/lib/llm/types";
 
 // Types for the request/response
 interface ChatMessageRequest {
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from request
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify session ownership
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await (supabase as any)
       .from("chat_sessions")
       .select("*")
       .eq("id", sessionId)
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get chat history for context
-    const { data: messages, error: messagesError } = await supabase
+    const { data: messages, error: messagesError } = await (supabase as any)
       .from("chat_messages")
       .select("message_type, content")
       .eq("session_id", sessionId)
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Build conversation history
     const conversationHistory =
-      messages?.map((msg) => ({
+      messages?.map((msg: any) => ({
         role:
           msg.message_type === "user"
             ? ("user" as const)
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     const systemPrompt = SYSTEM_PROMPTS[contextType] || SYSTEM_PROMPTS.general;
 
     // Prepare LLM request
-    const chatRequest: ChatCompletionRequest = {
+    const chatRequest: GenerationRequest = {
       messages: [
         { role: "system", content: systemPrompt },
         ...conversationHistory,
@@ -148,8 +148,15 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Get LLM provider
-    const providerManager = ProviderManager.getInstance();
+    // Get LLM provider  
+    const providerManager = new ProviderManager({
+      default_provider: "claude",
+      fallback_chain: ["claude"],
+      load_balancing: { type: "round_robin" },
+      health_check_interval: 30000,
+      failover_enabled: true,
+      max_concurrent_requests: 10,
+    });
 
     const provider = await providerManager.selectProvider({
       capabilities: [LLMCapability.TEXT_GENERATION],
@@ -177,7 +184,7 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         try {
           // Create initial AI message record
-          const { data: newMessage, error: createError } = await supabase
+          const { data: newMessage, error: createError } = await (supabase as any)
             .from("chat_messages")
             .insert({
               session_id: sessionId,
@@ -186,8 +193,8 @@ export async function POST(request: NextRequest) {
               content: "",
               status: "sending",
               is_streaming: true,
-              model_used: provider.getId(),
-              provider_id: provider.getId(),
+              model_used: provider.id,
+              provider_id: provider.id,
             })
             .select()
             .single();
@@ -209,75 +216,43 @@ export async function POST(request: NextRequest) {
           );
 
           // Process streaming response
-          const response = await provider.complete(chatRequest);
+          await provider.generateStream(chatRequest, (chunk) => {
+            try {
+              // Handle different streaming chunk types
+              if (chunk.type === "content_block_delta" && chunk.delta?.text) {
+                const delta = chunk.delta.text;
+                responseContent += delta;
 
-          if (!response.body) {
-            throw new Error("No response body from provider");
-          }
+                // Send content delta
+                const deltaEvent: StreamingResponse = {
+                  type: "content_delta",
+                  delta,
+                };
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify(deltaEvent)}\n\n`),
+                );
 
-          while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                try {
-                  const data = JSON.parse(line.slice(6));
-
-                  // Handle different streaming event types from Claude/OpenAI
-                  if (
-                    data.type === "content_block_delta" ||
-                    data.type === "content_delta"
-                  ) {
-                    const delta = data.delta?.text || data.delta || "";
-
-                    responseContent += delta;
-
-                    // Send content delta
-                    const deltaEvent: StreamingResponse = {
-                      type: "content_delta",
-                      delta,
-                    };
-
-                    controller.enqueue(
-                      encoder.encode(`data: ${JSON.stringify(deltaEvent)}\n\n`),
-                    );
-
-                    // Update message in database periodically
-                    if (responseContent.length % 100 === 0) {
-                      await supabase
-                        .from("chat_messages")
-                        .update({
-                          content: responseContent,
-                          updated_at: new Date().toISOString(),
-                        })
-                        .eq("id", aiMessage.id);
-                    }
-                  } else if (
-                    data.type === "message_stop" ||
-                    data.type === "done"
-                  ) {
-                    // Extract usage statistics if available
-                    if (data.usage) {
-                      totalTokens = data.usage.total_tokens || 0;
-                      promptTokens = data.usage.prompt_tokens || 0;
-                      completionTokens = data.usage.completion_tokens || 0;
-                    }
-                    break;
-                  }
-                } catch (parseError) {
-                  console.error("Failed to parse streaming data:", parseError);
+                // Update message in database periodically
+                if (responseContent.length % 100 === 0) {
+                  (supabase as any)
+                    .from("chat_messages")
+                    .update({
+                      content: responseContent,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", aiMessage.id);
                 }
+              } else if (chunk.type === "message_stop" && chunk.usage) {
+                // Extract usage statistics if available
+                totalTokens = chunk.usage.total_tokens || 0;
+                promptTokens = chunk.usage.prompt_tokens || 0;
+                completionTokens = chunk.usage.completion_tokens || 0;
               }
+            } catch (parseError) {
+              console.error("Failed to process streaming chunk:", parseError);
             }
-          }
+          });
 
           // Calculate cost (rough estimate - adjust based on actual provider pricing)
           const costCents = Math.ceil(
@@ -285,7 +260,7 @@ export async function POST(request: NextRequest) {
           );
 
           // Update final message
-          const { data: updatedMessage, error: updateError } = await supabase
+          const { data: updatedMessage, error: updateError } = await (supabase as any)
             .from("chat_messages")
             .update({
               content: responseContent,
@@ -320,7 +295,7 @@ export async function POST(request: NextRequest) {
           );
 
           // Track usage for billing/analytics
-          await supabase.from("usage_tracking").insert({
+          await (supabase as any).from("usage_tracking").insert({
             user_id: user.id,
             feature_type: "chat_completion",
             tokens_used: totalTokens,
@@ -328,8 +303,8 @@ export async function POST(request: NextRequest) {
             metadata: {
               sessionId,
               messageId: aiMessage.id,
-              provider: provider.getId(),
-              model: provider.getId(),
+              provider: provider.id,
+              model: provider.id,
               contextType,
             },
           });
@@ -338,7 +313,7 @@ export async function POST(request: NextRequest) {
 
           // Update message with error status
           if (aiMessage) {
-            await supabase
+            await (supabase as any)
               .from("chat_messages")
               .update({
                 status: "error",

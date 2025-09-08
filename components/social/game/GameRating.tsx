@@ -76,7 +76,7 @@ export function GameRating({
 
   const fetchUserRating = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("game_ratings")
         .select("rating, review")
         .eq("game_id", gameId)
@@ -95,7 +95,7 @@ export function GameRating({
 
   const fetchRatings = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("game_ratings")
         .select(
           `
@@ -118,7 +118,7 @@ export function GameRating({
         .limit(10);
 
       if (data && !error) {
-        const ratingsWithProfiles = data.map((rating) => ({
+        const ratingsWithProfiles = data.map((rating: any) => ({
           ...rating,
           user_profile: rating.profiles,
         }));
@@ -151,27 +151,27 @@ export function GameRating({
 
       if (hasUserRated) {
         // Update existing rating
-        result = await supabase
+        result = await (supabase as any)
           .from("game_ratings")
           .update(ratingData)
           .eq("game_id", gameId)
           .eq("user_id", currentUserId);
       } else {
         // Insert new rating
-        result = await supabase.from("game_ratings").insert(ratingData);
+        result = await (supabase as any).from("game_ratings").insert(ratingData);
       }
 
       if (result.error) throw result.error;
 
       // Recalculate average rating
-      const { data: allRatings } = await supabase
+      const { data: allRatings } = await (supabase as any)
         .from("game_ratings")
         .select("rating")
         .eq("game_id", gameId);
 
       if (allRatings) {
         const newAverage =
-          allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+          allRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / allRatings.length;
         const newCount = allRatings.length;
 
         setAverageRating(newAverage);
@@ -181,7 +181,7 @@ export function GameRating({
       }
 
       // Create activity
-      await supabase.from("activities").insert({
+      await (supabase as any).from("activities").insert({
         user_id: currentUserId,
         activity_type: hasUserRated ? "game_rating_updated" : "game_rated",
         target_game_id: gameId,

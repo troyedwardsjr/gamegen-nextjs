@@ -147,7 +147,7 @@ export function GlassmorphicButton({
       className={glassClasses}
       variant="light"
       {...(animated ? motionProps : {})}
-      {...props}
+      {...(props as any)}
     >
       {/* Gaming ripple effect on click */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700 pointer-events-none" />
