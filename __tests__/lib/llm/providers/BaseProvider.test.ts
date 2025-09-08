@@ -10,9 +10,28 @@ import {
   TokenUsage,
 } from '@/lib/llm/types';
 
-// Mock p-retry
+// Mock p-retry to avoid actual retry logic in tests
 jest.mock('p-retry', () => {
-  return jest.fn().mockImplementation((fn) => fn());
+  const mockPRetry = jest.fn().mockImplementation(async (fn) => {
+    // Execute the function once without retry logic
+    try {
+      return await fn();
+    } catch (error) {
+      // Re-throw error without retry attempts
+      throw error;
+    }
+  });
+  
+  return {
+    __esModule: true,
+    default: mockPRetry,
+    AbortError: class AbortError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'AbortError';
+      }
+    },
+  };
 });
 
 // Test implementation of BaseProvider

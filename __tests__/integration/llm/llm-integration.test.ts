@@ -16,8 +16,8 @@ import {
   TokenUsage,
 } from '@/lib/llm/types';
 
-// Mock MSW for HTTP interception
-import { rest } from 'msw';
+// Mock MSW for HTTP interception - MSW v2 imports
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
 // Mock implementations
@@ -174,45 +174,46 @@ class OptimizedPlatformerGame {
   };
 
   beforeAll(() => {
-    // Set up MSW server for HTTP mocking
+    // Set up MSW server for HTTP mocking - MSW v2 syntax
     mockServer = setupServer(
       // Mock Claude API
-      rest.post('https://api.anthropic.com/v1/messages', (req, res, ctx) => {
-        const body = req.body as any;
+      http.post('https://api.anthropic.com/v1/messages', async ({ request }) => {
+        const body = await request.json() as any;
         
         if (body.messages?.[0]?.content?.includes('error')) {
-          return res(ctx.status(529), ctx.json(mockResponses.errorResponse));
+          return HttpResponse.json(mockResponses.errorResponse, { status: 529 });
         }
         
         if (body.messages?.[0]?.content?.includes('optimize')) {
-          return res(ctx.json({
+          return HttpResponse.json({
             id: 'msg_test_123',
             type: 'message',
             role: 'assistant',
             content: [{ type: 'text', text: mockResponses.codeOptimization.content }],
             usage: mockResponses.codeOptimization.usage,
-          }));
+          });
         }
 
-        return res(ctx.json({
+        return HttpResponse.json({
           id: 'msg_test_123',
           type: 'message',
           role: 'assistant',
           content: [{ type: 'text', text: mockResponses.gameGeneration.content }],
           usage: mockResponses.gameGeneration.usage,
-        }));
+        });
       }),
 
       // Mock streaming endpoint
-      rest.post('https://api.anthropic.com/v1/messages/stream', (req, res, ctx) => {
+      http.post('https://api.anthropic.com/v1/messages/stream', () => {
         const stream = mockResponses.streamingChunks
           .map(chunk => `data: ${JSON.stringify(chunk)}\n\n`)
           .join('');
         
-        return res(
-          ctx.set('Content-Type', 'text/event-stream'),
-          ctx.text(stream)
-        );
+        return HttpResponse.text(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+          },
+        });
       })
     );
 
