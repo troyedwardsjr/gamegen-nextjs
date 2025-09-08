@@ -147,8 +147,8 @@ export default function CommunityPage() {
                 Community Leaderboards
               </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                See who&apos;s leading the way in different categories and compete to
-                reach the top!
+                See who&apos;s leading the way in different categories and
+                compete to reach the top!
               </p>
             </div>
 

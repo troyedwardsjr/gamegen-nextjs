@@ -249,7 +249,7 @@ export default function CommunityPageMinimal() {
                 Community Leaderboards
               </h2>
               <p className="text-foreground/70 max-w-2xl mx-auto">
-                See who's leading the way in different categories!
+                See who&apos;s leading the way in different categories!
               </p>
             </div>
 

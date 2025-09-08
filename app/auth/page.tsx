@@ -60,7 +60,7 @@ export default function AuthPage() {
           setError(result.error || "Sign up failed");
         }
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -112,7 +112,10 @@ export default function AuthPage() {
           >
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
+                <label
+                  className="block text-sm font-medium text-gray-200 mb-2"
+                  htmlFor="email"
+                >
                   Email
                 </label>
                 <Input
@@ -125,6 +128,7 @@ export default function AuthPage() {
                       "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15",
                   }}
                   data-testid="email-input"
+                  id="email"
                   placeholder="your@email.com"
                   type="email"
                   value={email}
@@ -133,7 +137,10 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
+                <label
+                  className="block text-sm font-medium text-gray-200 mb-2"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <Input
@@ -160,6 +167,7 @@ export default function AuthPage() {
                       )}
                     </button>
                   }
+                  id="password"
                   placeholder={isLogin ? "Enter password" : "Create a password"}
                   type={isVisible ? "text" : "password"}
                   value={password}
@@ -169,7 +177,10 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <label
+                    className="block text-sm font-medium text-gray-200 mb-2"
+                    htmlFor="confirm-password"
+                  >
                     Confirm Password
                   </label>
                   <Input
@@ -182,6 +193,7 @@ export default function AuthPage() {
                         "bg-white/10 backdrop-blur-xl border-white/20 hover:border-purple-400/50 focus-within:border-purple-400 data-[hover=true]:bg-white/15",
                     }}
                     data-testid="confirm-password-input"
+                    id="confirm-password"
                     placeholder="Confirm your password"
                     type="password"
                     value={confirmPassword}
