@@ -21,10 +21,29 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 
 // Mock implementations
-jest.mock('@/lib/llm/providers/manager');
-jest.mock('@/lib/llm/providers/claude');
-jest.mock('@/lib/llm/config');
-jest.mock('@/lib/llm/billing/tracker');
+jest.mock('@/lib/llm/providers/manager', () => {
+  return {
+    ProviderManager: jest.fn(),
+  };
+});
+
+jest.mock('@/lib/llm/providers/claude', () => {
+  return {
+    ClaudeProvider: jest.fn(),
+  };
+});
+
+jest.mock('@/lib/llm/config', () => {
+  return {
+    LLMConfigManager: jest.fn(),
+  };
+});
+
+jest.mock('@/lib/llm/billing/tracker', () => {
+  return {
+    BillingTracker: jest.fn(),
+  };
+});
 
 const MockProviderManager = ProviderManager as jest.MockedClass<typeof ProviderManager>;
 const MockClaudeProvider = ClaudeProvider as jest.MockedClass<typeof ClaudeProvider>;
@@ -228,7 +247,7 @@ class OptimizedPlatformerGame {
     jest.clearAllMocks();
     mockServer.resetHandlers();
 
-    // Mock provider manager
+    // Create mock instances directly
     providerManager = {
       generateText: jest.fn(),
       generateStream: jest.fn(),
@@ -236,9 +255,7 @@ class OptimizedPlatformerGame {
       healthCheck: jest.fn(),
       getMetrics: jest.fn(),
     };
-    MockProviderManager.mockImplementation(() => providerManager);
 
-    // Mock Claude provider
     mockClaudeProvider = {
       id: 'claude',
       name: 'Claude',
@@ -247,14 +264,16 @@ class OptimizedPlatformerGame {
       healthCheck: jest.fn(),
       getMetrics: jest.fn(),
     };
-    MockClaudeProvider.mockImplementation(() => mockClaudeProvider);
 
-    // Mock billing tracker
     mockBillingTracker = {
       checkBalance: jest.fn(),
       deductCredits: jest.fn(),
       trackUsage: jest.fn(),
     };
+
+    // Update mock implementations to return these instances
+    MockProviderManager.mockImplementation(() => providerManager);
+    MockClaudeProvider.mockImplementation(() => mockClaudeProvider);
     MockBillingTracker.mockImplementation(() => mockBillingTracker);
   });
 

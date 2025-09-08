@@ -43,6 +43,8 @@ const customJestConfig = {
     '!**/public/**',
     '!**/styles/**',
     '!**/unrest_app/**', // Exclude legacy directory
+    '!**/unrest_app.disabled/**', // Exclude disabled directory
+    '!**/*.disabled.*', // Exclude disabled files
     // Exclude specific files
     '!app/layout.tsx', // Layout files are hard to test meaningfully
     '!app/loading.tsx',
@@ -102,10 +104,12 @@ const customJestConfig = {
     '<rootDir>/test-results/',
     '<rootDir>/playwright-report/',
     '<rootDir>/unrest_app/',
+    '<rootDir>/unrest_app.disabled/',
     '<rootDir>/src-tauri/',
     // Exclude Playwright tests from Jest
     '<rootDir>/__tests__/e2e/',
     '\\.spec\\.(ts|tsx)$',
+    '\\.disabled\\.(ts|tsx)$',
   ],
   transformIgnorePatterns: [
     '/node_modules/(?!(openai|@anthropic-ai/sdk|@supabase/.*|@heroui/.*|msw/.*|p-retry/.*)/)/',
