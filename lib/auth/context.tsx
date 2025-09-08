@@ -270,10 +270,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const resetPassword = useCallback(
     async (email: string): Promise<AuthResult> => {
       try {
-        const { error } =
-          await sessionManager.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-          });
+        const { error } = await sessionManager.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
 
         if (error) {
           return { success: false, error: error.message };

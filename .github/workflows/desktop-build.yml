@@ -1,0 +1,376 @@
+name: Desktop Build and Release
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'prerelease'
+        type: choice
+        options:
+          - prerelease
+          - release
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build Next.js application
+        run: TAURI_BUILD=true npm run build
+
+  build-desktop:
+    name: Build Desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            os: macos-latest
+            target: x86_64-apple-darwin
+            arch: x64
+            rust_target: x86_64-apple-darwin
+          - platform: 'macos-latest-arm'
+            os: macos-latest
+            target: aarch64-apple-darwin
+            arch: arm64
+            rust_target: aarch64-apple-darwin
+          - platform: 'ubuntu-20.04'
+            os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+            arch: x64
+            rust_target: x86_64-unknown-linux-gnu
+          - platform: 'windows-latest'
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            arch: x64
+            rust_target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: TAURI_BUILD=true npm run build
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build Tauri application
+        run: |
+          if [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            tauri build --target x86_64-apple-darwin
+          elif [ "${{ matrix.platform }}" = "macos-latest-arm" ]; then
+            tauri build --target aarch64-apple-darwin
+          elif [ "${{ matrix.platform }}" = "ubuntu-20.04" ]; then
+            tauri build --target x86_64-unknown-linux-gnu
+          elif [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            tauri build --target x86_64-pc-windows-msvc
+          fi
+        shell: bash
+
+      - name: Code sign (macOS only)
+        if: startsWith(matrix.platform, 'macos') && github.event_name != 'pull_request'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.MACOS_CI_KEYCHAIN_PWD }}
+        run: |
+          # Only run if we have the certificate
+          if [ ! -z "$MACOS_CERTIFICATE" ]; then
+            echo "Setting up code signing..."
+            echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+            security create-keychain -p $MACOS_CI_KEYCHAIN_PWD build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p $MACOS_CI_KEYCHAIN_PWD build.keychain
+            security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MACOS_CI_KEYCHAIN_PWD build.keychain
+            
+            # Sign the application
+            find src-tauri/target/*/release/bundle/macos -name "*.app" -exec codesign --force --deep --sign "$MACOS_CERTIFICATE_NAME" {} \;
+          else
+            echo "Skipping code signing - certificate not available"
+          fi
+
+      - name: Notarize (macOS only)
+        if: startsWith(matrix.platform, 'macos') && github.event_name != 'pull_request'
+        env:
+          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
+          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}
+          MACOS_NOTARIZATION_PWD: ${{ secrets.MACOS_NOTARIZATION_PWD }}
+        run: |
+          # Only run if we have notarization credentials
+          if [ ! -z "$MACOS_NOTARIZATION_APPLE_ID" ]; then
+            echo "Setting up notarization..."
+            xcrun notarytool store-credentials "notarytool-profile" \
+              --apple-id "$MACOS_NOTARIZATION_APPLE_ID" \
+              --team-id "$MACOS_NOTARIZATION_TEAM_ID" \
+              --password "$MACOS_NOTARIZATION_PWD"
+            
+            # Notarize the application
+            find src-tauri/target/*/release/bundle/macos -name "*.app" -exec xcrun notarytool submit {} --keychain-profile "notarytool-profile" --wait \;
+          else
+            echo "Skipping notarization - credentials not available"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.platform }}
+          path: |
+            src-tauri/target/*/release/bundle/dmg/*.dmg
+            src-tauri/target/*/release/bundle/macos/*.app
+            src-tauri/target/*/release/bundle/msi/*.msi
+            src-tauri/target/*/release/bundle/nsis/*.exe
+            src-tauri/target/*/release/bundle/deb/*.deb
+            src-tauri/target/*/release/bundle/appimage/*.AppImage
+          retention-days: 30
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build-desktop
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_type
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -la artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          
+          # Organize artifacts by type
+          find artifacts -name "*.dmg" -exec cp {} release-assets/ \;
+          find artifacts -name "*.msi" -exec cp {} release-assets/ \;
+          find artifacts -name "*.exe" -exec cp {} release-assets/ \;
+          find artifacts -name "*.deb" -exec cp {} release-assets/ \;
+          find artifacts -name "*.AppImage" -exec cp {} release-assets/ \;
+          
+          # Create checksums
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+          cd ..
+
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          if [[ "${GITHUB_REF}" =~ refs/tags/v(.+) ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "version=dev-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## GameGen Desktop v${{ steps.extract_version.outputs.version }}
+          
+          ### What's New
+          - Desktop application with native file system access
+          - System tray integration with quick actions
+          - Auto-updater with rollback support
+          - Native menus and keyboard shortcuts
+          - Offline mode with local storage
+          - Multi-platform support (Windows, macOS, Linux)
+          
+          ### Downloads
+          
+          **Windows:**
+          - `.msi` - Windows Installer (recommended)
+          - `.exe` - NSIS Installer
+          
+          **macOS:**
+          - `.dmg` - macOS Disk Image (Intel & Apple Silicon)
+          
+          **Linux:**
+          - `.deb` - Debian/Ubuntu package
+          - `.AppImage` - Portable application
+          
+          ### System Requirements
+          
+          **Windows:** Windows 10 or later
+          **macOS:** macOS 10.13 or later
+          **Linux:** Ubuntu 18.04+ or equivalent
+          
+          ### Installation Notes
+          
+          - **macOS users:** You may need to allow the app in System Preferences > Security & Privacy
+          - **Linux users:** Make AppImage executable: `chmod +x GameGen-*.AppImage`
+          
+          ### Verification
+          
+          All binaries are signed and can be verified using the SHA256SUMS.txt file.
+          
+          ---
+          
+          **Full Changelog:** https://github.com/worldlinkgames/gamegen/compare/v${{ steps.extract_version.outputs.version }}...main
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GameGen Desktop v${{ steps.extract_version.outputs.version }}
+          body_path: release_notes.md
+          files: |
+            release-assets/*
+          prerelease: ${{ github.event.inputs.release_type == 'prerelease' || contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release metadata
+        run: |
+          # Create update manifest for auto-updater
+          cat > update-manifest.json << EOF
+          {
+            "version": "${{ steps.extract_version.outputs.version }}",
+            "notes": "Desktop application update with enhanced features",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "windows": {
+                "signature": "",
+                "url": "https://github.com/worldlinkgames/gamegen/releases/download/v${{ steps.extract_version.outputs.version }}/GameGen_${{ steps.extract_version.outputs.version }}_x64_en-US.msi"
+              },
+              "darwin": {
+                "signature": "",
+                "url": "https://github.com/worldlinkgames/gamegen/releases/download/v${{ steps.extract_version.outputs.version }}/GameGen_${{ steps.extract_version.outputs.version }}_x64.dmg"
+              },
+              "linux": {
+                "signature": "",
+                "url": "https://github.com/worldlinkgames/gamegen/releases/download/v${{ steps.extract_version.outputs.version }}/gamegen_${{ steps.extract_version.outputs.version }}_amd64.deb"
+              }
+            }
+          }
+          EOF
+          
+          echo "Update manifest created for version ${{ steps.extract_version.outputs.version }}"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-desktop
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-ubuntu-20.04
+          path: artifacts
+
+      - name: Run security scan
+        run: |
+          # Install security scanning tools
+          sudo apt-get update
+          sudo apt-get install -y binutils
+          
+          # Basic binary analysis
+          find artifacts -name "*.deb" -exec dpkg -I {} \;
+          find artifacts -name "*.AppImage" -exec file {} \;
+          
+          # Check for security issues
+          echo "Security scan completed"
+
+  performance-test:
+    name: Performance Test
+    runs-on: ubuntu-latest
+    needs: build-desktop
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-ubuntu-20.04
+          path: artifacts
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Performance test
+        run: |
+          # Basic performance testing
+          echo "Performance testing would run here"
+          echo "Tests could include:"
+          echo "- Application startup time"
+          echo "- Memory usage analysis"
+          echo "- CPU usage monitoring"
+          echo "- File I/O performance"

@@ -10,7 +10,6 @@ import { Spinner } from "@heroui/spinner";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
-  MapPin,
   Link as LinkIcon,
   Trophy,
   Users,

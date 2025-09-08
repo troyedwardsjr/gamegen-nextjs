@@ -25,11 +25,7 @@ export default function ProfilePage() {
       className="px-0 py-8"
       initial={{ opacity: 0, y: 20 }}
     >
-      <UserProfile
-        className="mb-8"
-        currentUserId={user.id}
-        userId={user.id}
-      />
+      <UserProfile className="mb-8" currentUserId={user.id} userId={user.id} />
 
       <Tabs
         className="w-full"
@@ -47,11 +43,7 @@ export default function ProfilePage() {
           }
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <ActivityFeed
-              maxItems={10}
-              showFilters={false}
-              userId={user.id}
-            />
+            <ActivityFeed maxItems={10} showFilters={false} userId={user.id} />
             <AchievementProgress
               maxRecentAchievements={5}
               showStats={true}
@@ -109,10 +101,7 @@ export default function ProfilePage() {
           }
         >
           <div className="mt-8">
-            <ActivityFeed
-              showFilters={true}
-              userId={user.id}
-            />
+            <ActivityFeed showFilters={true} userId={user.id} />
           </div>
         </Tab>
       </Tabs>

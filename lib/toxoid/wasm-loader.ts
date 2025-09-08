@@ -404,14 +404,15 @@ export class ToxoidWasmLoader {
     // This is a mock implementation - the real version would bind to WASM functions
     const mockEngine: ToxoidEngine = {
       API: {
-        createEntity: (name?: string) => ({
-          id: Math.random() as any, // Cast to EntityId for mock
-          name: name || "",
-          add: () => true,
-          remove: () => true,
-          has: () => false,
-          getComponent: () => null,
-        } as any), // Use as any for mock to avoid complex type matching
+        createEntity: (name?: string) =>
+          ({
+            id: Math.random() as any, // Cast to EntityId for mock
+            name: name || "",
+            add: () => true,
+            remove: () => true,
+            has: () => false,
+            getComponent: () => null,
+          }) as any, // Use as any for mock to avoid complex type matching
         destroyEntity: () => {},
         getEntityById: () => null,
         getEntityByName: () => null,

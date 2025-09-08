@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { 
+
+import {
   UseAssetRecommendationsReturn,
   AssetRecommendation,
   AssetRecommendationContext,
-  Asset,
-  AssetError,
 } from "@/types/assets";
 
 // Mock recommendations data
@@ -46,41 +45,50 @@ const mockRecommendations: AssetRecommendation[] = [
 ];
 
 // Simulate API delay
-const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const simulateDelay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 // Mock recommendation function
 const mockGetRecommendations = async (
-  context: AssetRecommendationContext
+  context: AssetRecommendationContext,
 ): Promise<AssetRecommendation[]> => {
   await simulateDelay(500 + Math.random() * 1000);
 
   // Filter out excluded assets
   let recommendations = mockRecommendations.filter(
-    rec => !context.excludeIds?.includes(rec.assetId)
+    (rec) => !context.excludeIds?.includes(rec.assetId),
   );
 
   // Adjust scores based on context
-  recommendations = recommendations.map(rec => {
+  recommendations = recommendations.map((rec) => {
     let adjustedScore = rec.score;
 
     // Boost score for matching game genre
-    if (context.gameGenre && rec.tags.some(tag => 
-      tag.toLowerCase().includes(context.gameGenre!.toLowerCase())
-    )) {
+    if (
+      context.gameGenre &&
+      rec.tags.some((tag) =>
+        tag.toLowerCase().includes(context.gameGenre!.toLowerCase()),
+      )
+    ) {
       adjustedScore = Math.min(100, adjustedScore + 10);
     }
 
     // Boost score for matching game style
-    if (context.gameStyle && rec.tags.some(tag => 
-      tag.toLowerCase().includes(context.gameStyle!.toLowerCase())
-    )) {
+    if (
+      context.gameStyle &&
+      rec.tags.some((tag) =>
+        tag.toLowerCase().includes(context.gameStyle!.toLowerCase()),
+      )
+    ) {
       adjustedScore = Math.min(100, adjustedScore + 8);
     }
 
     // Boost score for matching preferences
-    if (context.preferences?.some(pref => 
-      rec.tags.some(tag => tag.toLowerCase().includes(pref.toLowerCase()))
-    )) {
+    if (
+      context.preferences?.some((pref) =>
+        rec.tags.some((tag) => tag.toLowerCase().includes(pref.toLowerCase())),
+      )
+    ) {
       adjustedScore = Math.min(100, adjustedScore + 5);
     }
 
@@ -88,7 +96,7 @@ const mockGetRecommendations = async (
     if (context.currentAssets?.length) {
       // In a real implementation, this would use ML models
       // For mock, just boost complementary assets
-      if (rec.type === 'complementary') {
+      if (rec.type === "complementary") {
         adjustedScore = Math.min(100, adjustedScore + 7);
       }
     }
@@ -108,12 +116,13 @@ const mockGetRecommendations = async (
 
 // Generate contextual recommendations based on user behavior
 const generateContextualRecommendations = (
-  context: AssetRecommendationContext
+  context: AssetRecommendationContext,
 ): AssetRecommendation[] => {
   const contextualRecs: AssetRecommendation[] = [];
 
   // Time-based recommendations
   const hour = new Date().getHours();
+
   if (hour >= 9 && hour <= 17) {
     // Work hours - suggest productivity assets
     contextualRecs.push({
@@ -138,7 +147,9 @@ const generateContextualRecommendations = (
 
   // Seasonal recommendations
   const month = new Date().getMonth();
-  if (month >= 9 && month <= 11) { // October-December
+
+  if (month >= 9 && month <= 11) {
+    // October-December
     contextualRecs.push({
       assetId: "winter-theme-1",
       score: 72,
@@ -153,70 +164,82 @@ const generateContextualRecommendations = (
 };
 
 export function useAssetRecommendations(): UseAssetRecommendationsReturn {
-  const [recommendations, setRecommendations] = useState<AssetRecommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<AssetRecommendation[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getRecommendations = useCallback(async (context: AssetRecommendationContext) => {
-    setLoading(true);
-    setError(null);
+  const getRecommendations = useCallback(
+    async (context: AssetRecommendationContext) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      // Get both ML-based and contextual recommendations
-      const [mlRecommendations, contextualRecs] = await Promise.all([
-        mockGetRecommendations(context),
-        Promise.resolve(generateContextualRecommendations(context)),
-      ]);
+      try {
+        // Get both ML-based and contextual recommendations
+        const [mlRecommendations, contextualRecs] = await Promise.all([
+          mockGetRecommendations(context),
+          Promise.resolve(generateContextualRecommendations(context)),
+        ]);
 
-      // Merge and deduplicate recommendations
-      const allRecommendations = [...mlRecommendations, ...contextualRecs];
-      const uniqueRecommendations = allRecommendations.reduce((acc, rec) => {
-        const existing = acc.find(r => r.assetId === rec.assetId);
-        if (!existing) {
-          acc.push(rec);
-        } else if (rec.score > existing.score) {
-          // Replace with higher scoring recommendation
-          const index = acc.indexOf(existing);
-          acc[index] = rec;
-        }
-        return acc;
-      }, [] as AssetRecommendation[]);
+        // Merge and deduplicate recommendations
+        const allRecommendations = [...mlRecommendations, ...contextualRecs];
+        const uniqueRecommendations = allRecommendations.reduce((acc, rec) => {
+          const existing = acc.find((r) => r.assetId === rec.assetId);
 
-      // Sort by score and limit to top 15
-      const finalRecommendations = uniqueRecommendations
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 15);
+          if (!existing) {
+            acc.push(rec);
+          } else if (rec.score > existing.score) {
+            // Replace with higher scoring recommendation
+            const index = acc.indexOf(existing);
 
-      setRecommendations(finalRecommendations);
+            acc[index] = rec;
+          }
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendations';
-      setError(errorMessage);
-      setRecommendations([]);
-      console.error('Recommendation error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+          return acc;
+        }, [] as AssetRecommendation[]);
+
+        // Sort by score and limit to top 15
+        const finalRecommendations = uniqueRecommendations
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 15);
+
+        setRecommendations(finalRecommendations);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to get recommendations";
+
+        setError(errorMessage);
+        setRecommendations([]);
+        console.error("Recommendation error:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const refresh = useCallback(async () => {
     // Re-run the last recommendation context if available
     // In a real implementation, you'd store the last context
     const defaultContext: AssetRecommendationContext = {
-      gameGenre: 'action',
-      gameStyle: 'pixel',
+      gameGenre: "action",
+      gameStyle: "pixel",
     };
-    
+
     await getRecommendations(defaultContext);
   }, [getRecommendations]);
 
   // Auto-refresh recommendations periodically
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (recommendations.length > 0) {
-        refresh();
-      }
-    }, 5 * 60 * 1000); // Refresh every 5 minutes
+    const interval = setInterval(
+      () => {
+        if (recommendations.length > 0) {
+          refresh();
+        }
+      },
+      5 * 60 * 1000,
+    ); // Refresh every 5 minutes
 
     return () => clearInterval(interval);
   }, [recommendations.length, refresh]);

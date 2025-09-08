@@ -1,0 +1,206 @@
+/**
+ * LLM Integration Testing Suite - Simplified Version
+ * Tests LLM provider integration with proper mocking
+ */
+
+import { ProviderManager } from '@/lib/llm/providers/manager';
+import { ClaudeProvider } from '@/lib/llm/providers/claude';
+import { LLMConfigManager } from '@/lib/llm/config';
+import { BillingTracker } from '@/lib/llm/billing/tracker';
+import {
+  GenerationRequest,
+  GenerationResponse,
+  LLMError,
+  ProviderHealthStatus,
+  TokenUsage,
+} from '@/lib/llm/types';
+
+// Create mocks
+const mockProviderManager = {
+  generateText: jest.fn(),
+  generateStream: jest.fn(),
+  getProvider: jest.fn(),
+  healthCheck: jest.fn(),
+  getMetrics: jest.fn(),
+};
+
+const mockClaudeProvider = {
+  id: 'claude',
+  name: 'Claude',
+  generate: jest.fn(),
+  generateStream: jest.fn(),
+  healthCheck: jest.fn(),
+  getMetrics: jest.fn(),
+};
+
+const mockBillingTracker = {
+  checkBalance: jest.fn(),
+  deductCredits: jest.fn(),
+  trackUsage: jest.fn(),
+};
+
+// Mock Supabase first
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(() => ({
+      select: jest.fn(),
+      insert: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    })),
+  })),
+}));
+
+// Mock the modules
+jest.mock('@/lib/llm/providers/manager', () => ({
+  ProviderManager: jest.fn().mockImplementation(() => mockProviderManager),
+}));
+
+jest.mock('@/lib/llm/providers/claude', () => ({
+  ClaudeProvider: jest.fn().mockImplementation(() => mockClaudeProvider),
+}));
+
+jest.mock('@/lib/llm/config', () => ({
+  LLMConfigManager: jest.fn().mockImplementation(() => ({
+    getConfig: jest.fn(),
+    updateConfig: jest.fn(),
+  })),
+}));
+
+jest.mock('@/lib/llm/billing/tracker', () => ({
+  BillingTracker: jest.fn().mockImplementation(() => mockBillingTracker),
+}));
+
+describe('LLM Integration Tests - Simplified', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Reset mock return values
+    mockProviderManager.generateText.mockClear();
+    mockProviderManager.generateStream.mockClear();
+    mockProviderManager.healthCheck.mockClear();
+    mockProviderManager.getMetrics.mockClear();
+    
+    mockClaudeProvider.generate.mockClear();
+    mockClaudeProvider.generateStream.mockClear();
+    mockClaudeProvider.healthCheck.mockClear();
+    mockClaudeProvider.getMetrics.mockClear();
+    
+    mockBillingTracker.checkBalance.mockClear();
+    mockBillingTracker.deductCredits.mockClear();
+    mockBillingTracker.trackUsage.mockClear();
+  });
+
+  describe('Basic Integration', () => {
+    it('should create provider manager instance', () => {
+      const manager = new ProviderManager({} as any);
+      expect(ProviderManager).toHaveBeenCalled();
+      expect(manager).toBeDefined();
+    });
+
+    it('should generate text successfully', async () => {
+      const mockResponse: GenerationResponse = {
+        content: 'Test game content',
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+        provider_id: 'claude',
+        finish_reason: 'stop',
+        timestamp: new Date(),
+      };
+
+      mockProviderManager.generateText.mockResolvedValue(mockResponse);
+
+      const manager = new ProviderManager({} as any);
+      const request: GenerationRequest = {
+        messages: [{ role: 'user', content: 'Create a simple game' }],
+        temperature: 0.7,
+        max_tokens: 1000,
+      };
+
+      const result = await manager.generateText(request);
+      
+      expect(result).toEqual(mockResponse);
+      expect(mockProviderManager.generateText).toHaveBeenCalledWith(request);
+    });
+
+    it('should handle provider health checks', async () => {
+      const healthStatus: ProviderHealthStatus = {
+        provider_id: 'claude',
+        status: 'healthy',
+        latency: 150,
+        success_rate: 0.95,
+        last_check: new Date(),
+      };
+
+      mockProviderManager.healthCheck.mockResolvedValue(healthStatus);
+
+      const manager = new ProviderManager({} as any);
+      const result = await manager.healthCheck('claude');
+
+      expect(result).toEqual(healthStatus);
+      expect(mockProviderManager.healthCheck).toHaveBeenCalledWith('claude');
+    });
+
+    it('should track token usage', async () => {
+      const usage: TokenUsage = {
+        input_tokens: 100,
+        output_tokens: 200,
+        total_tokens: 300,
+      };
+
+      mockBillingTracker.trackUsage.mockResolvedValue(undefined);
+
+      const tracker = new BillingTracker({} as any);
+      await tracker.trackUsage('user123', usage, 'claude');
+
+      expect(mockBillingTracker.trackUsage).toHaveBeenCalledWith('user123', usage, 'claude');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle generation errors', async () => {
+      const error = new LLMError('Generation failed', 'GENERATION_ERROR');
+      mockProviderManager.generateText.mockRejectedValue(error);
+
+      const manager = new ProviderManager({} as any);
+      const request: GenerationRequest = {
+        messages: [{ role: 'user', content: 'Create a game' }],
+      };
+
+      await expect(manager.generateText(request)).rejects.toThrow('Generation failed');
+    });
+
+    it('should handle provider health check failures', async () => {
+      mockProviderManager.healthCheck.mockRejectedValue(new Error('Health check failed'));
+
+      const manager = new ProviderManager({} as any);
+      
+      await expect(manager.healthCheck('claude')).rejects.toThrow('Health check failed');
+    });
+  });
+
+  describe('Billing Integration', () => {
+    it('should check account balance', async () => {
+      const balance = { credits: 1000, currency: 'USD' };
+      mockBillingTracker.checkBalance.mockResolvedValue(balance);
+
+      const tracker = new BillingTracker({} as any);
+      const result = await tracker.checkBalance('user123');
+
+      expect(result).toEqual(balance);
+      expect(mockBillingTracker.checkBalance).toHaveBeenCalledWith('user123');
+    });
+
+    it('should deduct credits for usage', async () => {
+      mockBillingTracker.deductCredits.mockResolvedValue(undefined);
+
+      const tracker = new BillingTracker({} as any);
+      await tracker.deductCredits('user123', 50, 'Game generation');
+
+      expect(mockBillingTracker.deductCredits).toHaveBeenCalledWith('user123', 50, 'Game generation');
+    });
+  });
+});

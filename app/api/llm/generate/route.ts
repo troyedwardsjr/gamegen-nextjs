@@ -74,6 +74,7 @@ function initializeComponents() {
 
   // Register Claude provider
   const claudeConfig = configManager.getProviderConfig("claude");
+
   if (claudeConfig && process.env.ANTHROPIC_API_KEY) {
     const claudeProvider = new ClaudeProvider({
       api_key: process.env.ANTHROPIC_API_KEY!,
@@ -195,9 +196,17 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     // Handle streaming vs non-streaming
     if (generationRequest.stream) {
-      return handleStreamingRequest(generationRequest, userId, reservationId, { providerManager, billingTracker, logger });
+      return handleStreamingRequest(generationRequest, userId, reservationId, {
+        providerManager,
+        billingTracker,
+        logger,
+      });
     } else {
-      return handleRegularRequest(generationRequest, userId, reservationId, { providerManager, billingTracker, logger });
+      return handleRegularRequest(generationRequest, userId, reservationId, {
+        providerManager,
+        billingTracker,
+        logger,
+      });
     }
   } catch (error) {
     // Log error
@@ -207,7 +216,10 @@ export async function POST(request: NextRequest): Promise<Response> {
         undefined,
         error instanceof LLMError
           ? error
-          : new LLMError(error instanceof Error ? error.message : "Unknown error", "INTERNAL_ERROR"),
+          : new LLMError(
+              error instanceof Error ? error.message : "Unknown error",
+              "INTERNAL_ERROR",
+            ),
         undefined,
         userId,
       );
@@ -269,7 +281,7 @@ async function handleRegularRequest(
   components: { providerManager: any; billingTracker: any; logger: any },
 ): Promise<Response> {
   const { providerManager, billingTracker, logger } = components;
-  
+
   try {
     // Generate response
     const response = await providerManager.generate(request);
@@ -402,7 +414,10 @@ async function handleStreamingRequest(
           undefined,
           error instanceof LLMError
             ? error
-            : new LLMError(error instanceof Error ? error.message : "Unknown error", "STREAMING_ERROR"),
+            : new LLMError(
+                error instanceof Error ? error.message : "Unknown error",
+                "STREAMING_ERROR",
+              ),
           "claude",
           userId,
         );
@@ -531,7 +546,7 @@ export async function GET(): Promise<Response> {
   try {
     // Initialize components within request context
     const { providerManager } = initializeComponents();
-    
+
     const providerStatus = await providerManager.getAllProviderStatus();
     const configSummary = configManager.getConfigSummary();
 

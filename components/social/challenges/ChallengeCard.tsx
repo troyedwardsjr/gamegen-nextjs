@@ -225,11 +225,13 @@ export function ChallengeCard({
     if (!canJoin || !currentUserId) return;
 
     try {
-      const { error } = await (supabase as any).from("challenge_participants").insert({
-        challenge_id: challenge.id,
-        user_id: currentUserId,
-        joined_at: new Date().toISOString(),
-      });
+      const { error } = await (supabase as any)
+        .from("challenge_participants")
+        .insert({
+          challenge_id: challenge.id,
+          user_id: currentUserId,
+          joined_at: new Date().toISOString(),
+        });
 
       if (!error) {
         setIsParticipating(true);
@@ -319,7 +321,15 @@ export function ChallengeCard({
           <div className="flex items-center gap-2 mt-1">
             <Chip
               className="text-xs"
-              color={statusConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"}
+              color={
+                statusConfig.color as
+                  | "default"
+                  | "warning"
+                  | "success"
+                  | "primary"
+                  | "secondary"
+                  | "danger"
+              }
               size="sm"
               variant="flat"
             >
@@ -383,11 +393,31 @@ export function ChallengeCard({
               </p>
 
               <div className="flex items-center gap-2 mb-3">
-                <Chip color={statusConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"} size="sm" variant="flat">
+                <Chip
+                  color={
+                    statusConfig.color as
+                      | "default"
+                      | "warning"
+                      | "success"
+                      | "primary"
+                      | "secondary"
+                      | "danger"
+                  }
+                  size="sm"
+                  variant="flat"
+                >
                   {statusConfig.label}
                 </Chip>
                 <Chip
-                  color={difficultyConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"}
+                  color={
+                    difficultyConfig.color as
+                      | "default"
+                      | "warning"
+                      | "success"
+                      | "primary"
+                      | "secondary"
+                      | "danger"
+                  }
                   size="sm"
                   startContent={<DifficultyIcon size={10} />}
                   variant="flat"
@@ -460,7 +490,15 @@ export function ChallengeCard({
               <div className="absolute top-3 left-3">
                 <Chip
                   className="font-semibold"
-                  color={statusConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"}
+                  color={
+                    statusConfig.color as
+                      | "default"
+                      | "warning"
+                      | "success"
+                      | "primary"
+                      | "secondary"
+                      | "danger"
+                  }
                   size="sm"
                   variant="solid"
                 >
@@ -509,7 +547,15 @@ export function ChallengeCard({
                     </span>
                   </div>
                   <Chip
-                    color={difficultyConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"}
+                    color={
+                      difficultyConfig.color as
+                        | "default"
+                        | "warning"
+                        | "success"
+                        | "primary"
+                        | "secondary"
+                        | "danger"
+                    }
                     size="sm"
                     startContent={<DifficultyIcon size={12} />}
                     variant="flat"
@@ -606,11 +652,31 @@ export function ChallengeCard({
                   </div>
 
                   <div className="flex items-center gap-2 mb-2">
-                    <Chip color={statusConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"} size="sm" variant="flat">
+                    <Chip
+                      color={
+                        statusConfig.color as
+                          | "default"
+                          | "warning"
+                          | "success"
+                          | "primary"
+                          | "secondary"
+                          | "danger"
+                      }
+                      size="sm"
+                      variant="flat"
+                    >
                       {statusConfig.label}
                     </Chip>
                     <Chip
-                      color={difficultyConfig.color as "default" | "warning" | "success" | "primary" | "secondary" | "danger"}
+                      color={
+                        difficultyConfig.color as
+                          | "default"
+                          | "warning"
+                          | "success"
+                          | "primary"
+                          | "secondary"
+                          | "danger"
+                      }
                       size="sm"
                       startContent={<DifficultyIcon size={12} />}
                       variant="flat"

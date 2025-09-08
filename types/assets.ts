@@ -3,52 +3,62 @@
  * Supports pixel art game creation with AI integration
  */
 
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 // Base asset types
-export type AssetType = 
-  | 'sprite' 
-  | 'tileset' 
-  | 'sound' 
-  | 'music' 
-  | 'animation' 
-  | 'font'
-  | 'shader'
-  | 'texture'
-  | 'model'
-  | 'scene'
-  | 'script'
-  | 'data';
+export type AssetType =
+  | "sprite"
+  | "tileset"
+  | "sound"
+  | "music"
+  | "animation"
+  | "font"
+  | "shader"
+  | "texture"
+  | "model"
+  | "scene"
+  | "script"
+  | "data";
 
-export type AssetFormat = 
-  | 'png' 
-  | 'jpg' 
-  | 'webp' 
-  | 'svg' 
-  | 'gif'
-  | 'wav' 
-  | 'mp3' 
-  | 'ogg' 
-  | 'flac'
-  | 'json' 
-  | 'xml' 
-  | 'yaml'
-  | 'glsl' 
-  | 'hlsl'
-  | 'fbx' 
-  | 'obj' 
-  | 'gltf'
-  | 'ttf' 
-  | 'otf' 
-  | 'woff'
-  | 'js' 
-  | 'ts' 
-  | 'lua' 
-  | 'py';
+export type AssetFormat =
+  | "png"
+  | "jpg"
+  | "webp"
+  | "svg"
+  | "gif"
+  | "wav"
+  | "mp3"
+  | "ogg"
+  | "flac"
+  | "json"
+  | "xml"
+  | "yaml"
+  | "glsl"
+  | "hlsl"
+  | "fbx"
+  | "obj"
+  | "gltf"
+  | "ttf"
+  | "otf"
+  | "woff"
+  | "js"
+  | "ts"
+  | "lua"
+  | "py";
 
-export type AssetSource = 'user' | 'ai_generated' | 'template' | 'community' | 'marketplace';
-export type AssetStatus = 'draft' | 'ready' | 'in_use' | 'archived' | 'deprecated';
-export type AssetQuality = 'low' | 'medium' | 'high' | 'ultra';
+export type AssetSource =
+  | "user"
+  | "ai_generated"
+  | "template"
+  | "community"
+  | "marketplace";
+export type AssetStatus =
+  | "draft"
+  | "ready"
+  | "in_use"
+  | "archived"
+  | "deprecated";
+export type AssetQuality = "low" | "medium" | "high" | "ultra";
 
 // Asset metadata interfaces
 export interface AssetDimensions {
@@ -77,7 +87,7 @@ export interface AssetMetadata {
   style?: string;
   theme?: string;
   genre?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   rating?: number; // 1-5 stars
   downloads?: number;
   likes?: number;
@@ -88,7 +98,7 @@ export interface AssetOptimization {
   compressedSize: number;
   compressionRatio: number;
   formats: AssetFormat[];
-  optimizationLevel: 'none' | 'light' | 'medium' | 'aggressive';
+  optimizationLevel: "none" | "light" | "medium" | "aggressive";
   webOptimized: boolean;
   mobileOptimized: boolean;
 }
@@ -224,21 +234,21 @@ export interface AssetSearchQuery {
     minRecommendationScore?: number;
   };
   sortBy?: AssetSortField;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
 }
 
-export type AssetSortField = 
-  | 'name'
-  | 'createdAt'
-  | 'updatedAt'
-  | 'lastAccessedAt'
-  | 'size'
-  | 'usageCount'
-  | 'rating'
-  | 'qualityScore'
-  | 'relevance';
+export type AssetSortField =
+  | "name"
+  | "createdAt"
+  | "updatedAt"
+  | "lastAccessedAt"
+  | "size"
+  | "usageCount"
+  | "rating"
+  | "qualityScore"
+  | "relevance";
 
 export interface AssetSearchResult {
   assets: Asset[];
@@ -261,7 +271,7 @@ export interface AssetSearchFacets {
 export interface AssetFilter {
   id: string;
   label: string;
-  type: 'checkbox' | 'radio' | 'range' | 'date' | 'multiselect';
+  type: "checkbox" | "radio" | "range" | "date" | "multiselect";
   options?: AssetFilterOption[];
   value?: unknown;
   min?: number;
@@ -300,18 +310,18 @@ export interface AssetUploadProgress {
   estimatedTimeRemaining?: number; // seconds
 }
 
-export type AssetUploadStage = 
-  | 'queued'
-  | 'uploading'
-  | 'processing'
-  | 'optimizing'
-  | 'analyzing'
-  | 'generating_thumbnail'
-  | 'extracting_metadata'
-  | 'virus_scanning'
-  | 'finalizing'
-  | 'completed'
-  | 'failed';
+export type AssetUploadStage =
+  | "queued"
+  | "uploading"
+  | "processing"
+  | "optimizing"
+  | "analyzing"
+  | "generating_thumbnail"
+  | "extracting_metadata"
+  | "virus_scanning"
+  | "finalizing"
+  | "completed"
+  | "failed";
 
 export interface AssetUploadResult {
   asset: Asset;
@@ -326,7 +336,7 @@ export interface AssetUploadResult {
 
 // Batch operations
 export interface AssetBatchOperation {
-  type: 'delete' | 'move' | 'tag' | 'optimize' | 'export' | 'analyze';
+  type: "delete" | "move" | "tag" | "optimize" | "export" | "analyze";
   assetIds: string[];
   parameters?: Record<string, unknown>;
 }
@@ -360,7 +370,7 @@ export interface AssetRecommendation {
   reason: string;
   tags: string[];
   similarity: number; // 0-1
-  type: 'similar' | 'complementary' | 'style_match' | 'usage_pattern';
+  type: "similar" | "complementary" | "style_match" | "usage_pattern";
 }
 
 export interface AssetRecommendationContext {
@@ -398,7 +408,7 @@ export interface AssetCardProps {
   isHighlighted?: boolean;
   showMetadata?: boolean;
   showUsage?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   onClick?: (asset: Asset) => void;
   onDoubleClick?: (asset: Asset) => void;
   onSelect?: (asset: Asset, selected: boolean) => void;
@@ -423,7 +433,7 @@ export interface AssetGridProps {
   emptyState?: ReactNode;
   columns?: number;
   gap?: number;
-  itemSize?: 'small' | 'medium' | 'large';
+  itemSize?: "small" | "medium" | "large";
   virtualScrolling?: boolean;
   enableSelection?: boolean;
   enableDragDrop?: boolean;
@@ -466,7 +476,10 @@ export interface UseAssetsReturn {
 }
 
 export interface UseAssetUploadReturn {
-  upload: (files: File[], config?: Partial<AssetUploadConfig>) => Promise<AssetUploadResult[]>;
+  upload: (
+    files: File[],
+    config?: Partial<AssetUploadConfig>,
+  ) => Promise<AssetUploadResult[]>;
   progress: AssetUploadProgress[];
   isUploading: boolean;
   cancel: (fileId: string) => void;
@@ -488,20 +501,20 @@ export class AssetError extends Error {
 
   constructor(message: string, code: string, details?: unknown) {
     super(message);
-    this.name = 'AssetError';
+    this.name = "AssetError";
     this.code = code;
     this.details = details;
   }
 }
 
-export type AssetErrorCode = 
-  | 'ASSET_NOT_FOUND'
-  | 'ASSET_ACCESS_DENIED'
-  | 'ASSET_UPLOAD_FAILED'
-  | 'ASSET_FORMAT_UNSUPPORTED'
-  | 'ASSET_SIZE_EXCEEDED'
-  | 'ASSET_QUOTA_EXCEEDED'
-  | 'ASSET_PROCESSING_FAILED'
-  | 'ASSET_OPTIMIZATION_FAILED'
-  | 'ASSET_AI_ANALYSIS_FAILED'
-  | 'ASSET_SEARCH_FAILED';
+export type AssetErrorCode =
+  | "ASSET_NOT_FOUND"
+  | "ASSET_ACCESS_DENIED"
+  | "ASSET_UPLOAD_FAILED"
+  | "ASSET_FORMAT_UNSUPPORTED"
+  | "ASSET_SIZE_EXCEEDED"
+  | "ASSET_QUOTA_EXCEEDED"
+  | "ASSET_PROCESSING_FAILED"
+  | "ASSET_OPTIMIZATION_FAILED"
+  | "ASSET_AI_ANALYSIS_FAILED"
+  | "ASSET_SEARCH_FAILED";

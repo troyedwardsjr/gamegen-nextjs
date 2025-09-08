@@ -112,14 +112,18 @@ export function GameSocialPanel({
           .eq("game_id", game.id)
           .eq("is_deleted", false),
 
-        (supabase as any).from("game_ratings").select("rating").eq("game_id", game.id),
+        (supabase as any)
+          .from("game_ratings")
+          .select("rating")
+          .eq("game_id", game.id),
       ]);
 
       const commentCount = commentsResult.count || 0;
       const ratings = ratingsResult.data || [];
       const avgRating =
         ratings.length > 0
-          ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
+          ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) /
+            ratings.length
           : 0;
 
       setSocialStats((prev) => ({

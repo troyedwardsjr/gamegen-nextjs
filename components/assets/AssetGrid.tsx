@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 // Virtual scrolling imports disabled due to import issues - will be fixed in next iteration
 // import { FixedSizeGrid as Grid } from "react-window";
-// import InfiniteLoader from "react-window-infinite-loader";  
+// import InfiniteLoader from "react-window-infinite-loader";
 // import AutoSizer from "react-virtualized-auto-sizer";
 import { motion, AnimatePresence } from "framer-motion";
-import { clsx } from "clsx";
+
+import { AssetCard } from "./AssetCard";
 
 import { Asset, AssetGridProps } from "@/types/assets";
-import { AssetCard } from "./AssetCard";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
 
 // Grid item sizes based on item size prop
@@ -24,11 +30,15 @@ const DEFAULT_GAP = 16;
 const OVERSCAN_COUNT = 5;
 
 // Loading skeleton component
-const AssetCardSkeleton = ({ size }: { size: 'small' | 'medium' | 'large' }) => {
+const AssetCardSkeleton = ({
+  size,
+}: {
+  size: "small" | "medium" | "large";
+}) => {
   const itemSize = ITEM_SIZES[size];
-  
+
   return (
-    <div 
+    <div
       className="animate-pulse bg-white/5 rounded-lg border border-white/10"
       style={{ width: itemSize.width - 8, height: itemSize.height - 8 }}
     >
@@ -53,14 +63,27 @@ const EmptyState = ({ children }: { children?: React.ReactNode }) => (
     {children || (
       <div className="text-center space-y-4">
         <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 012-2h6a1 1 0 012 2v2M7 7h10" />
+          <svg
+            className="w-8 h-8 text-white/40"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 012-2h6a1 1 0 012 2v2M7 7h10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+            />
           </svg>
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-white/80">No assets found</h3>
+          <h3 className="text-lg font-semibold text-white/80">
+            No assets found
+          </h3>
           <p className="text-sm text-white/60 max-w-sm">
-            Try adjusting your search criteria or upload some assets to get started.
+            Try adjusting your search criteria or upload some assets to get
+            started.
           </p>
         </div>
       </div>
@@ -69,21 +92,39 @@ const EmptyState = ({ children }: { children?: React.ReactNode }) => (
 );
 
 // Error state component
-const ErrorState = ({ error, onRetry }: { error: string; onRetry?: () => void }) => (
+const ErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: string;
+  onRetry?: () => void;
+}) => (
   <div className="flex-1 flex items-center justify-center p-8">
     <div className="text-center space-y-4">
       <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
-        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-8 h-8 text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+          />
         </svg>
       </div>
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-white/80">Failed to load assets</h3>
+        <h3 className="text-lg font-semibold text-white/80">
+          Failed to load assets
+        </h3>
         <p className="text-sm text-white/60 max-w-sm">{error}</p>
         {onRetry && (
           <button
-            onClick={onRetry}
             className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+            onClick={onRetry}
           >
             Try Again
           </button>
@@ -107,7 +148,7 @@ const GridCell = ({
     assets: Asset[];
     columnsPerRow: number;
     gap: number;
-    itemSize: 'small' | 'medium' | 'large';
+    itemSize: "small" | "medium" | "large";
     selectedIds: string[];
     highlightedId?: string;
     onAssetClick?: (asset: Asset) => void;
@@ -164,28 +205,31 @@ const GridCell = ({
   const isSelected = selectedIds.includes(asset.id);
   const isHighlighted = highlightedId === asset.id;
 
-  const handleSelect = useCallback((selectedAsset: Asset, selected: boolean) => {
-    if (!onSelectionChange) return;
-    
-    const newSelectedIds = selected 
-      ? [...selectedIds, selectedAsset.id]
-      : selectedIds.filter(id => id !== selectedAsset.id);
-    
-    onSelectionChange(newSelectedIds);
-  }, [selectedIds, onSelectionChange]);
+  const handleSelect = useCallback(
+    (selectedAsset: Asset, selected: boolean) => {
+      if (!onSelectionChange) return;
+
+      const newSelectedIds = selected
+        ? [...selectedIds, selectedAsset.id]
+        : selectedIds.filter((id) => id !== selectedAsset.id);
+
+      onSelectionChange(newSelectedIds);
+    },
+    [selectedIds, onSelectionChange],
+  );
 
   return (
     <div style={cellStyle}>
       <AssetCard
         asset={asset}
-        size={itemSize}
-        isSelected={isSelected}
         isHighlighted={isHighlighted}
+        isSelected={isSelected}
+        showActions={true}
+        size={itemSize}
         onClick={onAssetClick}
         onDoubleClick={onAssetDoubleClick}
-        onSelect={enableSelection ? handleSelect : undefined}
         onDragStart={enableDragDrop ? onDragStart : undefined}
-        showActions={true}
+        onSelect={enableSelection ? handleSelect : undefined}
       />
     </div>
   );
@@ -200,7 +244,7 @@ export function AssetGrid({
   emptyState,
   columns,
   gap = DEFAULT_GAP,
-  itemSize = 'medium',
+  itemSize = "medium",
   virtualScrolling = true,
   enableSelection = true,
   enableDragDrop = true,
@@ -219,16 +263,23 @@ export function AssetGrid({
   const columnsPerRow = useMemo(() => {
     if (columns) return columns;
     if (containerWidth === 0) return 1;
-    return Math.max(1, Math.floor((containerWidth + gap) / (itemDimensions.width + gap)));
+
+    return Math.max(
+      1,
+      Math.floor((containerWidth + gap) / (itemDimensions.width + gap)),
+    );
   }, [containerWidth, columns, gap, itemDimensions.width]);
 
   const rowCount = Math.ceil(assets.length / columnsPerRow);
   const itemCount = hasMore ? assets.length + columnsPerRow : assets.length; // Add extra row for loading
 
   // Infinite loading handler
-  const isItemLoaded = useCallback((index: number) => {
-    return index < assets.length;
-  }, [assets.length]);
+  const isItemLoaded = useCallback(
+    (index: number) => {
+      return index < assets.length;
+    },
+    [assets.length],
+  );
 
   const loadMoreItems = useCallback(async () => {
     if (onLoadMore && hasMore && !loading) {
@@ -237,52 +288,63 @@ export function AssetGrid({
   }, [onLoadMore, hasMore, loading]);
 
   // Grid data for react-window
-  const gridData = useMemo(() => ({
-    assets,
-    columnsPerRow,
-    gap,
-    itemSize,
-    selectedIds,
-    highlightedId,
-    onAssetClick,
-    onAssetDoubleClick,
-    onSelectionChange,
-    onDragStart,
-    enableSelection,
-    enableDragDrop,
-    isLoading: loading,
-  }), [
-    assets,
-    columnsPerRow,
-    gap,
-    itemSize,
-    selectedIds,
-    highlightedId,
-    onAssetClick,
-    onAssetDoubleClick,
-    onSelectionChange,
-    onDragStart,
-    enableSelection,
-    enableDragDrop,
-    loading,
-  ]);
+  const gridData = useMemo(
+    () => ({
+      assets,
+      columnsPerRow,
+      gap,
+      itemSize,
+      selectedIds,
+      highlightedId,
+      onAssetClick,
+      onAssetDoubleClick,
+      onSelectionChange,
+      onDragStart,
+      enableSelection,
+      enableDragDrop,
+      isLoading: loading,
+    }),
+    [
+      assets,
+      columnsPerRow,
+      gap,
+      itemSize,
+      selectedIds,
+      highlightedId,
+      onAssetClick,
+      onAssetDoubleClick,
+      onSelectionChange,
+      onDragStart,
+      enableSelection,
+      enableDragDrop,
+      loading,
+    ],
+  );
 
   // Handle container resize
-  const handleResize = useCallback(({ width }: { width: number; height: number }) => {
-    setContainerWidth(width);
-  }, []);
+  const handleResize = useCallback(
+    ({ width }: { width: number; height: number }) => {
+      setContainerWidth(width);
+    },
+    [],
+  );
 
   // Scroll to asset
-  const scrollToAsset = useCallback((assetId: string) => {
-    const assetIndex = assets.findIndex(asset => asset.id === assetId);
-    if (assetIndex === -1 || !gridRef.current) return;
+  const scrollToAsset = useCallback(
+    (assetId: string) => {
+      const assetIndex = assets.findIndex((asset) => asset.id === assetId);
 
-    const rowIndex = Math.floor(assetIndex / columnsPerRow);
-    gridRef.current.scrollToItem({
-      rowIndex,
-      align: 'center',
-    });
-  }, [assets, columnsPerRow]);
+      if (assetIndex === -1 || !gridRef.current) return;
+
+      const rowIndex = Math.floor(assetIndex / columnsPerRow);
+
+      gridRef.current.scrollToItem({
+        rowIndex,
+        align: "center",
+      });
+    },
+    [assets, columnsPerRow],
+  );
 
   // Expose scroll method
   useEffect(() => {
@@ -310,12 +372,13 @@ export function AssetGrid({
   }
 
   // Regular grid (non-virtual) - temporarily disabled virtual scrolling due to import issues
-  if (true) { // !virtualScrolling || assets.length < 50
+  if (true) {
+    // !virtualScrolling || assets.length < 50
     return (
       <div className="h-full overflow-y-auto">
-        <div 
+        <div
           className="grid gap-4 p-4"
-          style={{ 
+          style={{
             gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
             gap: `${gap}px`,
           }}
@@ -325,34 +388,37 @@ export function AssetGrid({
               const isSelected = selectedIds.includes(asset.id);
               const isHighlighted = highlightedId === asset.id;
 
-              const handleSelect = (selectedAsset: Asset, selected: boolean) => {
+              const handleSelect = (
+                selectedAsset: Asset,
+                selected: boolean,
+              ) => {
                 if (!onSelectionChange) return;
-                
-                const newSelectedIds = selected 
+
+                const newSelectedIds = selected
                   ? [...selectedIds, selectedAsset.id]
-                  : selectedIds.filter(id => id !== selectedAsset.id);
-                
+                  : selectedIds.filter((id) => id !== selectedAsset.id);
+
                 onSelectionChange(newSelectedIds);
               };
 
               return (
                 <motion.div
                   key={asset.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.05 }}
                 >
                   <AssetCard
                     asset={asset}
-                    size={itemSize}
-                    isSelected={isSelected}
                     isHighlighted={isHighlighted}
+                    isSelected={isSelected}
+                    showActions={true}
+                    size={itemSize}
                     onClick={onAssetClick}
                     onDoubleClick={onAssetDoubleClick}
-                    onSelect={enableSelection ? handleSelect : undefined}
                     onDragStart={enableDragDrop ? onDragStart : undefined}
-                    showActions={true}
+                    onSelect={enableSelection ? handleSelect : undefined}
                   />
                 </motion.div>
               );
@@ -373,8 +439,8 @@ export function AssetGrid({
         {hasMore && !loading && (
           <div className="p-4 text-center">
             <button
-              onClick={loadMoreItems}
               className="px-6 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+              onClick={loadMoreItems}
             >
               Load More
             </button>
@@ -458,13 +524,13 @@ export function AssetGrid({
     </div>
   );
   */
-  
+
   // Fallback to regular grid since virtual scrolling is disabled
   return (
     <div className="h-full overflow-y-auto">
-      <div 
+      <div
         className="grid gap-4 p-4"
-        style={{ 
+        style={{
           gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
           gap: `${gap}px`,
         }}
@@ -475,11 +541,11 @@ export function AssetGrid({
 
           const handleSelect = (selectedAsset: Asset, selected: boolean) => {
             if (!onSelectionChange) return;
-            
-            const newSelectedIds = selected 
+
+            const newSelectedIds = selected
               ? [...selectedIds, selectedAsset.id]
-              : selectedIds.filter(id => id !== selectedAsset.id);
-            
+              : selectedIds.filter((id) => id !== selectedAsset.id);
+
             onSelectionChange(newSelectedIds);
           };
 
@@ -487,14 +553,14 @@ export function AssetGrid({
             <AssetCard
               key={asset.id}
               asset={asset}
-              size={itemSize}
-              isSelected={isSelected}
               isHighlighted={isHighlighted}
+              isSelected={isSelected}
+              showActions={true}
+              size={itemSize}
               onClick={onAssetClick}
               onDoubleClick={onAssetDoubleClick}
-              onSelect={enableSelection ? handleSelect : undefined}
               onDragStart={enableDragDrop ? onDragStart : undefined}
-              showActions={true}
+              onSelect={enableSelection ? handleSelect : undefined}
             />
           );
         })}
@@ -513,8 +579,8 @@ export function AssetGrid({
       {hasMore && !loading && (
         <div className="p-4 text-center">
           <button
-            onClick={loadMoreItems}
             className="px-6 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+            onClick={loadMoreItems}
           >
             Load More
           </button>

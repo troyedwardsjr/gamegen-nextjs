@@ -36,7 +36,14 @@ interface SocialShareButtonProps {
     tags?: string[] | null;
   };
   shareData?: SocialShareData;
-  variant?: "flat" | "solid" | "shadow" | "light" | "bordered" | "faded" | "ghost";
+  variant?:
+    | "flat"
+    | "solid"
+    | "shadow"
+    | "light"
+    | "bordered"
+    | "faded"
+    | "ghost";
   size?: "sm" | "md" | "lg";
   isIconOnly?: boolean;
   className?: string;

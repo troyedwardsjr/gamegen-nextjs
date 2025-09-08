@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Get LLM provider  
+    // Get LLM provider
     const providerManager = new ProviderManager({
       default_provider: "claude",
       fallback_chain: ["claude"],
@@ -184,7 +184,9 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         try {
           // Create initial AI message record
-          const { data: newMessage, error: createError } = await (supabase as any)
+          const { data: newMessage, error: createError } = await (
+            supabase as any
+          )
             .from("chat_messages")
             .insert({
               session_id: sessionId,
@@ -221,6 +223,7 @@ export async function POST(request: NextRequest) {
               // Handle different streaming chunk types
               if (chunk.type === "content_block_delta" && chunk.delta?.text) {
                 const delta = chunk.delta.text;
+
                 responseContent += delta;
 
                 // Send content delta
@@ -260,7 +263,9 @@ export async function POST(request: NextRequest) {
           );
 
           // Update final message
-          const { data: updatedMessage, error: updateError } = await (supabase as any)
+          const { data: updatedMessage, error: updateError } = await (
+            supabase as any
+          )
             .from("chat_messages")
             .update({
               content: responseContent,

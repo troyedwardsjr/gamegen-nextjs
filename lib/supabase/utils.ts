@@ -153,7 +153,10 @@ export class SupabaseService<T extends keyof Database["public"]["Tables"]> {
 
   async delete(id: string): Promise<void> {
     const supabase = await this.getClient();
-    const { error } = await (supabase as any).from(this.tableName).delete().eq("id", id);
+    const { error } = await (supabase as any)
+      .from(this.tableName)
+      .delete()
+      .eq("id", id);
 
     if (error) {
       throw new DatabaseError(
@@ -389,9 +392,12 @@ export class MigrationRunner {
       }
 
       // Run the migration
-      const { error: migrationError } = await (this.adminClient as any).rpc("exec_sql", {
-        sql: sql,
-      });
+      const { error: migrationError } = await (this.adminClient as any).rpc(
+        "exec_sql",
+        {
+          sql: sql,
+        },
+      );
 
       if (migrationError) {
         throw new DatabaseError(

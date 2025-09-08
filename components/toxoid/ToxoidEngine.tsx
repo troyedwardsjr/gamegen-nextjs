@@ -409,7 +409,10 @@ export const ToxoidEngine = forwardRef<ToxoidEngineRef, ToxoidEngineProps>(
 
     if (error) {
       return (
-        <GlassmorphicCard className={`relative ${className}`} variant="accent-rose">
+        <GlassmorphicCard
+          className={`relative ${className}`}
+          variant="accent-rose"
+        >
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[320px]">
             <div className="text-red-400 mb-4">
               <svg

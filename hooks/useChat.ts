@@ -255,10 +255,10 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
 
   const handleStatusChange = useCallback(
     (status: WebSocketStatus) => {
-      setState((prev) => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         wsStatus: status,
-        isConnected: status === "connected"
+        isConnected: status === "connected",
       }));
 
       if (status === "connected") {
@@ -451,7 +451,9 @@ export function useChat(options: UseChatOptions = {}): ChatState & ChatActions {
           status: "sending",
         };
 
-        const { data: savedMessage, error: messageError } = await (supabase as any)
+        const { data: savedMessage, error: messageError } = await (
+          supabase as any
+        )
           .from("chat_messages")
           .insert(userMessage)
           .select()

@@ -281,10 +281,13 @@ export class ClientSessionManager {
   private clearLocalSession() {
     try {
       if (typeof window === "undefined") return;
-      
+
       if (this.options.storage === "localStorage" && window.localStorage) {
         window.localStorage.removeItem("sb-auth-token");
-      } else if (this.options.storage === "sessionStorage" && window.sessionStorage) {
+      } else if (
+        this.options.storage === "sessionStorage" &&
+        window.sessionStorage
+      ) {
         window.sessionStorage.removeItem("sb-auth-token");
       }
     } catch (error) {
@@ -295,7 +298,10 @@ export class ClientSessionManager {
   /**
    * Reset password for email
    */
-  async resetPasswordForEmail(email: string, options?: { redirectTo?: string }) {
+  async resetPasswordForEmail(
+    email: string,
+    options?: { redirectTo?: string },
+  ) {
     return this.supabase.auth.resetPasswordForEmail(email, options);
   }
 

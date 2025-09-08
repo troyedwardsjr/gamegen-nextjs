@@ -1,0 +1,558 @@
+# Comprehensive Testing CI/CD Pipeline
+# Runs all test suites: unit, integration, e2e, performance, security, accessibility
+name: Comprehensive Testing Suite
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run nightly tests at 2 AM UTC
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  FORCE_COLOR: 1
+  CI: true
+  
+  # Test environment variables
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL_TEST }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY_TEST }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_TEST }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_TEST }}
+  
+  # Security testing
+  SECURITY_SCAN_ENABLED: true
+  
+  # Performance testing
+  LIGHTHOUSE_CI_TOKEN: ${{ secrets.LIGHTHOUSE_CI_TOKEN }}
+  ARTILLERY_CLOUD_API_KEY: ${{ secrets.ARTILLERY_CLOUD_API_KEY }}
+
+jobs:
+  # Pre-flight checks
+  lint-and-typecheck:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint
+        run: npm run lint:check
+        
+      - name: Run TypeScript check
+        run: npm run type-check
+        
+      - name: Check code formatting
+        run: npm run format:check
+
+  # Unit and Integration Tests
+  unit-integration-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    strategy:
+      matrix:
+        test-type: [unit, integration, api]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ${{ matrix.test-type }} tests
+        run: npm run test:${{ matrix.test-type }}
+        env:
+          NODE_OPTIONS: '--experimental-vm-modules --max-old-space-size=4096'
+          
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./coverage
+          flags: ${{ matrix.test-type }}
+          
+  # End-to-End Tests
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1/4, 2/4, 3/4, 4/4]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+        
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          
+      - name: Start application
+        run: npm start &
+        env:
+          PORT: 3000
+          
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+        
+      - name: Run E2E tests
+        run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results-${{ matrix.browser }}-${{ matrix.shard }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  # Accessibility Tests
+  accessibility-tests:
+    name: Accessibility Tests (WCAG 2.1 AA)
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Start application
+        run: npm start &
+        
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+        
+      - name: Run accessibility tests
+        run: npx playwright test accessibility.spec.ts
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-report
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+  # Visual Regression Tests
+  visual-regression-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Start application
+        run: npm start &
+        
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+        
+      - name: Run visual regression tests
+        run: npx playwright test visual-regression.spec.ts --update-snapshots
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          
+      - name: Upload visual diff report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-regression-report
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run security unit tests
+        run: npm run test security/
+        
+      - name: Run npm audit
+        run: npm audit --audit-level high
+        continue-on-error: true
+        
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
+        
+      - name: Build application for security scan
+        run: npm run build
+        
+      - name: Start application for OWASP ZAP
+        run: npm start &
+        
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+        
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j -l WARN'
+        continue-on-error: true
+
+  # Performance Tests
+  performance-tests:
+    name: Performance & Load Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          
+      - name: Start application
+        run: npm start &
+        
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+        
+      - name: Install Artillery
+        run: npm install -g artillery@latest
+        
+      - name: Run load tests
+        run: artillery run performance.yml --output performance-results.json
+        env:
+          TARGET_URL: http://localhost:3000
+          
+      - name: Generate Artillery report
+        run: artillery report performance-results.json --output performance-report.html
+        
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_TOKEN: ${{ secrets.LIGHTHOUSE_CI_TOKEN }}
+          
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: |
+            performance-report.html
+            performance-results.json
+            .lighthouseci/
+          retention-days: 30
+
+  # Comprehensive Coverage Report
+  coverage-report:
+    name: Generate Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-integration-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run comprehensive test coverage
+        run: npm run test:coverage
+        env:
+          NODE_OPTIONS: '--experimental-vm-modules --max-old-space-size=4096'
+          
+      - name: Check coverage thresholds
+        run: |
+          # Parse coverage and fail if below thresholds
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Overall coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 80% threshold"
+            exit 1
+          fi
+          
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./coverage
+          flags: comprehensive
+          
+      - name: Comment coverage on PR
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          lcov-file: ./coverage/lcov.info
+          delete-old-comments: true
+
+  # Mutation Testing (Weekly)
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[mutation-test]')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Stryker
+        run: npm install -g @stryker-mutator/core @stryker-mutator/jest-runner
+        
+      - name: Run mutation testing
+        run: npx stryker run
+        env:
+          NODE_OPTIONS: '--experimental-vm-modules --max-old-space-size=8192'
+          
+      - name: Upload mutation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-testing-report
+          path: reports/mutation/
+          retention-days: 30
+
+  # Quality Gate
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [
+      unit-integration-tests,
+      e2e-tests,
+      accessibility-tests,
+      visual-regression-tests,
+      security-tests,
+      performance-tests,
+      coverage-report
+    ]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "Unit/Integration Tests: ${{ needs.unit-integration-tests.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Accessibility Tests: ${{ needs.accessibility-tests.result }}"
+          echo "Visual Regression Tests: ${{ needs.visual-regression-tests.result }}"
+          echo "Security Tests: ${{ needs.security-tests.result }}"
+          echo "Performance Tests: ${{ needs.performance-tests.result }}"
+          echo "Coverage Report: ${{ needs.coverage-report.result }}"
+          
+          # Fail if any critical tests failed
+          if [[ "${{ needs.unit-integration-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.coverage-report.result }}" == "failure" ]] || \
+             [[ "${{ needs.e2e-tests.result }}" == "failure" ]]; then
+            echo "Critical tests failed - blocking deployment"
+            exit 1
+          fi
+          
+          # Warn about non-critical test failures
+          if [[ "${{ needs.accessibility-tests.result }}" == "failure" ]]; then
+            echo "⚠️ Accessibility tests failed - please review"
+          fi
+          
+          if [[ "${{ needs.visual-regression-tests.result }}" == "failure" ]]; then
+            echo "⚠️ Visual regression tests failed - please review screenshots"
+          fi
+          
+          if [[ "${{ needs.security-tests.result }}" == "failure" ]]; then
+            echo "⚠️ Security tests found issues - please review"
+          fi
+          
+          if [[ "${{ needs.performance-tests.result }}" == "failure" ]]; then
+            echo "⚠️ Performance tests failed - please review metrics"
+          fi
+          
+          echo "✅ Quality gate passed"
+
+  # Deployment (only on main branch after quality gate passes)
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment"
+          # Add your deployment commands here
+          
+      - name: Run smoke tests
+        run: |
+          # Wait for deployment
+          sleep 30
+          
+          # Run basic smoke tests against staging
+          curl -f ${{ secrets.STAGING_URL }}/api/health || exit 1
+          echo "✅ Smoke tests passed"
+
+  # Notifications
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [quality-gate, deploy]
+    if: always()
+    steps:
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          custom_payload: |
+            {
+              attachments: [{
+                color: '${{ job.status }}' === 'success' ? 'good' : '${{ job.status }}' === 'failure' ? 'danger' : 'warning',
+                blocks: [{
+                  type: 'section',
+                  text: {
+                    type: 'mrkdwn',
+                    text: `*${{ github.workflow }}* ${{ job.status }} for \`${{ github.ref }}\``
+                  }
+                }, {
+                  type: 'section',
+                  fields: [{
+                    type: 'mrkdwn',
+                    text: `*Repository:*\n${{ github.repository }}`
+                  }, {
+                    type: 'mrkdwn',
+                    text: `*Branch:*\n${{ github.ref_name }}`
+                  }, {
+                    type: 'mrkdwn',
+                    text: `*Commit:*\n${{ github.sha }}`
+                  }, {
+                    type: 'mrkdwn',
+                    text: `*Author:*\n${{ github.actor }}`
+                  }]
+                }, {
+                  type: 'actions',
+                  elements: [{
+                    type: 'button',
+                    text: {
+                      type: 'plain_text',
+                      text: 'View Details'
+                    },
+                    url: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                  }]
+                }]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

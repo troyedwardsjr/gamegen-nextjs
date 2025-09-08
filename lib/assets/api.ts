@@ -3,10 +3,10 @@
  * Handles communication with Supabase backend and external services
  */
 
-import { 
-  Asset, 
+import {
+  Asset,
   AssetCollection,
-  AssetSearchQuery, 
+  AssetSearchQuery,
   AssetSearchResult,
   AssetUploadConfig,
   AssetUploadResult,
@@ -23,66 +23,69 @@ const supabase = createClient();
 
 // API endpoints configuration
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
   endpoints: {
-    assets: '/assets',
-    collections: '/collections',
-    upload: '/assets/upload',
-    search: '/assets/search',
-    recommendations: '/assets/recommendations',
-    ai: '/assets/ai',
-    batch: '/assets/batch',
+    assets: "/assets",
+    collections: "/collections",
+    upload: "/assets/upload",
+    search: "/assets/search",
+    recommendations: "/assets/recommendations",
+    ai: "/assets/ai",
+    batch: "/assets/batch",
   },
   timeout: 30000, // 30 seconds
 };
 
 // Custom fetch wrapper with error handling
 const apiRequest = async <T>(
-  endpoint: string, 
-  options: RequestInit = {}
+  endpoint: string,
+  options: RequestInit = {},
 ): Promise<T> => {
   const url = `${API_CONFIG.baseUrl}${endpoint}`;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: response.statusText }));
+
       throw new AssetError(
         errorData.message || `HTTP ${response.status}`,
         `HTTP_${response.status}`,
-        errorData
+        errorData,
       );
     }
-    
+
     return response.json();
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof AssetError) {
       throw error;
     }
-    
+
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new AssetError('Request timeout', 'REQUEST_TIMEOUT');
+      if (error.name === "AbortError") {
+        throw new AssetError("Request timeout", "REQUEST_TIMEOUT");
       }
-      throw new AssetError(error.message, 'NETWORK_ERROR');
+      throw new AssetError(error.message, "NETWORK_ERROR");
     }
-    
-    throw new AssetError('Unknown error occurred', 'UNKNOWN_ERROR');
+
+    throw new AssetError("Unknown error occurred", "UNKNOWN_ERROR");
   }
 };
 
@@ -96,15 +99,17 @@ export const assetApi = {
   // Search assets
   async search(query: AssetSearchQuery): Promise<AssetSearchResult> {
     return apiRequest<AssetSearchResult>(API_CONFIG.endpoints.search, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(query),
     });
   },
 
   // Create new asset
-  async create(assetData: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>): Promise<Asset> {
+  async create(
+    assetData: Omit<Asset, "id" | "createdAt" | "updatedAt">,
+  ): Promise<Asset> {
     return apiRequest<Asset>(API_CONFIG.endpoints.assets, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(assetData),
     });
   },
@@ -112,7 +117,7 @@ export const assetApi = {
   // Update asset
   async update(id: string, updates: Partial<Asset>): Promise<Asset> {
     return apiRequest<Asset>(`${API_CONFIG.endpoints.assets}/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(updates),
     });
   },
@@ -120,14 +125,16 @@ export const assetApi = {
   // Delete asset
   async delete(id: string): Promise<void> {
     await apiRequest(`${API_CONFIG.endpoints.assets}/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   // Batch operations
-  async batchOperation(operation: AssetBatchOperation): Promise<AssetBatchResult> {
+  async batchOperation(
+    operation: AssetBatchOperation,
+  ): Promise<AssetBatchResult> {
     return apiRequest<AssetBatchResult>(API_CONFIG.endpoints.batch, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(operation),
     });
   },
@@ -139,7 +146,9 @@ export const assetApi = {
 
   // Get similar assets
   async getSimilar(id: string, limit: number = 5): Promise<Asset[]> {
-    return apiRequest<Asset[]>(`${API_CONFIG.endpoints.assets}/${id}/similar?limit=${limit}`);
+    return apiRequest<Asset[]>(
+      `${API_CONFIG.endpoints.assets}/${id}/similar?limit=${limit}`,
+    );
   },
 };
 
@@ -147,53 +156,59 @@ export const assetApi = {
 export const uploadApi = {
   // Upload single or multiple files
   async uploadFiles(
-    files: File[], 
+    files: File[],
     config?: Partial<AssetUploadConfig>,
-    onProgress?: (progress: any) => void
+    onProgress?: (progress: any) => void,
   ): Promise<AssetUploadResult[]> {
     const formData = new FormData();
-    
+
     files.forEach((file, index) => {
       formData.append(`files`, file);
     });
-    
+
     if (config) {
-      formData.append('config', JSON.stringify(config));
+      formData.append("config", JSON.stringify(config));
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 minutes for uploads
 
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-        // Don't set Content-Type header, let browser set it for FormData
-      });
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`,
+        {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+          // Don't set Content-Type header, let browser set it for FormData
+        },
+      );
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: response.statusText }));
+
         throw new AssetError(
-          errorData.message || 'Upload failed',
-          'UPLOAD_FAILED',
-          errorData
+          errorData.message || "Upload failed",
+          "UPLOAD_FAILED",
+          errorData,
         );
       }
 
       return response.json();
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof AssetError) {
         throw error;
       }
-      
+
       throw new AssetError(
-        error instanceof Error ? error.message : 'Upload failed',
-        'UPLOAD_ERROR'
+        error instanceof Error ? error.message : "Upload failed",
+        "UPLOAD_ERROR",
       );
     }
   },
@@ -206,7 +221,7 @@ export const uploadApi = {
   // Cancel upload
   async cancelUpload(uploadId: string): Promise<void> {
     await apiRequest(`${API_CONFIG.endpoints.upload}/${uploadId}/cancel`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -220,76 +235,112 @@ export const collectionsApi = {
 
   // Get collection by ID
   async getById(id: string): Promise<AssetCollection> {
-    return apiRequest<AssetCollection>(`${API_CONFIG.endpoints.collections}/${id}`);
+    return apiRequest<AssetCollection>(
+      `${API_CONFIG.endpoints.collections}/${id}`,
+    );
   },
 
   // Create new collection
-  async create(collection: Omit<AssetCollection, 'id' | 'createdAt' | 'updatedAt'>): Promise<AssetCollection> {
+  async create(
+    collection: Omit<AssetCollection, "id" | "createdAt" | "updatedAt">,
+  ): Promise<AssetCollection> {
     return apiRequest<AssetCollection>(API_CONFIG.endpoints.collections, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(collection),
     });
   },
 
   // Update collection
-  async update(id: string, updates: Partial<AssetCollection>): Promise<AssetCollection> {
-    return apiRequest<AssetCollection>(`${API_CONFIG.endpoints.collections}/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updates),
-    });
+  async update(
+    id: string,
+    updates: Partial<AssetCollection>,
+  ): Promise<AssetCollection> {
+    return apiRequest<AssetCollection>(
+      `${API_CONFIG.endpoints.collections}/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+      },
+    );
   },
 
   // Delete collection
   async delete(id: string): Promise<void> {
     await apiRequest(`${API_CONFIG.endpoints.collections}/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
   // Add assets to collection
-  async addAssets(collectionId: string, assetIds: string[]): Promise<AssetCollection> {
-    return apiRequest<AssetCollection>(`${API_CONFIG.endpoints.collections}/${collectionId}/assets`, {
-      method: 'POST',
-      body: JSON.stringify({ assetIds }),
-    });
+  async addAssets(
+    collectionId: string,
+    assetIds: string[],
+  ): Promise<AssetCollection> {
+    return apiRequest<AssetCollection>(
+      `${API_CONFIG.endpoints.collections}/${collectionId}/assets`,
+      {
+        method: "POST",
+        body: JSON.stringify({ assetIds }),
+      },
+    );
   },
 
   // Remove assets from collection
-  async removeAssets(collectionId: string, assetIds: string[]): Promise<AssetCollection> {
-    return apiRequest<AssetCollection>(`${API_CONFIG.endpoints.collections}/${collectionId}/assets`, {
-      method: 'DELETE',
-      body: JSON.stringify({ assetIds }),
-    });
+  async removeAssets(
+    collectionId: string,
+    assetIds: string[],
+  ): Promise<AssetCollection> {
+    return apiRequest<AssetCollection>(
+      `${API_CONFIG.endpoints.collections}/${collectionId}/assets`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({ assetIds }),
+      },
+    );
   },
 
   // Get collection assets
   async getAssets(collectionId: string): Promise<Asset[]> {
-    return apiRequest<Asset[]>(`${API_CONFIG.endpoints.collections}/${collectionId}/assets`);
+    return apiRequest<Asset[]>(
+      `${API_CONFIG.endpoints.collections}/${collectionId}/assets`,
+    );
   },
 };
 
 // AI and recommendation operations
 export const aiApi = {
   // Get asset recommendations
-  async getRecommendations(context: AssetRecommendationContext): Promise<AssetRecommendation[]> {
-    return apiRequest<AssetRecommendation[]>(API_CONFIG.endpoints.recommendations, {
-      method: 'POST',
-      body: JSON.stringify(context),
-    });
+  async getRecommendations(
+    context: AssetRecommendationContext,
+  ): Promise<AssetRecommendation[]> {
+    return apiRequest<AssetRecommendation[]>(
+      API_CONFIG.endpoints.recommendations,
+      {
+        method: "POST",
+        body: JSON.stringify(context),
+      },
+    );
   },
 
   // Generate asset with AI
-  async generateAsset(prompt: string, type: string, options?: any): Promise<AssetUploadResult> {
-    return apiRequest<AssetUploadResult>(`${API_CONFIG.endpoints.ai}/generate`, {
-      method: 'POST',
-      body: JSON.stringify({ prompt, type, ...options }),
-    });
+  async generateAsset(
+    prompt: string,
+    type: string,
+    options?: any,
+  ): Promise<AssetUploadResult> {
+    return apiRequest<AssetUploadResult>(
+      `${API_CONFIG.endpoints.ai}/generate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ prompt, type, ...options }),
+      },
+    );
   },
 
   // Enhance asset with AI
   async enhanceAsset(assetId: string, enhancement: string): Promise<Asset> {
     return apiRequest<Asset>(`${API_CONFIG.endpoints.ai}/enhance`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ assetId, enhancement }),
     });
   },
@@ -297,24 +348,28 @@ export const aiApi = {
   // Auto-tag asset with AI
   async autoTag(assetId: string): Promise<string[]> {
     return apiRequest<string[]>(`${API_CONFIG.endpoints.ai}/tag`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ assetId }),
     });
   },
 
   // Get asset quality score
   async getQualityScore(assetId: string): Promise<number> {
-    const response = await apiRequest<{ score: number }>(`${API_CONFIG.endpoints.ai}/quality`, {
-      method: 'POST',
-      body: JSON.stringify({ assetId }),
-    });
+    const response = await apiRequest<{ score: number }>(
+      `${API_CONFIG.endpoints.ai}/quality`,
+      {
+        method: "POST",
+        body: JSON.stringify({ assetId }),
+      },
+    );
+
     return response.score;
   },
 
   // Semantic search
   async semanticSearch(query: string, limit: number = 20): Promise<Asset[]> {
     return apiRequest<Asset[]>(`${API_CONFIG.endpoints.ai}/search`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ query, limit }),
     });
   },
@@ -325,31 +380,29 @@ export const supabaseApi = {
   // Initialize real-time subscriptions
   subscribeToAssetChanges(
     callback: (payload: any) => void,
-    filter?: { userId?: string; collectionId?: string }
+    filter?: { userId?: string; collectionId?: string },
   ) {
-    let subscription = supabase
-      .channel('asset-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'assets',
-          ...(filter?.userId && { filter: `owner_id=eq.${filter.userId}` }),
-        },
-        callback
-      );
+    let subscription = supabase.channel("asset-changes").on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "assets",
+        ...(filter?.userId && { filter: `owner_id=eq.${filter.userId}` }),
+      },
+      callback,
+    );
 
     if (filter?.collectionId) {
       subscription = subscription.on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'asset_collections',
+          event: "*",
+          schema: "public",
+          table: "asset_collections",
           filter: `id=eq.${filter.collectionId}`,
         },
-        callback
+        callback,
       );
     }
 
@@ -365,17 +418,17 @@ export const supabaseApi = {
     bucket: string,
     path: string,
     file: File,
-    options?: { cacheControl?: string; upsert?: boolean }
+    options?: { cacheControl?: string; upsert?: boolean },
   ): Promise<{ url: string; path: string }> {
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
-        cacheControl: options?.cacheControl || '3600',
+        cacheControl: options?.cacheControl || "3600",
         upsert: options?.upsert || false,
       });
 
     if (error) {
-      throw new AssetError(error.message, 'STORAGE_UPLOAD_FAILED', error);
+      throw new AssetError(error.message, "STORAGE_UPLOAD_FAILED", error);
     }
 
     const { data: urlData } = supabase.storage
@@ -390,36 +443,32 @@ export const supabaseApi = {
 
   // Delete file from Supabase Storage
   async deleteFromStorage(bucket: string, path: string): Promise<void> {
-    const { error } = await supabase.storage
-      .from(bucket)
-      .remove([path]);
+    const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
-      throw new AssetError(error.message, 'STORAGE_DELETE_FAILED', error);
+      throw new AssetError(error.message, "STORAGE_DELETE_FAILED", error);
     }
   },
 
   // Get file URL from Supabase Storage
   getStorageUrl(bucket: string, path: string): string {
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(path);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return data.publicUrl;
   },
 
   // Create signed URL for private files
   async createSignedUrl(
-    bucket: string, 
-    path: string, 
-    expiresIn: number = 3600
+    bucket: string,
+    path: string,
+    expiresIn: number = 3600,
   ): Promise<string> {
     const { data, error } = await supabase.storage
       .from(bucket)
       .createSignedUrl(path, expiresIn);
 
     if (error) {
-      throw new AssetError(error.message, 'SIGNED_URL_FAILED', error);
+      throw new AssetError(error.message, "SIGNED_URL_FAILED", error);
     }
 
     return data.signedUrl;
@@ -428,7 +477,10 @@ export const supabaseApi = {
 
 // Cache management
 class AssetCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<
+    string,
+    { data: any; timestamp: number; ttl: number }
+  >();
 
   set(key: string, data: any, ttl: number = 5 * 60 * 1000): void {
     this.cache.set(key, {
@@ -440,10 +492,12 @@ class AssetCache {
 
   get<T>(key: string): T | null {
     const item = this.cache.get(key);
+
     if (!item) return null;
 
     if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key);
+
       return null;
     }
 
@@ -461,6 +515,7 @@ class AssetCache {
   // Clean expired entries
   cleanup(): void {
     const now = Date.now();
+
     for (const [key, item] of Array.from(this.cache.entries())) {
       if (now - item.timestamp > item.ttl) {
         this.cache.delete(key);
@@ -473,7 +528,7 @@ class AssetCache {
 export const assetCache = new AssetCache();
 
 // Set up automatic cache cleanup
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setInterval(() => {
     assetCache.cleanup();
   }, 60000); // Clean up every minute
@@ -484,30 +539,39 @@ export const cachedApi = {
   async getAsset(id: string): Promise<Asset> {
     const cacheKey = `asset:${id}`;
     const cached = assetCache.get<Asset>(cacheKey);
+
     if (cached) return cached;
 
     const asset = await assetApi.getById(id);
+
     assetCache.set(cacheKey, asset, 5 * 60 * 1000); // 5 minutes
+
     return asset;
   },
 
   async getCollection(id: string): Promise<AssetCollection> {
     const cacheKey = `collection:${id}`;
     const cached = assetCache.get<AssetCollection>(cacheKey);
+
     if (cached) return cached;
 
     const collection = await collectionsApi.getById(id);
+
     assetCache.set(cacheKey, collection, 10 * 60 * 1000); // 10 minutes
+
     return collection;
   },
 
   async searchAssets(query: AssetSearchQuery): Promise<AssetSearchResult> {
     const cacheKey = `search:${JSON.stringify(query)}`;
     const cached = assetCache.get<AssetSearchResult>(cacheKey);
+
     if (cached) return cached;
 
     const result = await assetApi.search(query);
+
     assetCache.set(cacheKey, result, 2 * 60 * 1000); // 2 minutes
+
     return result;
   },
 };
@@ -519,17 +583,17 @@ export const handleApiError = (error: unknown): AssetError => {
   }
 
   if (error instanceof Error) {
-    return new AssetError(error.message, 'API_ERROR');
+    return new AssetError(error.message, "API_ERROR");
   }
 
-  return new AssetError('An unexpected error occurred', 'UNKNOWN_ERROR');
+  return new AssetError("An unexpected error occurred", "UNKNOWN_ERROR");
 };
 
 // Retry logic for failed requests
 export const withRetry = async <T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
-  delay: number = 1000
+  delay: number = 1000,
 ): Promise<T> => {
   let lastError: Error;
 
@@ -537,14 +601,16 @@ export const withRetry = async <T>(
     try {
       return await operation();
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Unknown error');
-      
+      lastError = error instanceof Error ? error : new Error("Unknown error");
+
       if (attempt === maxRetries) {
         throw lastError;
       }
 
       // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay * Math.pow(2, attempt - 1)),
+      );
     }
   }
 
