@@ -13,6 +13,7 @@ import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
 import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import WorldLinkCanvas from "@/components/toxoid/WorldLinkCanvas";
 import { ScriptEditor } from "@/components/toxoid/ScriptEditor";
+import { ExportModal } from "@/components/export/ExportModal";
 
 // Simple types for game state management
 interface ToxoidGameState {
@@ -46,7 +47,6 @@ const LivePlayTab = () => {
   const worldLinkEngineRef = useRef<any>(null);
 
   const handleWorldLinkReady = useCallback((engine: any) => {
-    console.log("[LivePlayTab] WorldLink engine ready:", engine);
     worldLinkEngineRef.current = engine;
 
     // Update game state to indicate engine is ready
@@ -55,20 +55,17 @@ const LivePlayTab = () => {
     // Execute a basic demo script if the engine supports scripting
     const demoScript = `
 // Create a simple demo scene
-console.log("Setting up WorldLink demo scene...");
-
 // Basic initialization - this will depend on the actual WorldLink API
 if (typeof Module !== 'undefined' && Module._main) {
-  console.log("WorldLink engine initialized successfully!");
+  // WorldLink engine initialized successfully
 }
     `;
 
-    // For now, just log the demo script - actual execution will depend on WorldLink API
-    console.log("[LivePlayTab] Demo script ready:", demoScript);
+    // Demo script ready for execution when WorldLink API is available
   }, []);
 
   const handleWorldLinkError = useCallback((error: string) => {
-    console.error("[LivePlayTab] WorldLink engine error:", error);
+    // TODO: Implement proper error handling/logging
     setGameState((prev: ToxoidGameState) => ({ ...prev, isRunning: false }));
   }, []);
 
@@ -369,27 +366,20 @@ console.log("Game script loaded successfully!");`;
         // Get the Toxoid engine from the Live Play tab
         // This is a simplified approach - in a real implementation,
         // we'd have a shared context or state management
-        console.log(
-          "[CodeEditor] Executing script:",
-          code.substring(0, 100) + "...",
-        );
 
         // For now, just validate the script syntax
         const isValid =
           !code.includes("undefined_function") && code.includes("Toxoid");
 
         if (isValid) {
-          console.log("[CodeEditor] ✅ Script executed successfully");
-
+          // TODO: Implement proper script execution feedback
           return true;
         } else {
-          console.error("[CodeEditor] ❌ Script validation failed");
-
+          // TODO: Implement proper error reporting
           return false;
         }
       } catch (error) {
-        console.error("[CodeEditor] Script execution error:", error);
-
+        // TODO: Implement proper error handling
         return false;
       }
     },
@@ -398,8 +388,7 @@ console.log("Game script loaded successfully!");`;
 
   const handleScriptSave = useCallback((script: GameScript) => {
     setCurrentScript(script);
-    console.log("[CodeEditor] Script saved:", script.name);
-
+    // TODO: Implement proper script saving to database
     // In a real implementation, this would save to the database
     // and sync with the project state
   }, []);
@@ -449,8 +438,21 @@ const SettingsTab = () => {
     sfxVolume: 85,
   });
 
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+
   const updateSetting = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleExportClick = (platform: string) => {
+    setSelectedPlatform(platform);
+    setIsExportModalOpen(true);
+  };
+
+  const handleExportSuccess = (jobId: string) => {
+    // Handle successful export - could show notification here
+    // TODO: Add notification system for export success
   };
 
   return (
@@ -576,19 +578,40 @@ const SettingsTab = () => {
         </h3>
 
         <div className="space-y-3">
-          <GlassmorphicButton className="w-full" variant="gaming">
+          <GlassmorphicButton 
+            className="w-full" 
+            variant="gaming"
+            onPress={() => handleExportClick('web')}
+          >
             Export to Web (HTML5)
           </GlassmorphicButton>
 
-          <GlassmorphicButton className="w-full" variant="accent">
+          <GlassmorphicButton 
+            className="w-full" 
+            variant="accent"
+            onPress={() => handleExportClick('desktop-windows')}
+          >
             Export to Desktop
           </GlassmorphicButton>
 
-          <GlassmorphicButton className="w-full" variant="glass">
+          <GlassmorphicButton 
+            className="w-full" 
+            variant="glass"
+            onPress={() => handleExportClick('share')}
+          >
             Share Project Link
           </GlassmorphicButton>
         </div>
       </GlassmorphicCard>
+
+      {/* Export Modal */}
+      <ExportModal
+        gameId="demo-game-id" // TODO: Get actual game ID from context
+        gameTitle={settings.gameTitle}
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExportSuccess={handleExportSuccess}
+      />
     </div>
   );
 };

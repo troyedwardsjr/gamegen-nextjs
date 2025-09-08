@@ -64,9 +64,24 @@ export function ChatPanel({
 
   // Define available contexts
   const contexts: ChatContext[] = [
-    { id: "game-design", name: "Game Design", type: "game-design" as const, icon: "🎮" },
-    { id: "code-help", name: "Code Help", type: "code-help" as const, icon: "💻" },
-    { id: "art-generation", name: "Art Generation", type: "art-generation" as const, icon: "🎨" },
+    {
+      id: "game-design",
+      name: "Game Design",
+      type: "game-design" as const,
+      icon: "🎮",
+    },
+    {
+      id: "code-help",
+      name: "Code Help",
+      type: "code-help" as const,
+      icon: "💻",
+    },
+    {
+      id: "art-generation",
+      name: "Art Generation",
+      type: "art-generation" as const,
+      icon: "🎨",
+    },
     { id: "general", name: "General", type: "general" as const, icon: "💬" },
   ];
 
@@ -110,10 +125,13 @@ export function ChatPanel({
   }, [selectedContext.type, session?.context_type, user, gameId]);
 
   // Handle voice transcription
-  const handleVoiceTranscription = useCallback((text: string) => {
-    setCurrentMessage(currentMessage + (currentMessage ? " " : "") + text);
-    inputRef.current?.focus();
-  }, [currentMessage]);
+  const handleVoiceTranscription = useCallback(
+    (text: string) => {
+      setCurrentMessage(currentMessage + (currentMessage ? " " : "") + text);
+      inputRef.current?.focus();
+    },
+    [currentMessage],
+  );
 
   // Handle prompt template selection
   const handleTemplateSelect = useCallback(async (template: any) => {
