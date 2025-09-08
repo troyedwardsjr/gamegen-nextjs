@@ -1,0 +1,229 @@
+/**
+ * Glassmorphic Design System for GameGen
+ * Gaming-focused glassmorphic design tokens and utilities
+ * Theme: Purple/Black with gaming accents
+ */
+
+/* Design Tokens */
+:root {
+  /* Glassmorphic Base Colors */
+  --glass-bg-light: rgba(255, 255, 255, 0.1);
+  --glass-bg-medium: rgba(255, 255, 255, 0.15);
+  --glass-bg-strong: rgba(255, 255, 255, 0.25);
+  
+  /* Gaming Purple Palette */
+  --game-purple-50: rgba(250, 245, 255, 0.1);
+  --game-purple-100: rgba(243, 232, 255, 0.15);
+  --game-purple-200: rgba(221, 214, 254, 0.2);
+  --game-purple-300: rgba(196, 181, 253, 0.25);
+  --game-purple-400: rgba(167, 139, 250, 0.3);
+  --game-purple-500: rgba(139, 92, 246, 0.4);
+  --game-purple-600: rgba(124, 58, 237, 0.5);
+  --game-purple-700: rgba(109, 40, 217, 0.6);
+  --game-purple-800: rgba(91, 33, 182, 0.7);
+  --game-purple-900: rgba(76, 29, 149, 0.8);
+  
+  /* Gaming Accent Colors */
+  --game-cyan: rgba(6, 182, 212, 0.3);
+  --game-emerald: rgba(16, 185, 129, 0.3);
+  --game-rose: rgba(244, 63, 94, 0.3);
+  --game-amber: rgba(245, 158, 11, 0.3);
+  
+  /* Blur Values */
+  --blur-xs: blur(2px);
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(12px);
+  --blur-xl: blur(16px);
+  --blur-2xl: blur(24px);
+  --blur-3xl: blur(32px);
+  
+  /* Shadow Values */
+  --shadow-glass-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-glass-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-glass-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-glass-xl: 0 20px 25px rgba(0, 0, 0, 0.25);
+  
+  /* Gaming Glow Effects */
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.4);
+  --glow-emerald: 0 0 20px rgba(16, 185, 129, 0.4);
+  --glow-rose: 0 0 20px rgba(244, 63, 94, 0.4);
+
+  /* Glass Text Colors */
+  --glass-text: rgba(255, 255, 255, 0.9);
+  --glass-text-muted: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] {
+  /* Dark theme overrides */
+  --glass-bg-light: rgba(0, 0, 0, 0.1);
+  --glass-bg-medium: rgba(0, 0, 0, 0.15);
+  --glass-bg-strong: rgba(0, 0, 0, 0.25);
+}
+
+/* Glassmorphic Base Utilities */
+.glass-base {
+  backdrop-filter: var(--blur-md) saturate(150%);
+  background-color: var(--glass-bg-medium);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-subtle {
+  backdrop-filter: var(--blur-sm) saturate(120%);
+  background-color: var(--glass-bg-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  backdrop-filter: var(--blur-lg) saturate(180%);
+  background-color: var(--glass-bg-strong);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Gaming-specific Glassmorphic Variants */
+.glass-gaming {
+  backdrop-filter: var(--blur-md) saturate(150%);
+  background: linear-gradient(135deg, var(--game-purple-500), var(--game-purple-700));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: var(--shadow-glass-md), var(--glow-purple);
+}
+
+.glass-gaming:hover {
+  background: linear-gradient(135deg, var(--game-purple-400), var(--game-purple-600));
+  box-shadow: var(--shadow-glass-lg), var(--glow-purple);
+  transform: translateY(-2px);
+}
+
+.glass-accent-cyan {
+  backdrop-filter: var(--blur-md) saturate(150%);
+  background: linear-gradient(135deg, var(--game-cyan), var(--game-purple-600));
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: var(--shadow-glass-md), var(--glow-cyan);
+}
+
+.glass-accent-emerald {
+  backdrop-filter: var(--blur-md) saturate(150%);
+  background: linear-gradient(135deg, var(--game-emerald), var(--game-purple-600));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: var(--shadow-glass-md), var(--glow-emerald);
+}
+
+.glass-accent-rose {
+  backdrop-filter: var(--blur-md) saturate(150%);
+  background: linear-gradient(135deg, var(--game-rose), var(--game-purple-600));
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  box-shadow: var(--shadow-glass-md), var(--glow-rose);
+}
+
+/* Interactive States */
+.glass-interactive {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-interactive:hover {
+  backdrop-filter: var(--blur-lg) saturate(180%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glass-lg);
+}
+
+.glass-interactive:active {
+  transform: translateY(0);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animation Utilities */
+.glass-fade-in {
+  animation: glassBloomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-slide-up {
+  animation: glassSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-pulse {
+  animation: glassPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Keyframe Animations */
+@keyframes glassBloomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    backdrop-filter: var(--blur-xs) saturate(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    backdrop-filter: var(--blur-md) saturate(150%);
+  }
+}
+
+@keyframes glassSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glassPulse {
+  0%, 100% {
+    box-shadow: var(--shadow-glass-md), 0 0 0 rgba(139, 92, 246, 0);
+  }
+  50% {
+    box-shadow: var(--shadow-glass-lg), 0 0 20px rgba(139, 92, 246, 0.4);
+  }
+}
+
+/* Responsive Blur Adjustments */
+@media (max-width: 768px) {
+  :root {
+    --blur-sm: blur(2px);
+    --blur-md: blur(4px);
+    --blur-lg: blur(8px);
+    --blur-xl: blur(12px);
+    --blur-2xl: blur(16px);
+    --blur-3xl: blur(20px);
+  }
+}
+
+/* Accessibility and Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .glass-interactive,
+  .glass-fade-in,
+  .glass-slide-up,
+  .glass-pulse {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus States for Accessibility */
+.glass-focus-visible:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-glass-lg), var(--glow-purple);
+}
+
+/* Background Pattern for Gaming Aesthetic */
+.glass-gaming-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 80%, var(--game-purple-500) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--game-cyan) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--game-purple-600) 0%, transparent 50%);
+}
+
+/* Glass Text Color Utilities */
+.text-glass-text {
+  color: var(--glass-text);
+}
+
+.text-glass-text-muted {
+  color: var(--glass-text-muted);
+}

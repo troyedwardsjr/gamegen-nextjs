@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/troyedwards/dev/gamegen_nextjs/logs/.46eaf802d27f925075aa6a6f0d7c50774186f4e0-audit.json",
+    "files": [
+        {
+            "date": 1757060981036,
+            "name": "/Users/troyedwards/dev/gamegen_nextjs/logs/mcp-puppeteer-2025-09-05.log",
+            "hash": "9c00db6a07e98e1978df133d3694f6098c649bda979e6d05c7431873bb390257"
+        },
+        {
+            "date": 1757144705265,
+            "name": "/Users/troyedwards/dev/gamegen_nextjs/logs/mcp-puppeteer-2025-09-06.log",
+            "hash": "8413ce4bab45f09969e3516a95c8019ca957ddccf087a9c6cbdbe075a4cff633"
+        }
+    ],
+    "hashType": "sha256"
+}

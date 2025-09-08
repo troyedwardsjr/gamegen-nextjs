@@ -1,0 +1,34 @@
+{
+    "maps": [
+        {
+            "fileName": "cell_0.json",
+            "height": 800,
+            "width": 800,
+            "x": 0,
+            "y": 0
+        },
+        {
+            "fileName": "cell_1.json",
+            "height": 800,
+            "width": 800,
+            "x": 800,
+            "y": 0
+        },
+        {
+            "fileName": "cell_3.json",
+            "height": 800,
+            "width": 800,
+            "x": 0,
+            "y": 800
+        },
+        {
+            "fileName": "cell_4.json",
+            "height": 800,
+            "width": 800,
+            "x": 800,
+            "y": 800
+        }
+    ],
+    "onlyShowAdjacentMaps": false,
+    "type": "world"
+}
