@@ -13,7 +13,11 @@ import {
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
-import { GlassmorphicDropdown } from "@/components/ui/GlassmorphicDropdown";
+import { AssetGrid } from "@/components/assets/AssetGrid";
+import { AssetSearch } from "@/components/assets/AssetSearch";
+import { AssetUpload } from "@/components/assets/AssetUpload";
+import { AssetCollections } from "@/components/assets/AssetCollections";
+import { useAssets } from "@/hooks/useAssets";
 
 interface Asset {
   id: string;
@@ -24,9 +28,16 @@ interface Asset {
   thumbnail?: string;
   tags: string[];
   inUse: boolean;
+  url?: string;
+  metadata?: {
+    dimensions?: { width: number; height: number };
+    fileSize?: number;
+    format?: string;
+    quality?: number;
+  };
 }
 
-// Mock assets data
+// Enhanced mock assets data with AI recommendations
 const mockAssets: Asset[] = [
   {
     id: "1",
@@ -34,8 +45,14 @@ const mockAssets: Asset[] = [
     type: "sprite",
     size: "32x32",
     lastModified: new Date(Date.now() - 3600000),
-    tags: ["character", "player", "idle"],
+    tags: ["character", "player", "idle", "cyberpunk"],
     inUse: true,
+    metadata: {
+      dimensions: { width: 32, height: 32 },
+      fileSize: 2048,
+      format: "PNG",
+      quality: 95
+    }
   },
   {
     id: "2",
@@ -43,8 +60,14 @@ const mockAssets: Asset[] = [
     type: "tileset",
     size: "512x512",
     lastModified: new Date(Date.now() - 7200000),
-    tags: ["tileset", "cyberpunk", "environment"],
+    tags: ["tileset", "cyberpunk", "environment", "neon"],
     inUse: true,
+    metadata: {
+      dimensions: { width: 512, height: 512 },
+      fileSize: 65536,
+      format: "PNG",
+      quality: 98
+    }
   },
   {
     id: "3",
@@ -52,8 +75,13 @@ const mockAssets: Asset[] = [
     type: "sound",
     size: "48KB",
     lastModified: new Date(Date.now() - 1800000),
-    tags: ["sfx", "jump", "action"],
+    tags: ["sfx", "jump", "action", "8bit"],
     inUse: false,
+    metadata: {
+      fileSize: 49152,
+      format: "WAV",
+      quality: 85
+    }
   },
   {
     id: "4",
@@ -61,8 +89,13 @@ const mockAssets: Asset[] = [
     type: "music",
     size: "2.3MB",
     lastModified: new Date(Date.now() - 14400000),
-    tags: ["music", "background", "cyberpunk"],
+    tags: ["music", "background", "cyberpunk", "ambient"],
     inUse: true,
+    metadata: {
+      fileSize: 2411724,
+      format: "MP3",
+      quality: 92
+    }
   },
   {
     id: "5",
@@ -70,8 +103,13 @@ const mockAssets: Asset[] = [
     type: "animation",
     size: "16 frames",
     lastModified: new Date(Date.now() - 5400000),
-    tags: ["animation", "player", "walk"],
+    tags: ["animation", "player", "walk", "character"],
     inUse: false,
+    metadata: {
+      fileSize: 8192,
+      format: "ANIM",
+      quality: 88
+    }
   },
 ];
 
@@ -148,89 +186,12 @@ const SpritesTab = () => {
       </div>
 
       {/* Asset Grid */}
-      <div className="flex-1 overflow-y-auto p-3">
-        <div className="grid grid-cols-2 gap-2">
-          <AnimatePresence>
-            {sprites.map((asset) => (
-              <motion.div
-                key={asset.id}
-                animate={{ opacity: 1, scale: 1 }}
-                className="group cursor-pointer"
-                exit={{ opacity: 0, scale: 0.9 }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <GlassmorphicCard
-                  className="relative overflow-hidden"
-                  hover={true}
-                  variant="subtle"
-                >
-                  {/* Asset Preview */}
-                  <div className="aspect-square bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-t-lg relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                      {getAssetIcon(asset.type)}
-                    </div>
-
-                    {asset.inUse && (
-                      <GlassmorphicBadge
-                        className="absolute top-2 right-2"
-                        size="sm"
-                        variant="success"
-                      >
-                        In Use
-                      </GlassmorphicBadge>
-                    )}
-
-                    {/* Hover Actions */}
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex space-x-1">
-                        <GlassmorphicButton size="sm" variant="gaming">
-                          Use
-                        </GlassmorphicButton>
-                        <GlassmorphicButton size="sm" variant="glass">
-                          Edit
-                        </GlassmorphicButton>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Asset Info */}
-                  <div className="p-2">
-                    <div className="font-medium text-xs text-white/90 truncate">
-                      {asset.name}
-                    </div>
-                    <div className="text-xs text-white/60 mt-1">
-                      {asset.size}
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {asset.tags.slice(0, 2).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-1 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {asset.tags.length > 2 && (
-                        <span className="text-xs text-white/40">
-                          +{asset.tags.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </GlassmorphicCard>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </div>
+      <AssetGrid assets={sprites} />
     </div>
   );
 };
 
-const SoundsTab = () => {
+const AudioTab = () => {
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
 
   const sounds = mockAssets.filter((asset) =>
@@ -261,6 +222,18 @@ const SoundsTab = () => {
             Upload
           </GlassmorphicButton>
         </div>
+
+        {/* AI Recommendations */}
+        <div className="mt-3 p-2 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-lg border border-purple-500/20">
+          <div className="text-xs font-medium text-purple-200 mb-1">🤖 AI Recommendations</div>
+          <div className="text-xs text-white/70">Perfect match for cyberpunk theme in your current project</div>
+          <div className="flex items-center mt-1">
+            <div className="text-xs text-emerald-400">95% confidence</div>
+            <div className="ml-2 h-1 flex-1 bg-white/20 rounded">
+              <div className="h-full w-[95%] bg-gradient-to-r from-emerald-400 to-cyan-400 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Audio List */}
@@ -276,6 +249,16 @@ const SoundsTab = () => {
                 </div>
                 <div className="text-xs text-white/60">
                   {asset.size} • {asset.type}
+                </div>
+                <div className="flex space-x-1 mt-1">
+                  {asset.tags.slice(0, 3).map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-1 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
 
@@ -409,137 +392,17 @@ const AnimationsTab = () => {
   );
 };
 
-const LibraryTab = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+const CollectionsTab = () => {
+  return <AssetCollections />;
+};
 
-  const categories = [
-    { id: "all", label: "All Assets", count: mockAssets.length },
-    {
-      id: "sprites",
-      label: "Sprites",
-      count: mockAssets.filter((a) => a.type === "sprite").length,
-    },
-    {
-      id: "tilesets",
-      label: "Tilesets",
-      count: mockAssets.filter((a) => a.type === "tileset").length,
-    },
-    {
-      id: "audio",
-      label: "Audio",
-      count: mockAssets.filter((a) => ["sound", "music"].includes(a.type))
-        .length,
-    },
-    {
-      id: "animations",
-      label: "Animations",
-      count: mockAssets.filter((a) => a.type === "animation").length,
-    },
-  ];
-
-  const filteredAssets =
-    selectedCategory === "all"
-      ? mockAssets
-      : mockAssets.filter((asset) => {
-          switch (selectedCategory) {
-            case "sprites":
-              return asset.type === "sprite";
-            case "tilesets":
-              return asset.type === "tileset";
-            case "audio":
-              return ["sound", "music"].includes(asset.type);
-            case "animations":
-              return asset.type === "animation";
-            default:
-              return true;
-          }
-        });
-
-  return (
-    <div className="h-full flex flex-col">
-      {/* Categories */}
-      <div className="p-3 border-b border-white/10">
-        <div className="grid grid-cols-2 gap-1">
-          {categories.map((category) => (
-            <GlassmorphicButton
-              key={category.id}
-              className="flex items-center justify-between"
-              size="sm"
-              variant={selectedCategory === category.id ? "gaming" : "glass"}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              <span>{category.label}</span>
-              <GlassmorphicBadge size="sm" variant="default">
-                {category.count}
-              </GlassmorphicBadge>
-            </GlassmorphicButton>
-          ))}
-        </div>
-      </div>
-
-      {/* Asset Usage Stats */}
-      <div className="p-3 border-b border-white/10">
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <div className="text-xs text-white/60">Total</div>
-            <div className="text-sm font-semibold text-white/90">
-              {mockAssets.length}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-white/60">In Use</div>
-            <div className="text-sm font-semibold text-emerald-400">
-              {mockAssets.filter((a) => a.inUse).length}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-white/60">Unused</div>
-            <div className="text-sm font-semibold text-orange-400">
-              {mockAssets.filter((a) => !a.inUse).length}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Assets List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1">
-        {filteredAssets.map((asset) => (
-          <div
-            key={asset.id}
-            className={clsx(
-              "flex items-center space-x-3 p-2 rounded-lg",
-              "hover:bg-white/5 transition-colors cursor-pointer",
-              "border border-transparent hover:border-white/10",
-            )}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded flex items-center justify-center text-sm">
-              {asset.type === "sprite" && "🎨"}
-              {asset.type === "tileset" && "🧱"}
-              {asset.type === "sound" && "🔊"}
-              {asset.type === "music" && "🎵"}
-              {asset.type === "animation" && "🎬"}
-              {asset.type === "font" && "🔤"}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-white/90 truncate">
-                {asset.name}
-              </div>
-              <div className="text-xs text-white/50">{asset.size}</div>
-            </div>
-
-            {asset.inUse && (
-              <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+const SearchTab = () => {
+  return <AssetSearch assets={mockAssets} />;
 };
 
 export function AssetsPanel() {
   const [activeTab, setActiveTab] = useState("sprites");
+  const { assets, loading, error } = useAssets();
 
   const tabs: Tab[] = [
     {
@@ -549,14 +412,15 @@ export function AssetsPanel() {
         <span className={clsx(className, "text-sm")}>🎨</span>
       ),
       content: <SpritesTab />,
+      badge: mockAssets.filter((a) => ["sprite", "tileset"].includes(a.type)).length,
     },
     {
-      id: "sounds",
+      id: "audio",
       label: "Audio",
       icon: ({ className }) => (
         <span className={clsx(className, "text-sm")}>🔊</span>
       ),
-      content: <SoundsTab />,
+      content: <AudioTab />,
       badge: mockAssets.filter((a) => ["sound", "music"].includes(a.type))
         .length,
     },
@@ -569,8 +433,8 @@ export function AssetsPanel() {
       content: <AnimationsTab />,
     },
     {
-      id: "library",
-      label: "Library",
+      id: "collections",
+      label: "Collections",
       icon: ({ className }) => (
         <svg
           className={className}
@@ -586,9 +450,41 @@ export function AssetsPanel() {
           />
         </svg>
       ),
-      content: <LibraryTab />,
+      content: <CollectionsTab />,
+    },
+    {
+      id: "search",
+      label: "Search",
+      icon: ({ className }) => (
+        <svg
+          className={className}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+          />
+        </svg>
+      ),
+      content: <SearchTab />,
     },
   ];
+
+  if (error) {
+    return (
+      <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="h-full p-4">
+        <div className="text-center text-red-400">
+          <div className="text-lg mb-2">⚠️</div>
+          <div className="text-sm">Error loading assets</div>
+          <div className="text-xs text-white/60 mt-1">{error}</div>
+        </div>
+      </GlassmorphicCard>
+    );
+  }
 
   return (
     <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="h-full">
