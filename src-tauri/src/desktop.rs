@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
 use std::collections::HashMap;
 
 /// Initialize desktop-specific features
@@ -18,14 +18,14 @@ pub fn initialize_desktop_features(app: &mut tauri::App) -> Result<(), Box<dyn s
 }
 
 /// Set up system tray with additional features
-pub fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+pub fn setup_system_tray(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // This is already implemented in main.rs, but we can add more features here
     log::info!("System tray configured");
     Ok(())
 }
 
 /// Set up application menu bar
-pub fn setup_menu_bar(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+pub fn setup_menu_bar(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // This is already implemented in main.rs, but we can add more features here
     log::info!("Menu bar configured");
     Ok(())
@@ -41,7 +41,7 @@ pub fn setup_global_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn std::e
     ];
     
     for (shortcut_str, action, description) in shortcuts {
-        if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
+        if let Ok(_shortcut) = shortcut_str.parse::<Shortcut>() {
             let app_handle = app.handle().clone();
             let action_str = action.to_string();
             
@@ -153,7 +153,7 @@ fn configure_platform_settings(app: &mut tauri::App) -> Result<(), Box<dyn std::
     Ok(())
 }
 
-fn setup_file_associations(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn setup_file_associations(_app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // TODO: Register file associations for .ggp files
     // This would involve:
     // - Windows: Registry entries
