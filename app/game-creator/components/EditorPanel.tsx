@@ -12,7 +12,23 @@ import { GlassmorphicAlert } from "@/components/ui/GlassmorphicAlert";
 
 import WorldLinkCanvas from "@/components/toxoid/WorldLinkCanvas";
 import { ScriptEditor } from "@/components/toxoid/ScriptEditor";
-import { ToxoidGameState, GameScript } from "@/types/toxoid";
+
+// Simple types for game state management
+interface ToxoidGameState {
+  isRunning: boolean;
+  isPaused: boolean;
+  fps: number;
+  frameTime: number;
+  entityCount: number;
+  systemCount: number;
+  memoryUsage: number;
+}
+
+interface GameScript {
+  name: string;
+  content: string;
+  lastModified: Date;
+}
 
 // Individual Tab Components
 const LivePlayTab = () => {
@@ -33,7 +49,7 @@ const LivePlayTab = () => {
     worldLinkEngineRef.current = engine;
     
     // Update game state to indicate engine is ready
-    setGameState(prev => ({ ...prev, isRunning: true }));
+    setGameState((prev: ToxoidGameState) => ({ ...prev, isRunning: true }));
     
     // Execute a basic demo script if the engine supports scripting
     const demoScript = `
@@ -52,20 +68,20 @@ if (typeof Module !== 'undefined' && Module._main) {
 
   const handleWorldLinkError = useCallback((error: string) => {
     console.error('[LivePlayTab] WorldLink engine error:', error);
-    setGameState(prev => ({ ...prev, isRunning: false }));
+    setGameState((prev: ToxoidGameState) => ({ ...prev, isRunning: false }));
   }, []);
 
   const handlePlay = useCallback(() => {
     // For now, just toggle the playing state
     // Actual play/pause functionality will depend on WorldLink API
     setIsPlaying(prev => !prev);
-    setGameState(prev => ({ ...prev, isPaused: !isPlaying }));
+    setGameState((prev: ToxoidGameState) => ({ ...prev, isPaused: !isPlaying }));
   }, [isPlaying]);
 
   const handleReset = useCallback(async () => {
     // Reset functionality will depend on WorldLink API
     setIsPlaying(false);
-    setGameState(prev => ({ ...prev, isPaused: false }));
+    setGameState((prev: ToxoidGameState) => ({ ...prev, isPaused: false }));
   }, []);
 
   return (
@@ -120,8 +136,8 @@ if (typeof Module !== 'undefined' && Module._main) {
       {/* WorldLink Engine */}
       <div className="flex-1 p-4">
         <WorldLinkCanvas
-          width={640}
-          height={480}
+          width={1280}
+          height={720}
           onReady={handleWorldLinkReady}
           onError={handleWorldLinkError}
           enableDebugMode={true}
@@ -176,7 +192,7 @@ const MapEditorTab = () => {
               <label className="text-sm text-white/60">Grid:</label>
               <GlassmorphicInput
                 type="number"
-                value={gridSize}
+                value={gridSize.toString()}
                 onChange={(e) => setGridSize(Number(e.target.value))}
                 min="16"
                 max="64"
@@ -358,7 +374,7 @@ console.log("Game script loaded successfully!");`;
   const handleScriptChange = useCallback((code: string) => {
     // Update current script content
     if (currentScript) {
-      setCurrentScript(prev => prev ? {
+      setCurrentScript((prev: GameScript | null) => prev ? {
         ...prev,
         content: code,
         lastModified: new Date()
@@ -438,7 +454,7 @@ const SettingsTab = () => {
               </label>
               <GlassmorphicInput
                 type="number"
-                value={settings.fps}
+                value={settings.fps.toString()}
                 onChange={(e) => updateSetting("fps", Number(e.target.value))}
                 min="30"
                 max="120"

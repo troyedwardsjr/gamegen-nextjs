@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { GlassmorphicButton } from '@/components/ui/GlassmorphicButton';
 
+const NAVBAR_HEIGHT = 64; // px
+
 // Extend Window interface to include our custom property
 declare global {
 	interface Window {
@@ -66,8 +68,8 @@ interface WorldLinkCanvasProps {
 }
 
 export default function WorldLinkCanvas({
-	width = 640,
-	height = 480,
+	width = 1280,
+	height = 720,
 	className = "",
 	showFullscreenButton = false,
 	onReady,
@@ -82,11 +84,12 @@ export default function WorldLinkCanvas({
 		error: ''
 	});
 	const [canvasSize, setCanvasSize] = useState({ width, height });
+	const [containerHeight, setContainerHeight] = useState<string>(`calc(100vh - ${NAVBAR_HEIGHT}px)`);
 	const resizeTimeoutRef = useRef<NodeJS.Timeout>();
 
 	console.log('WorldLinkCanvas component rendered');
 
-	// Calculate optimal canvas size based on container
+	// Calculate optimal canvas size based on container - use fixed size to prevent WebGPU errors
 	const calculateCanvasSize = useCallback(() => {
 		if (!containerRef.current) {
 			return { width, height };
@@ -115,24 +118,36 @@ export default function WorldLinkCanvas({
 		}
 		
 		// Apply padding for safe areas and UI space
-		const padding = isMobileSafari() ? 20 : 10;
-		const availableWidth = Math.max(200, containerWidth - padding);
-		const availableHeight = Math.max(150, containerHeight - padding);
+		const padding = isMobileSafari() ? 40 : 20;
+		const availableWidth = Math.max(400, containerWidth - padding);
+		const availableHeight = Math.max(300, containerHeight - padding);
 		
-		// Maintain aspect ratio while fitting in container
+		// Use fixed canvas size to prevent WebGPU render target mismatches
+		// Only scale down if container is significantly smaller than target size
 		const targetAspectRatio = width / height;
 		const containerAspectRatio = availableWidth / availableHeight;
 		
-		let canvasWidth, canvasHeight;
+		let canvasWidth = width;
+		let canvasHeight = height;
 		
-		if (containerAspectRatio > targetAspectRatio) {
-			// Container is wider than target aspect ratio
-			canvasHeight = availableHeight;
-			canvasWidth = canvasHeight * targetAspectRatio;
-		} else {
-			// Container is taller than target aspect ratio
-			canvasWidth = availableWidth;
-			canvasHeight = canvasWidth / targetAspectRatio;
+		// Set minimum canvas dimensions to prevent shrinking too much
+		const minWidth = Math.min(800, width);
+		const minHeight = Math.min(600, height);
+		
+		// Only scale down if the container is significantly smaller than our target size
+		// and we have reliable container dimensions
+		if (availableWidth > 0 && availableHeight > 0 && 
+			(availableWidth < width * 0.8 || availableHeight < height * 0.8)) {
+			
+			if (containerAspectRatio > targetAspectRatio) {
+				// Container is wider than target aspect ratio
+				canvasHeight = Math.max(minHeight, availableHeight);
+				canvasWidth = Math.max(minWidth, canvasHeight * targetAspectRatio);
+			} else {
+				// Container is taller than target aspect ratio
+				canvasWidth = Math.max(minWidth, availableWidth);
+				canvasHeight = Math.max(minHeight, canvasWidth / targetAspectRatio);
+			}
 		}
 		
 		const newSize = {
@@ -144,24 +159,28 @@ export default function WorldLinkCanvas({
 		return newSize;
 	}, [width, height]);
 
-	// Update canvas size with debouncing for mobile Safari
+	// Update canvas size with debouncing - use longer delays to prevent constant resizing
 	const updateCanvasSize = useCallback(() => {
 		// Clear previous timeout
 		if (resizeTimeoutRef.current) {
 			clearTimeout(resizeTimeoutRef.current);
 		}
 		
-		// Debounce for mobile Safari
-		if (isMobileSafari()) {
-			resizeTimeoutRef.current = setTimeout(() => {
-				const newSize = calculateCanvasSize();
-				setCanvasSize(newSize);
-			}, 150);
-		} else {
+		// Use longer debounce to prevent WebGPU render target conflicts
+		const debounceDelay = isMobileSafari() ? 500 : 300;
+		resizeTimeoutRef.current = setTimeout(() => {
 			const newSize = calculateCanvasSize();
-			setCanvasSize(newSize);
-		}
-	}, [calculateCanvasSize]);
+			// Only update if size actually changed significantly
+			const currentSize = canvasSize;
+			const widthDiff = Math.abs(newSize.width - currentSize.width);
+			const heightDiff = Math.abs(newSize.height - currentSize.height);
+			
+			if (widthDiff > 50 || heightDiff > 50) {
+				console.log('📏 Significant size change detected, updating canvas:', newSize);
+				setCanvasSize(newSize);
+			}
+		}, debounceDelay);
+	}, [calculateCanvasSize, canvasSize]);
 
 	// Effect to track canvas size state changes and force style updates
 	useEffect(() => {
@@ -185,39 +204,12 @@ export default function WorldLinkCanvas({
 	useEffect(() => {
 		if (!canvasRef.current) return;
 		
-		const canvas = canvasRef.current;
-		let observer: MutationObserver;
-		
-		// Watch for WASM or other code changing canvas styles
-		if (typeof MutationObserver !== 'undefined') {
-			observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-						const currentWidth = canvas.style.width;
-						const currentHeight = canvas.style.height;
-						const expectedWidth = `${canvasSize.width}px`;
-						const expectedHeight = `${canvasSize.height}px`;
-						
-						if (currentWidth !== expectedWidth || currentHeight !== expectedHeight) {
-							console.log('🔧 Canvas style drift detected, fixing:', {
-								current: `${currentWidth}x${currentHeight}`,
-								expected: `${expectedWidth}x${expectedHeight}`
-							});
-							canvas.style.width = expectedWidth;
-							canvas.style.height = expectedHeight;
-						}
-					}
-				});
-			});
-			
-			observer.observe(canvas, {
-				attributes: true,
-				attributeFilter: ['style']
-			});
-		}
+		// Disable style drift monitoring to prevent WebGPU render target conflicts
+		// The WASM engine will handle its own canvas sizing
+		console.log('🎯 Canvas style monitoring disabled to prevent WebGPU conflicts');
 		
 		return () => {
-			if (observer) observer.disconnect();
+			// No cleanup needed since we're not using the observer
 		};
 	}, [canvasSize]);
 
@@ -533,24 +525,16 @@ export default function WorldLinkCanvas({
 		}
 
 		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		
+		// Reduce resize listeners to prevent WebGPU conflicts - only listen to major changes
 		window.addEventListener('resize', updateCanvasSize);
 		window.addEventListener('orientationchange', updateCanvasSize);
 		
-		// Mobile Safari specific event listeners
+		// Minimal Mobile Safari event listeners
 		if (isMobileSafari()) {
 			if (window.visualViewport) {
 				window.visualViewport.addEventListener('resize', updateCanvasSize);
 			}
-			
-			window.addEventListener('scroll', updateCanvasSize);
-			document.addEventListener('touchend', () => {
-				setTimeout(updateCanvasSize, 300);
-			});
-			document.addEventListener('visibilitychange', () => {
-				if (!document.hidden) {
-					setTimeout(updateCanvasSize, 200);
-				}
-			});
 		}
 		
 		return () => {
@@ -563,7 +547,6 @@ export default function WorldLinkCanvas({
 				if (window.visualViewport) {
 					window.visualViewport.removeEventListener('resize', updateCanvasSize);
 				}
-				window.removeEventListener('scroll', updateCanvasSize);
 			}
 			
 			if (resizeTimeoutRef.current) {
@@ -656,8 +639,9 @@ export default function WorldLinkCanvas({
 			} ${className}`}
 			style={{
 				backgroundColor: '#11100E',
-				width: showFullscreenButton ? '100%' : `${canvasSize.width}px`,
-				height: showFullscreenButton ? '100%' : `${canvasSize.height}px`,
+				width: '100%',
+				height: gameState.isFullscreen ? '100vh' : '100%',
+				minHeight: '400px'
 			}}
 		>
 			{/* Loading Overlay */}
