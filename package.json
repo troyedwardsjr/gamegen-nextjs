@@ -25,7 +25,18 @@
     "test:e2e:performance": "playwright test performance-accessibility.spec.ts",
     "test:e2e:dev": "npm run dev-mode:on && playwright test",
     "playwright:install": "playwright install",
-    "playwright:install-deps": "playwright install-deps"
+    "playwright:install-deps": "playwright install-deps",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "TAURI_BUILD=true npm run build && tauri build",
+    "tauri:build:debug": "TAURI_BUILD=true npm run build && tauri build --debug",
+    "tauri:build:windows": "TAURI_BUILD=true npm run build && tauri build --target x86_64-pc-windows-msvc",
+    "tauri:build:macos": "TAURI_BUILD=true npm run build && tauri build --target x86_64-apple-darwin",
+    "tauri:build:macos:arm": "TAURI_BUILD=true npm run build && tauri build --target aarch64-apple-darwin",
+    "tauri:build:linux": "TAURI_BUILD=true npm run build && tauri build --target x86_64-unknown-linux-gnu",
+    "tauri:build:all": "npm run tauri:build:windows && npm run tauri:build:macos && npm run tauri:build:macos:arm && npm run tauri:build:linux",
+    "desktop:dev": "npm run tauri:dev",
+    "desktop:build": "npm run tauri:build",
+    "desktop:setup": "cd src-tauri && cargo install tauri-cli"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.61.0",
@@ -84,6 +95,8 @@
     "@playwright/test": "^1.55.0",
     "@react-types/shared": "3.30.0",
     "@tailwindcss/postcss": "4.1.11",
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/cli": "^2.8.4",
     "@types/node": "20.5.7",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
