@@ -14,9 +14,10 @@ import type {
   LLMMessage,
   TokenUsage,
 } from "@/lib/llm/types";
-import { LLMError } from "@/lib/llm/types";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+
+import { LLMError } from "@/lib/llm/types";
 
 export interface UseLLMGenerationOptions {
   onStreamChunk?: (chunk: StreamChunk) => void;

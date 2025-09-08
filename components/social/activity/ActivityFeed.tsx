@@ -363,11 +363,14 @@ export function CompactActivityFeed({
   useEffect(() => {
     const fetchRecentActivities = async () => {
       try {
-        const { data, error } = await (supabase as any).rpc("get_user_activity_feed", {
-          user_id: userId,
-          limit_count: limit,
-          offset_count: 0,
-        });
+        const { data, error } = await (supabase as any).rpc(
+          "get_user_activity_feed",
+          {
+            user_id: userId,
+            limit_count: limit,
+            offset_count: 0,
+          },
+        );
 
         if (error) throw error;
         setActivities(data || []);

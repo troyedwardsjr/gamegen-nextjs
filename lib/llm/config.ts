@@ -302,7 +302,7 @@ export class LLMConfigManager {
       throw new Error(
         `Failed to import configuration: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   }

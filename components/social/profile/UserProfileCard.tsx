@@ -6,7 +6,7 @@ import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { MapPin, ExternalLink, Crown, Star, Verified } from "lucide-react";
+import { ExternalLink, Crown, Star, Verified } from "lucide-react";
 
 import { CompactFollowButton } from "./FollowButton";
 import { UserStats } from "./UserStats";
@@ -167,7 +167,6 @@ export function UserProfileCard({
                 </div>
               )}
             </div>
-
 
             {/* Bio */}
             {showBio && profile.bio && size !== "sm" && (

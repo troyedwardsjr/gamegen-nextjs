@@ -282,8 +282,10 @@ export class EmailVerificationManager {
 
       // Clean up in-memory cooldowns
       const entries = Array.from(verificationCooldowns.entries());
+
       for (let i = 0; i < entries.length; i++) {
         const [userId, timestamp] = entries[i];
+
         if (timestamp < expiryCutoff) {
           verificationCooldowns.delete(userId);
         }

@@ -279,7 +279,9 @@ export class LLMLogger {
       total_cost: number;
     };
   }> {
-    let query = (await this.supabase).from("llm_performance_metrics").select("*");
+    let query = (await this.supabase)
+      .from("llm_performance_metrics")
+      .select("*");
 
     if (filters.provider_id) {
       query = query.eq("provider_id", filters.provider_id);
@@ -486,7 +488,9 @@ export class LLMLogger {
    * Store logs in database
    */
   private async storeLogs(logs: RequestLog[]): Promise<void> {
-    const { error } = await (await this.supabase).from("llm_request_logs").insert(logs);
+    const { error } = await (await this.supabase)
+      .from("llm_request_logs")
+      .insert(logs);
 
     if (error) {
       console.error("[LLMLogger] Failed to store logs:", error);

@@ -1,328 +1,591 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
+// Virtual scrolling imports disabled due to import issues - will be fixed in next iteration
+// import { FixedSizeGrid as Grid } from "react-window";
+// import InfiniteLoader from "react-window-infinite-loader";
+// import AutoSizer from "react-virtualized-auto-sizer";
 import { motion, AnimatePresence } from "framer-motion";
-import { clsx } from "clsx";
+
+import { AssetCard } from "./AssetCard";
+
+import { Asset, AssetGridProps } from "@/types/assets";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
-import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
-import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
-import { AssetPreview } from "./AssetPreview";
-import type { Asset } from "@/types/assets";
 
-interface AssetGridProps {
-  assets: Asset[];
-  loading?: boolean;
-  onAssetSelect?: (asset: Asset) => void;
-  onAssetAction?: (asset: Asset, action: string) => void;
-  selectedAssets?: string[];
-  selectionMode?: boolean;
-  gridSize?: "small" | "medium" | "large";
-  showMetadata?: boolean;
-  className?: string;
-}
+// Grid item sizes based on item size prop
+const ITEM_SIZES = {
+  small: { width: 140, height: 140 },
+  medium: { width: 200, height: 200 },
+  large: { width: 280, height: 280 },
+};
 
-const GRID_CONFIGS = {
-  small: {
-    columns: "grid-cols-4",
-    cardSize: "aspect-square",
-    textSize: "text-xs",
-  },
-  medium: {
-    columns: "grid-cols-3",
-    cardSize: "aspect-[4/3]",
-    textSize: "text-sm",
-  },
-  large: {
-    columns: "grid-cols-2",
-    cardSize: "aspect-[3/2]",
-    textSize: "text-sm",
-  },
+// Default grid configuration
+const DEFAULT_GAP = 16;
+const OVERSCAN_COUNT = 5;
+
+// Loading skeleton component
+const AssetCardSkeleton = ({
+  size,
+}: {
+  size: "small" | "medium" | "large";
+}) => {
+  const itemSize = ITEM_SIZES[size];
+
+  return (
+    <div
+      className="animate-pulse bg-white/5 rounded-lg border border-white/10"
+      style={{ width: itemSize.width - 8, height: itemSize.height - 8 }}
+    >
+      <div className="p-3 space-y-3">
+        <div className="h-20 bg-white/10 rounded" />
+        <div className="space-y-2">
+          <div className="h-3 bg-white/10 rounded w-3/4" />
+          <div className="h-2 bg-white/10 rounded w-1/2" />
+        </div>
+        <div className="flex space-x-1">
+          <div className="h-4 bg-white/10 rounded w-12" />
+          <div className="h-4 bg-white/10 rounded w-8" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Empty state component
+const EmptyState = ({ children }: { children?: React.ReactNode }) => (
+  <div className="flex-1 flex items-center justify-center p-8">
+    {children || (
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center">
+          <svg
+            className="w-8 h-8 text-white/40"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 012-2h6a1 1 0 012 2v2M7 7h10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+            />
+          </svg>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-white/80">
+            No assets found
+          </h3>
+          <p className="text-sm text-white/60 max-w-sm">
+            Try adjusting your search criteria or upload some assets to get
+            started.
+          </p>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+// Error state component
+const ErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: string;
+  onRetry?: () => void;
+}) => (
+  <div className="flex-1 flex items-center justify-center p-8">
+    <div className="text-center space-y-4">
+      <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
+        <svg
+          className="w-8 h-8 text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+          />
+        </svg>
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold text-white/80">
+          Failed to load assets
+        </h3>
+        <p className="text-sm text-white/60 max-w-sm">{error}</p>
+        {onRetry && (
+          <button
+            className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+            onClick={onRetry}
+          >
+            Try Again
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// Grid cell component for react-window
+const GridCell = ({
+  columnIndex,
+  rowIndex,
+  style,
+  data,
+}: {
+  columnIndex: number;
+  rowIndex: number;
+  style: React.CSSProperties;
+  data: {
+    assets: Asset[];
+    columnsPerRow: number;
+    gap: number;
+    itemSize: "small" | "medium" | "large";
+    selectedIds: string[];
+    highlightedId?: string;
+    onAssetClick?: (asset: Asset) => void;
+    onAssetDoubleClick?: (asset: Asset) => void;
+    onSelectionChange?: (selectedIds: string[]) => void;
+    onDragStart?: (asset: Asset) => void;
+    enableSelection: boolean;
+    enableDragDrop: boolean;
+    isLoading: boolean;
+  };
+}) => {
+  const {
+    assets,
+    columnsPerRow,
+    gap,
+    itemSize,
+    selectedIds,
+    highlightedId,
+    onAssetClick,
+    onAssetDoubleClick,
+    onSelectionChange,
+    onDragStart,
+    enableSelection,
+    enableDragDrop,
+    isLoading,
+  } = data;
+
+  const assetIndex = rowIndex * columnsPerRow + columnIndex;
+  const asset = assets[assetIndex];
+
+  // Adjust style for gap
+  const cellStyle = {
+    ...style,
+    left: (style.left as number) + gap / 2,
+    top: (style.top as number) + gap / 2,
+    width: (style.width as number) - gap,
+    height: (style.height as number) - gap,
+  };
+
+  // Loading state
+  if (isLoading && !asset) {
+    return (
+      <div style={cellStyle}>
+        <AssetCardSkeleton size={itemSize} />
+      </div>
+    );
+  }
+
+  // No asset at this position
+  if (!asset) {
+    return <div style={cellStyle} />;
+  }
+
+  const isSelected = selectedIds.includes(asset.id);
+  const isHighlighted = highlightedId === asset.id;
+
+  const handleSelect = useCallback(
+    (selectedAsset: Asset, selected: boolean) => {
+      if (!onSelectionChange) return;
+
+      const newSelectedIds = selected
+        ? [...selectedIds, selectedAsset.id]
+        : selectedIds.filter((id) => id !== selectedAsset.id);
+
+      onSelectionChange(newSelectedIds);
+    },
+    [selectedIds, onSelectionChange],
+  );
+
+  return (
+    <div style={cellStyle}>
+      <AssetCard
+        asset={asset}
+        isHighlighted={isHighlighted}
+        isSelected={isSelected}
+        showActions={true}
+        size={itemSize}
+        onClick={onAssetClick}
+        onDoubleClick={onAssetDoubleClick}
+        onDragStart={enableDragDrop ? onDragStart : undefined}
+        onSelect={enableSelection ? handleSelect : undefined}
+      />
+    </div>
+  );
 };
 
 export function AssetGrid({
   assets,
+  selectedIds = [],
+  highlightedId,
   loading = false,
-  onAssetSelect,
-  onAssetAction,
-  selectedAssets = [],
-  selectionMode = false,
-  gridSize = "medium",
-  showMetadata = true,
-  className,
+  error,
+  emptyState,
+  columns,
+  gap = DEFAULT_GAP,
+  itemSize = "medium",
+  virtualScrolling = true,
+  enableSelection = true,
+  enableDragDrop = true,
+  onAssetClick,
+  onAssetDoubleClick,
+  onSelectionChange,
+  onDragStart,
+  onLoadMore,
+  hasMore = false,
 }: AssetGridProps) {
-  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
-  const [draggedAsset, setDraggedAsset] = useState<Asset | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
-  
-  const config = GRID_CONFIGS[gridSize];
+  const [containerWidth, setContainerWidth] = useState(0);
+  const gridRef = useRef<any>(null);
 
-  const handleAssetClick = useCallback((asset: Asset) => {
-    if (selectionMode) {
-      onAssetSelect?.(asset);
-    } else {
-      setPreviewAsset(asset);
+  // Calculate grid dimensions
+  const itemDimensions = ITEM_SIZES[itemSize];
+  const columnsPerRow = useMemo(() => {
+    if (columns) return columns;
+    if (containerWidth === 0) return 1;
+
+    return Math.max(
+      1,
+      Math.floor((containerWidth + gap) / (itemDimensions.width + gap)),
+    );
+  }, [containerWidth, columns, gap, itemDimensions.width]);
+
+  const rowCount = Math.ceil(assets.length / columnsPerRow);
+  const itemCount = hasMore ? assets.length + columnsPerRow : assets.length; // Add extra row for loading
+
+  // Infinite loading handler
+  const isItemLoaded = useCallback(
+    (index: number) => {
+      return index < assets.length;
+    },
+    [assets.length],
+  );
+
+  const loadMoreItems = useCallback(async () => {
+    if (onLoadMore && hasMore && !loading) {
+      onLoadMore();
     }
-  }, [selectionMode, onAssetSelect]);
+  }, [onLoadMore, hasMore, loading]);
 
-  const handleAssetDoubleClick = useCallback((asset: Asset) => {
-    onAssetAction?.(asset, "use");
-  }, [onAssetAction]);
+  // Grid data for react-window
+  const gridData = useMemo(
+    () => ({
+      assets,
+      columnsPerRow,
+      gap,
+      itemSize,
+      selectedIds,
+      highlightedId,
+      onAssetClick,
+      onAssetDoubleClick,
+      onSelectionChange,
+      onDragStart,
+      enableSelection,
+      enableDragDrop,
+      isLoading: loading,
+    }),
+    [
+      assets,
+      columnsPerRow,
+      gap,
+      itemSize,
+      selectedIds,
+      highlightedId,
+      onAssetClick,
+      onAssetDoubleClick,
+      onSelectionChange,
+      onDragStart,
+      enableSelection,
+      enableDragDrop,
+      loading,
+    ],
+  );
 
-  const handleDragStart = useCallback((e: React.DragEvent, asset: Asset) => {
-    setDraggedAsset(asset);
-    e.dataTransfer.setData("application/json", JSON.stringify(asset));
-    e.dataTransfer.effectAllowed = "copy";
-  }, []);
+  // Handle container resize
+  const handleResize = useCallback(
+    ({ width }: { width: number; height: number }) => {
+      setContainerWidth(width);
+    },
+    [],
+  );
 
-  const handleDragEnd = useCallback(() => {
-    setDraggedAsset(null);
-  }, []);
+  // Scroll to asset
+  const scrollToAsset = useCallback(
+    (assetId: string) => {
+      const assetIndex = assets.findIndex((asset) => asset.id === assetId);
 
-  const getAssetIcon = (type: string) => {
-    const icons = {
-      sprite: "🎨",
-      tileset: "🧱",
-      sound: "🔊",
-      music: "🎵",
-      animation: "🎬",
-      font: "🔤",
-    };
-    return icons[type as keyof typeof icons] || "📁";
-  };
+      if (assetIndex === -1 || !gridRef.current) return;
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "Unknown";
-    const units = ["B", "KB", "MB", "GB"];
-    let size = bytes;
-    let unitIndex = 0;
-    
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
+      const rowIndex = Math.floor(assetIndex / columnsPerRow);
+
+      gridRef.current.scrollToItem({
+        rowIndex,
+        align: "center",
+      });
+    },
+    [assets, columnsPerRow],
+  );
+
+  // Expose scroll method
+  useEffect(() => {
+    if (highlightedId) {
+      scrollToAsset(highlightedId);
     }
-    
-    return `${size.toFixed(1)}${units[unitIndex]}`;
-  };
+  }, [highlightedId, scrollToAsset]);
 
-  if (loading) {
+  // Error state
+  if (error && !loading) {
     return (
-      <div className={clsx("flex-1 p-3", className)}>
-        <div className={clsx("grid gap-2", config.columns)}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className={clsx(
-                "bg-white/5 rounded-lg animate-pulse",
-                config.cardSize
-              )}
-            />
-          ))}
-        </div>
-      </div>
+      <GlassmorphicCard className="h-full flex items-center justify-center">
+        <ErrorState error={error} onRetry={() => window.location.reload()} />
+      </GlassmorphicCard>
     );
   }
 
-  if (assets.length === 0) {
+  // Empty state
+  if (assets.length === 0 && !loading) {
     return (
-      <div className={clsx("flex-1 flex items-center justify-center p-8", className)}>
-        <div className="text-center text-white/60">
-          <div className="text-4xl mb-2">📦</div>
-          <div className="text-sm font-medium mb-1">No assets found</div>
-          <div className="text-xs">Try adjusting your search or filters</div>
-        </div>
-      </div>
+      <GlassmorphicCard className="h-full flex items-center justify-center">
+        <EmptyState>{emptyState}</EmptyState>
+      </GlassmorphicCard>
     );
   }
 
-  return (
-    <>
-      <div 
-        ref={gridRef}
-        className={clsx("flex-1 overflow-y-auto p-3", className)}
-      >
-        <div className={clsx("grid gap-2", config.columns)}>
-          <AnimatePresence mode="popLayout">
-            {assets.map((asset) => {
-              const isSelected = selectedAssets.includes(asset.id);
-              const isDragged = draggedAsset?.id === asset.id;
-              
+  // Regular grid (non-virtual) - temporarily disabled virtual scrolling due to import issues
+  if (true) {
+    // !virtualScrolling || assets.length < 50
+    return (
+      <div className="h-full overflow-y-auto">
+        <div
+          className="grid gap-4 p-4"
+          style={{
+            gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
+            gap: `${gap}px`,
+          }}
+        >
+          <AnimatePresence>
+            {assets.map((asset, index) => {
+              const isSelected = selectedIds.includes(asset.id);
+              const isHighlighted = highlightedId === asset.id;
+
+              const handleSelect = (
+                selectedAsset: Asset,
+                selected: boolean,
+              ) => {
+                if (!onSelectionChange) return;
+
+                const newSelectedIds = selected
+                  ? [...selectedIds, selectedAsset.id]
+                  : selectedIds.filter((id) => id !== selectedAsset.id);
+
+                onSelectionChange(newSelectedIds);
+              };
+
               return (
                 <motion.div
                   key={asset.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ 
-                    opacity: isDragged ? 0.5 : 1, 
-                    scale: isDragged ? 0.95 : 1 
-                  }}
+                  animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group cursor-pointer"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, asset)}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => handleAssetClick(asset)}
-                  onDoubleClick={() => handleAssetDoubleClick(asset)}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <GlassmorphicCard
-                    className={clsx(
-                      "relative overflow-hidden transition-all duration-200",
-                      isSelected && "ring-2 ring-purple-400/50 bg-purple-500/10",
-                      "hover:border-purple-400/30"
-                    )}
-                    variant="subtle"
-                  >
-                    {/* Selection indicator */}
-                    {selectionMode && (
-                      <div className="absolute top-2 left-2 z-10">
-                        <div 
-                          className={clsx(
-                            "w-4 h-4 rounded border-2 flex items-center justify-center text-xs",
-                            isSelected 
-                              ? "bg-purple-500 border-purple-500 text-white"
-                              : "border-white/30 bg-white/10"
-                          )}
-                        >
-                          {isSelected && "✓"}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Asset Preview */}
-                    <div 
-                      className={clsx(
-                        "bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-t-lg relative",
-                        config.cardSize
-                      )}
-                    >
-                      {asset.thumbnail ? (
-                        <img
-                          src={asset.thumbnail}
-                          alt={asset.name}
-                          className="w-full h-full object-cover rounded-t-lg"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                          {getAssetIcon(asset.type)}
-                        </div>
-                      )}
-
-                      {/* Status badges */}
-                      <div className="absolute top-2 right-2 flex flex-col gap-1">
-                        {asset.inUse && (
-                          <GlassmorphicBadge
-                            size="sm"
-                            variant="success"
-                            className="text-xs"
-                          >
-                            In Use
-                          </GlassmorphicBadge>
-                        )}
-                        
-                        {asset.metadata?.quality && asset.metadata.quality > 90 && (
-                          <GlassmorphicBadge
-                            size="sm"
-                            variant="gaming"
-                            className="text-xs"
-                          >
-                            HQ
-                          </GlassmorphicBadge>
-                        )}
-                      </div>
-
-                      {/* Hover Actions */}
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex space-x-1">
-                          <GlassmorphicButton 
-                            size="sm" 
-                            variant="gaming"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAssetAction?.(asset, "use");
-                            }}
-                          >
-                            Use
-                          </GlassmorphicButton>
-                          <GlassmorphicButton 
-                            size="sm" 
-                            variant="glass"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewAsset(asset);
-                            }}
-                          >
-                            Preview
-                          </GlassmorphicButton>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Asset Info */}
-                    {showMetadata && (
-                      <div className="p-2">
-                        <div className={clsx(
-                          "font-medium text-white/90 truncate",
-                          config.textSize
-                        )}>
-                          {asset.name}
-                        </div>
-                        <div className="text-xs text-white/60 mt-1">
-                          {asset.size} • {formatFileSize(asset.metadata?.fileSize)}
-                        </div>
-
-                        {/* Tags */}
-                        {asset.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {asset.tags.slice(0, 2).map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {asset.tags.length > 2 && (
-                              <span className="text-xs text-white/40">
-                                +{asset.tags.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Quality indicator */}
-                        {asset.metadata?.quality && (
-                          <div className="mt-1 flex items-center gap-1">
-                            <div className="text-xs text-white/50">Quality:</div>
-                            <div className="flex-1 h-1 bg-white/20 rounded-full">
-                              <div 
-                                className="h-full bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 rounded-full"
-                                style={{ width: `${asset.metadata.quality}%` }}
-                              />
-                            </div>
-                            <div className="text-xs text-white/60">{asset.metadata.quality}%</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </GlassmorphicCard>
+                  <AssetCard
+                    asset={asset}
+                    isHighlighted={isHighlighted}
+                    isSelected={isSelected}
+                    showActions={true}
+                    size={itemSize}
+                    onClick={onAssetClick}
+                    onDoubleClick={onAssetDoubleClick}
+                    onDragStart={enableDragDrop ? onDragStart : undefined}
+                    onSelect={enableSelection ? handleSelect : undefined}
+                  />
                 </motion.div>
               );
             })}
           </AnimatePresence>
+
+          {/* Loading skeletons */}
+          {loading && (
+            <>
+              {Array.from({ length: columnsPerRow * 2 }).map((_, index) => (
+                <AssetCardSkeleton key={`skeleton-${index}`} size={itemSize} />
+              ))}
+            </>
+          )}
         </div>
+
+        {/* Load more button */}
+        {hasMore && !loading && (
+          <div className="p-4 text-center">
+            <button
+              className="px-6 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+              onClick={loadMoreItems}
+            >
+              Load More
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Virtual scrolling grid - temporarily disabled due to react-window import issues
+  // TODO: Re-enable once react-window imports are resolved
+  /*
+  return (
+    <div className="h-full">
+      <AutoSizer onResize={handleResize}>
+        {({ width, height }) => {
+          if (!hasMore) {
+            return (
+              <Grid
+                ref={gridRef}
+                width={width}
+                height={height}
+                columnCount={columnsPerRow}
+                columnWidth={itemDimensions.width + gap}
+                rowCount={rowCount}
+                rowHeight={itemDimensions.height + gap}
+                itemData={gridData}
+                overscanRowCount={OVERSCAN_COUNT}
+                overscanColumnCount={OVERSCAN_COUNT}
+                style={{ padding: `${gap / 2}px` }}
+              >
+                {GridCell}
+              </Grid>
+            );
+          }
+
+          return (
+            <InfiniteLoader
+              isItemLoaded={isItemLoaded}
+              itemCount={itemCount}
+              loadMoreItems={loadMoreItems}
+              threshold={columnsPerRow * 3}
+            >
+              {({ onItemsRendered, ref }) => (
+                <Grid
+                  ref={(grid) => {
+                    ref(grid);
+                    gridRef.current = grid;
+                  }}
+                  width={width}
+                  height={height}
+                  columnCount={columnsPerRow}
+                  columnWidth={itemDimensions.width + gap}
+                  rowCount={Math.ceil(itemCount / columnsPerRow)}
+                  rowHeight={itemDimensions.height + gap}
+                  itemData={gridData}
+                  overscanRowCount={OVERSCAN_COUNT}
+                  overscanColumnCount={OVERSCAN_COUNT}
+                  onItemsRendered={({
+                    visibleRowStartIndex,
+                    visibleRowStopIndex,
+                    overscanRowStartIndex,
+                    overscanRowStopIndex,
+                  }) => {
+                    onItemsRendered({
+                      overscanStartIndex: overscanRowStartIndex * columnsPerRow,
+                      overscanStopIndex: overscanRowStopIndex * columnsPerRow,
+                      visibleStartIndex: visibleRowStartIndex * columnsPerRow,
+                      visibleStopIndex: visibleRowStopIndex * columnsPerRow,
+                    });
+                  }}
+                  style={{ padding: `${gap / 2}px` }}
+                >
+                  {GridCell}
+                </Grid>
+              )}
+            </InfiniteLoader>
+          );
+        }}
+      </AutoSizer>
+    </div>
+  );
+  */
+
+  // Fallback to regular grid since virtual scrolling is disabled
+  return (
+    <div className="h-full overflow-y-auto">
+      <div
+        className="grid gap-4 p-4"
+        style={{
+          gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
+          gap: `${gap}px`,
+        }}
+      >
+        {assets.map((asset, index) => {
+          const isSelected = selectedIds.includes(asset.id);
+          const isHighlighted = highlightedId === asset.id;
+
+          const handleSelect = (selectedAsset: Asset, selected: boolean) => {
+            if (!onSelectionChange) return;
+
+            const newSelectedIds = selected
+              ? [...selectedIds, selectedAsset.id]
+              : selectedIds.filter((id) => id !== selectedAsset.id);
+
+            onSelectionChange(newSelectedIds);
+          };
+
+          return (
+            <AssetCard
+              key={asset.id}
+              asset={asset}
+              isHighlighted={isHighlighted}
+              isSelected={isSelected}
+              showActions={true}
+              size={itemSize}
+              onClick={onAssetClick}
+              onDoubleClick={onAssetDoubleClick}
+              onDragStart={enableDragDrop ? onDragStart : undefined}
+              onSelect={enableSelection ? handleSelect : undefined}
+            />
+          );
+        })}
+
+        {/* Loading skeletons */}
+        {loading && (
+          <>
+            {Array.from({ length: columnsPerRow * 2 }).map((_, index) => (
+              <AssetCardSkeleton key={`skeleton-${index}`} size={itemSize} />
+            ))}
+          </>
+        )}
       </div>
 
-      {/* Asset Preview Modal */}
-      {previewAsset && (
-        <AssetPreview
-          asset={previewAsset}
-          isOpen={!!previewAsset}
-          onClose={() => setPreviewAsset(null)}
-          onAction={onAssetAction}
-        />
+      {/* Load more button */}
+      {hasMore && !loading && (
+        <div className="p-4 text-center">
+          <button
+            className="px-6 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+            onClick={loadMoreItems}
+          >
+            Load More
+          </button>
+        </div>
       )}
-    </>
+    </div>
   );
 }

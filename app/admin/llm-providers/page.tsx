@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -16,7 +16,7 @@ import {
 import { Spinner } from "@heroui/spinner";
 
 import { useLLMProvider } from "@/lib/hooks/use-llm-provider";
-import { ProviderConfiguration, ProviderConfig, ProviderHealthStatus } from "@/lib/llm/types";
+import { ProviderConfiguration } from "@/lib/llm/types";
 
 export default function LLMProvidersPage() {
   const {
@@ -32,9 +32,7 @@ export default function LLMProvidersPage() {
   } = useLLMProvider();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProvider, setEditingProvider] = useState<any | null>(
-    null,
-  );
+  const [editingProvider, setEditingProvider] = useState<any | null>(null);
   const [formData, setFormData] = useState<Partial<ProviderConfiguration>>({});
   const [testResults, setTestResults] = useState<Record<string, any>>({});
 
@@ -80,7 +78,10 @@ export default function LLMProvidersPage() {
   const handleSaveProvider = async () => {
     try {
       if (editingProvider) {
-        await updateProviderConfig(editingProvider.provider_id || editingProvider.id, formData);
+        await updateProviderConfig(
+          editingProvider.provider_id || editingProvider.id,
+          formData,
+        );
       } else {
         // For now, just show an alert since we don't have an add provider API
         alert("Adding new providers is not implemented yet");
@@ -95,10 +96,14 @@ export default function LLMProvidersPage() {
     try {
       // For now, just get metrics as a simple "test"
       const result = await getProviderMetrics(providerId);
+
       setTestResults((prev) => ({ ...prev, [providerId]: result }));
     } catch (error) {
       console.error("Error testing provider:", error);
-      setTestResults((prev) => ({ ...prev, [providerId]: { error: "Test failed" } }));
+      setTestResults((prev) => ({
+        ...prev,
+        [providerId]: { error: "Test failed" },
+      }));
     }
   };
 
@@ -112,9 +117,7 @@ export default function LLMProvidersPage() {
     };
 
     return (
-      <Badge color={colors[health] || "default"}>
-        {health.toUpperCase()}
-      </Badge>
+      <Badge color={colors[health] || "default"}>{health.toUpperCase()}</Badge>
     );
   };
 
@@ -149,7 +152,9 @@ export default function LLMProvidersPage() {
             <CardHeader className="flex justify-between items-start">
               <div className="flex items-center gap-3">
                 <div>
-                  <h3 className="text-xl font-semibold">{provider.provider_id}</h3>
+                  <h3 className="text-xl font-semibold">
+                    {provider.provider_id}
+                  </h3>
                   <p className="text-small text-default-500">
                     Provider - {provider.provider_id}
                   </p>
@@ -220,7 +225,9 @@ export default function LLMProvidersPage() {
                 </div>
                 <div>
                   <p className="text-small text-default-500">Last Check</p>
-                  <p className="text-small">{new Date(provider.last_health_check).toLocaleTimeString()}</p>
+                  <p className="text-small">
+                    {new Date(provider.last_health_check).toLocaleTimeString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-small text-default-500">Provider ID</p>
@@ -239,9 +246,14 @@ export default function LLMProvidersPage() {
                   <div>
                     <p className="text-small text-default-500">Success Rate</p>
                     <p className="text-small">
-                      {provider.metrics.successful_requests > 0 ? 
-                        ((provider.metrics.successful_requests / provider.metrics.total_requests) * 100).toFixed(2) : 0
-                      }%
+                      {provider.metrics.successful_requests > 0
+                        ? (
+                            (provider.metrics.successful_requests /
+                              provider.metrics.total_requests) *
+                            100
+                          ).toFixed(2)
+                        : 0}
+                      %
                     </p>
                   </div>
                   <div>
@@ -255,7 +267,9 @@ export default function LLMProvidersPage() {
                   <div>
                     <p className="text-small text-default-500">Last Used</p>
                     <p className="text-small">
-                      {new Date(provider.metrics.last_used).toLocaleTimeString()}
+                      {new Date(
+                        provider.metrics.last_used,
+                      ).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>

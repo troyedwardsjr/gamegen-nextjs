@@ -288,9 +288,10 @@ export class ToxoidInputManager {
         rightButton: false,
         middleButton: false,
         wheelDelta: 0,
-        isButtonPressed: (button: 'left' | 'right' | 'middle') => this.isMouseButtonPressed(button),
-        isButtonJustPressed: (button: 'left' | 'right' | 'middle') => false, // Placeholder
-        isButtonJustReleased: (button: 'left' | 'right' | 'middle') => false, // Placeholder
+        isButtonPressed: (button: "left" | "right" | "middle") =>
+          this.isMouseButtonPressed(button),
+        isButtonJustPressed: (button: "left" | "right" | "middle") => false, // Placeholder
+        isButtonJustReleased: (button: "left" | "right" | "middle") => false, // Placeholder
       } as MouseInputSingleton,
       gamepad: {
         gamepads: [],
@@ -441,7 +442,10 @@ export class ToxoidInputManager {
     this.eventListeners.set("wheel", wheelListener as EventListener);
 
     if (this.inputState.touch.isSupported) {
-      this.eventListeners.set("touchstart", touchStartListener as EventListener);
+      this.eventListeners.set(
+        "touchstart",
+        touchStartListener as EventListener,
+      );
       this.eventListeners.set("touchmove", touchMoveListener as EventListener);
       this.eventListeners.set("touchend", touchEndListener as EventListener);
     }

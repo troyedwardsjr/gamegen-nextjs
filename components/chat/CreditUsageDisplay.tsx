@@ -106,7 +106,9 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
       if (dailyError) throw dailyError;
 
       // Monthly usage
-      const { data: monthlyUsage, error: monthlyError } = await (supabase as any)
+      const { data: monthlyUsage, error: monthlyError } = await (
+        supabase as any
+      )
         .from("usage_tracking")
         .select("tokens_used, cost_cents, feature_type")
         .eq("user_id", user.id)
@@ -126,10 +128,15 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
 
       // Calculate totals
       const dailyCostCents =
-        dailyUsage?.reduce((sum: number, item: any) => sum + (item.cost_cents || 0), 0) || 0;
+        dailyUsage?.reduce(
+          (sum: number, item: any) => sum + (item.cost_cents || 0),
+          0,
+        ) || 0;
       const monthlyCostCents =
-        monthlyUsage?.reduce((sum: number, item: any) => sum + (item.cost_cents || 0), 0) ||
-        0;
+        monthlyUsage?.reduce(
+          (sum: number, item: any) => sum + (item.cost_cents || 0),
+          0,
+        ) || 0;
 
       // Feature breakdown
       const costBreakdown =
@@ -161,13 +168,18 @@ export const CreditUsageDisplay: React.FC<CreditUsageDisplayProps> = ({
           chat: costBreakdown.chat_completion || 0,
           artGeneration: costBreakdown.art_generation || 0,
           codeHelp: costBreakdown.code_help || 0,
-          other: Object.keys(costBreakdown).reduce((sum: number, key: string) => {
-            return !["chat_completion", "art_generation", "code_help"].includes(
-              key,
-            )
-              ? sum + costBreakdown[key]
-              : sum;
-          }, 0),
+          other: Object.keys(costBreakdown).reduce(
+            (sum: number, key: string) => {
+              return ![
+                "chat_completion",
+                "art_generation",
+                "code_help",
+              ].includes(key)
+                ? sum + costBreakdown[key]
+                : sum;
+            },
+            0,
+          ),
         },
         recentUsage:
           recentUsage?.map((item: any) => ({

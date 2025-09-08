@@ -1,224 +1,79 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { TabSystem, Tab } from "./TabSystem";
 
+import { AssetGrid } from "@/components/assets/AssetGrid";
+import { AssetSearch } from "@/components/assets/AssetSearch";
+import { AssetPreview } from "@/components/assets/AssetPreview";
+import { AssetUpload } from "@/components/assets/AssetUpload";
+import { AssetCollections } from "@/components/assets/AssetCollections";
+import { useAssets } from "@/hooks/useAssets";
+import { useAssetUpload } from "@/hooks/useAssetUpload";
+import { useAssetRecommendations } from "@/hooks/useAssetRecommendations";
+import { Asset, AssetSearchQuery } from "@/types/assets";
 import {
   GlassmorphicCard,
   GameGenCardPresets,
 } from "@/components/ui/GlassmorphicCard";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
-import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import { GlassmorphicBadge } from "@/components/ui/GlassmorphicBadge";
-import { AssetGrid } from "@/components/assets/AssetGrid";
-import { AssetSearch } from "@/components/assets/AssetSearch";
-import { AssetUpload } from "@/components/assets/AssetUpload";
-import { AssetCollections } from "@/components/assets/AssetCollections";
-import { useAssets } from "@/hooks/useAssets";
 
-interface Asset {
-  id: string;
-  name: string;
-  type: "sprite" | "tileset" | "sound" | "music" | "animation" | "font";
-  size: string;
-  lastModified: Date;
-  thumbnail?: string;
-  tags: string[];
-  inUse: boolean;
-  url?: string;
-  metadata?: {
-    dimensions?: { width: number; height: number };
-    fileSize?: number;
-    format?: string;
-    quality?: number;
-  };
-}
+// Smart Asset Library with AI Search - Enhanced AssetsPanel
+// Features: Virtual scrolling, semantic search, AI recommendations, collections
 
-// Enhanced mock assets data with AI recommendations
-const mockAssets: Asset[] = [
-  {
-    id: "1",
-    name: "player_idle.png",
-    type: "sprite",
-    size: "32x32",
-    lastModified: new Date(Date.now() - 3600000),
-    tags: ["character", "player", "idle", "cyberpunk"],
-    inUse: true,
-    metadata: {
-      dimensions: { width: 32, height: 32 },
-      fileSize: 2048,
-      format: "PNG",
-      quality: 95
-    }
-  },
-  {
-    id: "2",
-    name: "cyberpunk_tileset.png",
-    type: "tileset",
-    size: "512x512",
-    lastModified: new Date(Date.now() - 7200000),
-    tags: ["tileset", "cyberpunk", "environment", "neon"],
-    inUse: true,
-    metadata: {
-      dimensions: { width: 512, height: 512 },
-      fileSize: 65536,
-      format: "PNG",
-      quality: 98
-    }
-  },
-  {
-    id: "3",
-    name: "jump_sound.wav",
-    type: "sound",
-    size: "48KB",
-    lastModified: new Date(Date.now() - 1800000),
-    tags: ["sfx", "jump", "action", "8bit"],
-    inUse: false,
-    metadata: {
-      fileSize: 49152,
-      format: "WAV",
-      quality: 85
-    }
-  },
-  {
-    id: "4",
-    name: "background_music.mp3",
-    type: "music",
-    size: "2.3MB",
-    lastModified: new Date(Date.now() - 14400000),
-    tags: ["music", "background", "cyberpunk", "ambient"],
-    inUse: true,
-    metadata: {
-      fileSize: 2411724,
-      format: "MP3",
-      quality: 92
-    }
-  },
-  {
-    id: "5",
-    name: "player_walk.anim",
-    type: "animation",
-    size: "16 frames",
-    lastModified: new Date(Date.now() - 5400000),
-    tags: ["animation", "player", "walk", "character"],
-    inUse: false,
-    metadata: {
-      fileSize: 8192,
-      format: "ANIM",
-      quality: 88
-    }
-  },
-];
+// Enhanced Sprites & Tilesets tab with AI features
+const SpritesTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
+}: {
+  assets: Asset[];
+  loading: boolean;
+  onAssetClick: (asset: Asset) => void;
+  onAssetPreview: (asset: Asset) => void;
+  selectedAssetIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+}) => {
+  const [showUpload, setShowUpload] = useState(false);
+  const { upload } = useAssetUpload();
 
-const SpritesTab = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("name");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const sprites = mockAssets.filter(
-    (asset) =>
-      ["sprite", "tileset"].includes(asset.type) &&
-      asset.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedTags.length === 0 ||
-        selectedTags.some((tag) => asset.tags.includes(tag))),
+  const sprites = useMemo(
+    () =>
+      assets.filter(
+        (asset) => asset.type === "sprite" || asset.type === "tileset",
+      ),
+    [assets],
   );
 
-  const handleUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const getAssetIcon = (type: string) => {
-    switch (type) {
-      case "sprite":
-        return "🎨";
-      case "tileset":
-        return "🧱";
-      default:
-        return "📁";
-    }
-  };
+  const handleUploadComplete = useCallback((results: any[]) => {
+    console.log("Upload completed:", results);
+    setShowUpload(false);
+    // Refresh assets would be called here
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-3 border-b border-white/10">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white/90">Sprites & Tilesets</h4>
-          <GlassmorphicButton size="sm" variant="gaming" onClick={handleUpload}>
-            Upload
-          </GlassmorphicButton>
-        </div>
-
-        <div className="space-y-2">
-          <GlassmorphicInput
-            placeholder="Search assets..."
-            size="sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
           <div className="flex items-center space-x-2">
-            <GlassmorphicButton size="sm" variant="glass">
-              Sort: {sortBy}
-            </GlassmorphicButton>
-
+            <h4 className="font-semibold text-white/90">Sprites & Tilesets</h4>
             <GlassmorphicBadge size="sm" variant="gaming">
               {sprites.length} items
             </GlassmorphicBadge>
           </div>
-        </div>
-
-        <input
-          ref={fileInputRef}
-          multiple
-          accept="image/*"
-          className="hidden"
-          type="file"
-          onChange={(e) => {
-            // Handle file upload
-            console.log("Files selected:", e.target.files);
-          }}
-        />
-      </div>
-
-      {/* Asset Grid */}
-      <AssetGrid assets={sprites} />
-    </div>
-  );
-};
-
-const AudioTab = () => {
-  const [isPlaying, setIsPlaying] = useState<string | null>(null);
-
-  const sounds = mockAssets.filter((asset) =>
-    ["sound", "music"].includes(asset.type),
-  );
-
-  const handlePlay = (assetId: string) => {
-    if (isPlaying === assetId) {
-      setIsPlaying(null);
-    } else {
-      setIsPlaying(assetId);
-      // Stop after 3 seconds (demo)
-      setTimeout(() => setIsPlaying(null), 3000);
-    }
-  };
-
-  const getAudioIcon = (type: string) => {
-    return type === "music" ? "🎵" : "🔊";
-  };
-
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-3 border-b border-white/10">
-        <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-white/90">Audio Assets</h4>
-          <GlassmorphicButton size="sm" variant="gaming">
+          <GlassmorphicButton
+            size="sm"
+            variant="gaming"
+            onClick={() => setShowUpload(true)}
+          >
             Upload
           </GlassmorphicButton>
         </div>
@@ -236,93 +91,210 @@ const AudioTab = () => {
         </div>
       </div>
 
-      {/* Audio List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {sounds.map((asset) => (
-          <GlassmorphicCard key={asset.id} className="p-3" variant="subtle">
-            <div className="flex items-center space-x-3">
-              <div className="text-xl">{getAudioIcon(asset.type)}</div>
-
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-white/90 truncate">
-                  {asset.name}
-                </div>
-                <div className="text-xs text-white/60">
-                  {asset.size} • {asset.type}
-                </div>
-                <div className="flex space-x-1 mt-1">
-                  {asset.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-1 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                {asset.inUse && (
-                  <GlassmorphicBadge size="sm" variant="success">
-                    In Use
-                  </GlassmorphicBadge>
-                )}
-
-                <GlassmorphicButton
-                  size="sm"
-                  variant={isPlaying === asset.id ? "danger" : "gaming"}
-                  onClick={() => handlePlay(asset.id)}
-                >
-                  {isPlaying === asset.id ? (
-                    <svg
-                      className="w-3 h-3"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-3 h-3"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </GlassmorphicButton>
-              </div>
-            </div>
-
-            {isPlaying === asset.id && (
-              <motion.div
-                animate={{ height: "auto" }}
-                className="mt-3 overflow-hidden"
-                exit={{ height: 0 }}
-                initial={{ height: 0 }}
-              >
-                <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div
-                    animate={{ width: "100%" }}
-                    className="h-full bg-gradient-to-r from-purple-400 to-cyan-400"
-                    initial={{ width: "0%" }}
-                    transition={{ duration: 3, ease: "linear" }}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </GlassmorphicCard>
-        ))}
+      {/* Asset Grid */}
+      <div className="flex-1">
+        <AssetGrid
+          assets={sprites}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
+          loading={loading}
+          selectedIds={selectedAssetIds}
+          virtualScrolling={true}
+          onAssetClick={onAssetClick}
+          onAssetDoubleClick={onAssetPreview}
+          onSelectionChange={onSelectionChange}
+        />
       </div>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            onClick={() => setShowUpload(false)}
+          >
+            <motion.div
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GlassmorphicCard className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white/90">
+                    Upload Sprites & Tilesets
+                  </h3>
+                  <GlassmorphicButton
+                    size="sm"
+                    variant="glass-ghost"
+                    onClick={() => setShowUpload(false)}
+                  >
+                    ×
+                  </GlassmorphicButton>
+                </div>
+                <AssetUpload
+                  config={{
+                    allowedFormats: ["png", "jpg", "webp", "gif"],
+                    allowedTypes: ["sprite", "tileset"],
+                    maxFileSize: 10 * 1024 * 1024, // 10MB
+                    autoOptimize: true,
+                    generateThumbnail: true,
+                  }}
+                  multiple={true}
+                  onUploadComplete={handleUploadComplete}
+                />
+              </GlassmorphicCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-const AnimationsTab = () => {
-  const animations = mockAssets.filter((asset) => asset.type === "animation");
-  const [previewingAnimation, setPreviewingAnimation] = useState<string | null>(
-    null,
+// Enhanced Audio tab with preview capabilities
+const SoundsTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
+}: {
+  assets: Asset[];
+  loading: boolean;
+  onAssetClick: (asset: Asset) => void;
+  onAssetPreview: (asset: Asset) => void;
+  selectedAssetIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+}) => {
+  const [showUpload, setShowUpload] = useState(false);
+  const { upload } = useAssetUpload();
+
+  const audioAssets = useMemo(
+    () =>
+      assets.filter(
+        (asset) => asset.type === "sound" || asset.type === "music",
+      ),
+    [assets],
+  );
+
+  const handleUploadComplete = useCallback((results: any[]) => {
+    console.log("Audio upload completed:", results);
+    setShowUpload(false);
+  }, []);
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="p-3 border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <h4 className="font-semibold text-white/90">Audio Assets</h4>
+            <GlassmorphicBadge size="sm" variant="gaming">
+              {audioAssets.length} items
+            </GlassmorphicBadge>
+          </div>
+          <GlassmorphicButton
+            size="sm"
+            variant="gaming"
+            onClick={() => setShowUpload(true)}
+          >
+            Upload
+          </GlassmorphicButton>
+        </div>
+      </div>
+
+      {/* Audio Grid */}
+      <div className="flex-1">
+        <AssetGrid
+          assets={audioAssets}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
+          loading={loading}
+          selectedIds={selectedAssetIds}
+          virtualScrolling={true}
+          onAssetClick={onAssetClick}
+          onAssetDoubleClick={onAssetPreview}
+          onSelectionChange={onSelectionChange}
+        />
+      </div>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            onClick={() => setShowUpload(false)}
+          >
+            <motion.div
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GlassmorphicCard className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white/90">
+                    Upload Audio Assets
+                  </h3>
+                  <GlassmorphicButton
+                    size="sm"
+                    variant="glass-ghost"
+                    onClick={() => setShowUpload(false)}
+                  >
+                    ×
+                  </GlassmorphicButton>
+                </div>
+                <AssetUpload
+                  config={{
+                    allowedFormats: ["wav", "mp3", "ogg", "flac"],
+                    allowedTypes: ["sound", "music"],
+                    maxFileSize: 50 * 1024 * 1024, // 50MB
+                    autoOptimize: true,
+                    extractMetadata: true,
+                  }}
+                  multiple={true}
+                  onUploadComplete={handleUploadComplete}
+                />
+              </GlassmorphicCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Enhanced Animations tab
+const AnimationsTab = ({
+  assets,
+  loading,
+  onAssetClick,
+  onAssetPreview,
+  selectedAssetIds,
+  onSelectionChange,
+}: {
+  assets: Asset[];
+  loading: boolean;
+  onAssetClick: (asset: Asset) => void;
+  onAssetPreview: (asset: Asset) => void;
+  selectedAssetIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+}) => {
+  const animations = useMemo(
+    () => assets.filter((asset) => asset.type === "animation"),
+    [assets],
   );
 
   return (
@@ -330,80 +302,183 @@ const AnimationsTab = () => {
       {/* Header */}
       <div className="p-3 border-b border-white/10">
         <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-white/90">Animations</h4>
+          <div className="flex items-center space-x-2">
+            <h4 className="font-semibold text-white/90">Animations</h4>
+            <GlassmorphicBadge size="sm" variant="gaming">
+              {animations.length} items
+            </GlassmorphicBadge>
+          </div>
           <GlassmorphicButton size="sm" variant="gaming">
             Create
           </GlassmorphicButton>
         </div>
       </div>
 
-      {/* Animations List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {animations.map((asset) => (
-          <GlassmorphicCard key={asset.id} className="p-3" variant="subtle">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-lg flex items-center justify-center">
-                  <span className="text-lg">🎬</span>
-                </div>
-
-                <div>
-                  <div className="font-medium text-sm text-white/90">
-                    {asset.name}
-                  </div>
-                  <div className="text-xs text-white/60">{asset.size}</div>
-                  <div className="flex space-x-1 mt-1">
-                    {asset.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-1 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                {asset.inUse && (
-                  <GlassmorphicBadge size="sm" variant="success">
-                    In Use
-                  </GlassmorphicBadge>
-                )}
-
-                <GlassmorphicButton
-                  size="sm"
-                  variant="gaming"
-                  onClick={() =>
-                    setPreviewingAnimation(
-                      previewingAnimation === asset.id ? null : asset.id,
-                    )
-                  }
-                >
-                  {previewingAnimation === asset.id ? "Stop" : "Preview"}
-                </GlassmorphicButton>
-              </div>
-            </div>
-          </GlassmorphicCard>
-        ))}
+      {/* Animation Grid */}
+      <div className="flex-1">
+        <AssetGrid
+          assets={animations}
+          enableDragDrop={true}
+          enableSelection={true}
+          itemSize="medium"
+          loading={loading}
+          selectedIds={selectedAssetIds}
+          virtualScrolling={true}
+          onAssetClick={onAssetClick}
+          onAssetDoubleClick={onAssetPreview}
+          onSelectionChange={onSelectionChange}
+        />
       </div>
     </div>
   );
 };
 
-const CollectionsTab = () => {
-  return <AssetCollections />;
+// Enhanced Collections & Search tab
+const CollectionsTab = ({
+  selectedCollectionId,
+  onCollectionSelect,
+}: {
+  selectedCollectionId?: string;
+  onCollectionSelect: (id: string) => void;
+}) => {
+  return (
+    <div className="h-full">
+      <AssetCollections
+        selectedCollectionId={selectedCollectionId}
+        onCollectionCreate={(data) => console.log("Create collection:", data)}
+        onCollectionDelete={(id) => console.log("Delete collection:", id)}
+        onCollectionEdit={(id, data) =>
+          console.log("Edit collection:", id, data)
+        }
+        onCollectionSelect={onCollectionSelect}
+        onCollectionShare={(id) => console.log("Share collection:", id)}
+      />
+    </div>
+  );
 };
 
-const SearchTab = () => {
-  return <AssetSearch assets={mockAssets} />;
+// Smart Search tab with AI features
+const SmartSearchTab = ({
+  onSearch,
+}: {
+  onSearch: (query: AssetSearchQuery) => void;
+}) => {
+  const { recommendations, getRecommendations } = useAssetRecommendations();
+
+  useEffect(() => {
+    // Get initial recommendations
+    getRecommendations({
+      gameGenre: "action",
+      gameStyle: "pixel",
+      targetAudience: "indie",
+    });
+  }, [getRecommendations]);
+
+  return (
+    <div className="h-full flex flex-col space-y-4 p-4">
+      {/* Advanced Search */}
+      <div className="flex-shrink-0">
+        <AssetSearch
+          loading={false}
+          resultCount={0}
+          suggestions={[
+            "cyberpunk theme",
+            "character sprites",
+            "background music",
+          ]}
+          onClear={() => console.log("Clear search")}
+          onSearch={onSearch}
+        />
+      </div>
+
+      {/* AI Recommendations */}
+      {recommendations.length > 0 && (
+        <div className="flex-1 space-y-3">
+          <h3 className="text-sm font-semibold text-white/90">
+            AI Recommendations
+          </h3>
+          <div className="space-y-2">
+            {recommendations.slice(0, 5).map((rec) => (
+              <GlassmorphicCard
+                key={rec.assetId}
+                className="p-3"
+                variant="subtle"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-white/90">
+                      Score: {rec.score}%
+                    </div>
+                    <div className="text-xs text-white/70 mt-1">
+                      {rec.reason}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {rec.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-1.5 py-0.5 bg-purple-500/20 text-purple-200 rounded text-xs"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <GlassmorphicBadge size="sm" variant="gaming">
+                    {rec.type}
+                  </GlassmorphicBadge>
+                </div>
+              </GlassmorphicCard>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export function AssetsPanel() {
+  // State management
   const [activeTab, setActiveTab] = useState("sprites");
-  const { assets, loading, error } = useAssets();
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
+  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | undefined
+  >("system-all");
 
+  // Hooks
+  const { assets, loading, search, error } = useAssets();
+  const { recommendations, getRecommendations } = useAssetRecommendations();
+
+  // Handlers
+  const handleAssetClick = useCallback((asset: Asset) => {
+    console.log("Asset clicked:", asset);
+  }, []);
+
+  const handleAssetPreview = useCallback((asset: Asset) => {
+    setPreviewAsset(asset);
+  }, []);
+
+  const handleSearch = useCallback(
+    (query: AssetSearchQuery) => {
+      search(query);
+    },
+    [search],
+  );
+
+  const handleSelectionChange = useCallback((ids: string[]) => {
+    setSelectedAssetIds(ids);
+  }, []);
+
+  const handleCollectionSelect = useCallback(
+    (collectionId: string) => {
+      setSelectedCollectionId(collectionId);
+      // Filter assets by collection
+      search({ collections: [collectionId] });
+    },
+    [search],
+  );
+
+  // Tab configuration
   const tabs: Tab[] = [
     {
       id: "sprites",
@@ -411,8 +486,18 @@ export function AssetsPanel() {
       icon: ({ className }) => (
         <span className={clsx(className, "text-sm")}>🎨</span>
       ),
-      content: <SpritesTab />,
-      badge: mockAssets.filter((a) => ["sprite", "tileset"].includes(a.type)).length,
+      content: (
+        <SpritesTab
+          assets={assets}
+          loading={loading}
+          selectedAssetIds={selectedAssetIds}
+          onAssetClick={handleAssetClick}
+          onAssetPreview={handleAssetPreview}
+          onSelectionChange={handleSelectionChange}
+        />
+      ),
+      badge: assets.filter((a) => a.type === "sprite" || a.type === "tileset")
+        .length,
     },
     {
       id: "audio",
@@ -420,8 +505,17 @@ export function AssetsPanel() {
       icon: ({ className }) => (
         <span className={clsx(className, "text-sm")}>🔊</span>
       ),
-      content: <AudioTab />,
-      badge: mockAssets.filter((a) => ["sound", "music"].includes(a.type))
+      content: (
+        <SoundsTab
+          assets={assets}
+          loading={loading}
+          selectedAssetIds={selectedAssetIds}
+          onAssetClick={handleAssetClick}
+          onAssetPreview={handleAssetPreview}
+          onSelectionChange={handleSelectionChange}
+        />
+      ),
+      badge: assets.filter((a) => a.type === "sound" || a.type === "music")
         .length,
     },
     {
@@ -430,7 +524,17 @@ export function AssetsPanel() {
       icon: ({ className }) => (
         <span className={clsx(className, "text-sm")}>🎬</span>
       ),
-      content: <AnimationsTab />,
+      content: (
+        <AnimationsTab
+          assets={assets}
+          loading={loading}
+          selectedAssetIds={selectedAssetIds}
+          onAssetClick={handleAssetClick}
+          onAssetPreview={handleAssetPreview}
+          onSelectionChange={handleSelectionChange}
+        />
+      ),
+      badge: assets.filter((a) => a.type === "animation").length,
     },
     {
       id: "collections",
@@ -450,7 +554,12 @@ export function AssetsPanel() {
           />
         </svg>
       ),
-      content: <CollectionsTab />,
+      content: (
+        <CollectionsTab
+          selectedCollectionId={selectedCollectionId}
+          onCollectionSelect={handleCollectionSelect}
+        />
+      ),
     },
     {
       id: "search",
@@ -470,7 +579,8 @@ export function AssetsPanel() {
           />
         </svg>
       ),
-      content: <SearchTab />,
+      content: <SmartSearchTab onSearch={handleSearch} />,
+      badge: recommendations.length > 0 ? recommendations.length : undefined,
     },
   ];
 
@@ -487,16 +597,37 @@ export function AssetsPanel() {
   }
 
   return (
-    <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="h-full">
-      <TabSystem
-        activeTab={activeTab}
+    <>
+      <GlassmorphicCard
+        {...GameGenCardPresets.floatingPanel}
         className="h-full"
-        contentClassName="p-0"
-        size="sm"
-        tabs={tabs}
-        variant="gaming"
-        onTabChange={setActiveTab}
+      >
+        <TabSystem
+          activeTab={activeTab}
+          className="h-full"
+          contentClassName="p-0"
+          size="sm"
+          tabs={tabs}
+          variant="gaming"
+          onTabChange={setActiveTab}
+        />
+      </GlassmorphicCard>
+
+      {/* Asset Preview Modal */}
+      <AssetPreview
+        asset={previewAsset}
+        enablePlayback={true}
+        enableZoom={true}
+        isOpen={!!previewAsset}
+        showAIInfo={true}
+        showMetadata={true}
+        showUsage={true}
+        onAddToCollection={(asset) => console.log("Add to collection:", asset)}
+        onClose={() => setPreviewAsset(null)}
+        onDelete={(asset) => console.log("Delete asset:", asset)}
+        onDownload={(asset) => console.log("Download asset:", asset)}
+        onEdit={(asset) => console.log("Edit asset:", asset)}
       />
-    </GlassmorphicCard>
+    </>
   );
 }

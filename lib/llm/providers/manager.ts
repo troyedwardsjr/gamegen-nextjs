@@ -271,7 +271,8 @@ export class ProviderManager {
           provider_id: providerId,
           health_status: metrics.health_status,
           last_health_check: new Date(), // This would be tracked separately in a real implementation
-          circuit_breaker_state: circuitBreaker?.getState() || ("closed" as any),
+          circuit_breaker_state:
+            circuitBreaker?.getState() || ("closed" as any),
           rate_limit_status: rateLimiter?.getStatus() || {
             requests_used: 0,
             tokens_used: 0,

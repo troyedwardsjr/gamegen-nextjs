@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 // Simple sanitization fallback until isomorphic-dompurify is added
 const simpleSanitize = (input: string): string => {
-  return input.replace(/[<>\"'&]/g, '');
+  return input.replace(/[<>\"'&]/g, "");
 };
 
 import { AccountSecurityManager } from "./security";
@@ -350,6 +350,7 @@ export class SecurityMiddleware {
       const searchParams = request.nextUrl.searchParams;
 
       const entries = Array.from(searchParams.entries());
+
       for (let i = 0; i < entries.length; i++) {
         const [key, value] = entries[i];
         const sanitized = simpleSanitize(value);

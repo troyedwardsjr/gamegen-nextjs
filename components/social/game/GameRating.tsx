@@ -158,7 +158,9 @@ export function GameRating({
           .eq("user_id", currentUserId);
       } else {
         // Insert new rating
-        result = await (supabase as any).from("game_ratings").insert(ratingData);
+        result = await (supabase as any)
+          .from("game_ratings")
+          .insert(ratingData);
       }
 
       if (result.error) throw result.error;
@@ -171,7 +173,8 @@ export function GameRating({
 
       if (allRatings) {
         const newAverage =
-          allRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / allRatings.length;
+          allRatings.reduce((sum: number, r: any) => sum + r.rating, 0) /
+          allRatings.length;
         const newCount = allRatings.length;
 
         setAverageRating(newAverage);

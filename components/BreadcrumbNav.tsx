@@ -317,7 +317,9 @@ export function BreadcrumbNav({
                 initial={{ opacity: 0, scale: 0.8 }}
                 transition={{ delay: index * 0.1 + 0.05 }}
               >
-                {separator || <ChevronRightIcon className="w-4 h-4 text-gray-500" />}
+                {separator || (
+                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+                )}
               </motion.div>
             )}
           </React.Fragment>

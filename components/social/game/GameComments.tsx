@@ -6,7 +6,12 @@ import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/dropdown";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageCircle,

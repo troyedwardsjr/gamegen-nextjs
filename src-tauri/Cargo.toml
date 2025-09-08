@@ -1,0 +1,42 @@
+[package]
+name = "gamegen-desktop"
+version = "1.0.0"
+description = "GameGen Desktop Application - AI-powered pixel art game creation platform"
+authors = ["WorldLink Games <support@worldlinkgames.com>"]
+license = "MIT"
+repository = "https://github.com/worldlinkgames/gamegen"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["tray-icon", "devtools"] }
+tauri-plugin-dialog = "2.0"
+tauri-plugin-fs = "2.0"
+tauri-plugin-shell = "2.0"
+tauri-plugin-clipboard-manager = "2.0"
+tauri-plugin-notification = "2.0"
+tauri-plugin-os = "2.0"
+tauri-plugin-process = "2.0"
+tauri-plugin-updater = "2.0"
+tauri-plugin-window-state = "2.0"
+tauri-plugin-global-shortcut = "2.0"
+tauri-plugin-autostart = "2.0"
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+uuid = { version = "1.0", features = ["v4"] }
+dirs = "5.0"
+log = "0.4"
+env_logger = "0.11"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified,
+# DO NOT REMOVE!
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

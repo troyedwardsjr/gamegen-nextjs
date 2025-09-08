@@ -120,9 +120,9 @@ export interface MouseInputSingleton {
   rightButton: boolean;
   middleButton: boolean;
   wheelDelta: number;
-  isButtonPressed: (button: 'left' | 'right' | 'middle') => boolean;
-  isButtonJustPressed: (button: 'left' | 'right' | 'middle') => boolean;
-  isButtonJustReleased: (button: 'left' | 'right' | 'middle') => boolean;
+  isButtonPressed: (button: "left" | "right" | "middle") => boolean;
+  isButtonJustPressed: (button: "left" | "right" | "middle") => boolean;
+  isButtonJustReleased: (button: "left" | "right" | "middle") => boolean;
 }
 
 export interface GamepadInput {
