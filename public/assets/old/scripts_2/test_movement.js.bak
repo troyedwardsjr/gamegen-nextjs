@@ -1,0 +1,125 @@
+// Minimal Movement Test - Isolate Component Update Issues
+// This script tests if Position updates work correctly and if Velocity persists
+
+console.log("[MovementTest] Starting minimal movement test...");
+
+// Create a simple moving entity
+const testEntityId = Toxoid.API.filledRect(400, 300, 20, 20, { r: 1.0, g: 0.5, b: 0.0, a: 1.0 });
+const testEntity = Toxoid.API.getEntity(testEntityId);
+
+if (!testEntity) {
+    console.error("[MovementTest] Failed to create test entity");
+    throw new Error("Cannot create test entity");
+}
+
+console.log("[MovementTest] Test entity created with ID:", testEntityId);
+
+// Add Velocity component
+const velocityAdded = testEntity.add("Velocity");
+console.log("[MovementTest] Velocity component added:", velocityAdded);
+
+// Set initial velocity
+const velocity = testEntity.getComponent("Velocity");
+if (velocity) {
+    velocity.x = 2.0;
+    velocity.y = 1.0;
+    console.log("[MovementTest] Initial velocity set to x=2, y=1");
+} else {
+    console.error("[MovementTest] Cannot get Velocity component after adding");
+}
+
+// Counter for tracking updates
+let updateCount = 0;
+
+// Simple movement system - just move entity by velocity
+const testMovementSystem = Toxoid.System.create("TestMovement", "Position, Velocity", 1, function(iter) {
+    updateCount++;
+    
+    const entities = iter.entities();
+    console.log(`[MovementTest] Update #${updateCount}: Found ${entities.length} entities`);
+    
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+        
+        // Get components
+        const pos = entity.getComponent("Position");
+        const vel = entity.getComponent("Velocity");
+        
+        if (!pos) {
+            console.error(`[MovementTest] Entity ${i}: Position component missing`);
+            continue;
+        }
+        
+        if (!vel) {
+            console.error(`[MovementTest] Entity ${i}: Velocity component missing`);
+            continue;
+        }
+        
+        // Log current values before update
+        if (updateCount <= 10) {
+            console.log(`[MovementTest] Entity ${i} BEFORE: pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}), vel=(${vel.x.toFixed(1)}, ${vel.y.toFixed(1)})`);
+        }
+        
+        // Store old position
+        const oldX = pos.x;
+        const oldY = pos.y;
+        
+        // Update position by velocity
+        pos.x += vel.x;
+        pos.y += vel.y;
+        
+        // Check if velocity got corrupted after position update
+        const velAfter = entity.getComponent("Velocity");
+        if (!velAfter) {
+            console.error(`[MovementTest] Entity ${i}: Velocity component disappeared after position update!`);
+        } else if (velAfter.x !== vel.x || velAfter.y !== vel.y) {
+            console.error(`[MovementTest] Entity ${i}: Velocity corrupted! Expected (${vel.x}, ${vel.y}), got (${velAfter.x}, ${velAfter.y})`);
+        }
+        
+        // Log results
+        if (updateCount <= 10) {
+            console.log(`[MovementTest] Entity ${i} AFTER:  pos=(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}), vel=(${velAfter ? velAfter.x.toFixed(1) : 'NULL'}, ${velAfter ? velAfter.y.toFixed(1) : 'NULL'})`);
+            console.log(`[MovementTest] Entity ${i} MOVED:  dx=${(pos.x - oldX).toFixed(1)}, dy=${(pos.y - oldY).toFixed(1)}`);
+        }
+        
+        // Bounce off screen edges
+        if (pos.x < 0 || pos.x > 800) {
+            vel.x = -vel.x;
+            console.log(`[MovementTest] Entity ${i}: Bounced horizontally, new vel.x=${vel.x}`);
+        }
+        if (pos.y < 0 || pos.y > 600) {
+            vel.y = -vel.y;
+            console.log(`[MovementTest] Entity ${i}: Bounced vertically, new vel.y=${vel.y}`);
+        }
+    }
+});
+
+// Test system to monitor component integrity every few frames
+let integrityCheckCount = 0;
+const integrityCheckSystem = Toxoid.System.create("IntegrityCheck", "Position, Velocity", 10, function(iter) {
+    integrityCheckCount++;
+    
+    if (integrityCheckCount % 60 === 0) {  // Every second (assuming 60fps)
+        const entities = iter.entities();
+        console.log(`[MovementTest] Integrity Check #${integrityCheckCount / 60}: ${entities.length} entities`);
+        
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+            const pos = entity.getComponent("Position");
+            const vel = entity.getComponent("Velocity");
+            
+            if (!pos) {
+                console.error(`[MovementTest] Integrity Check: Entity ${i} lost Position component`);
+            }
+            if (!vel) {
+                console.error(`[MovementTest] Integrity Check: Entity ${i} lost Velocity component`);
+            } else {
+                console.log(`[MovementTest] Integrity Check: Entity ${i} has velocity (${vel.x.toFixed(1)}, ${vel.y.toFixed(1)})`);
+            }
+        }
+    }
+});
+
+console.log("[MovementTest] Systems created. Watch for component corruption issues...");
+console.log("[MovementTest] Expected behavior: Orange square bounces around screen");
+console.log("[MovementTest] Check console for velocity corruption errors");

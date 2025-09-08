@@ -1,0 +1,48 @@
+{
+  "path": "player-7aadfd5c-4792-47a0-b776-cdc8abd5b12d",
+  "label": "player-7aadfd5c-4792-47a0-b776-cdc8abd5b12d",
+  "ids": [
+    [
+      "Sprite"
+    ],
+    [
+      "BlendMode"
+    ],
+    [
+      "Position"
+    ],
+    [
+      "Size"
+    ],
+    [
+      "Callback"
+    ],
+    [
+      "Loadable"
+    ]
+  ],
+  "values": [
+    {
+      "filename": "assets/street_lamp.png",
+      "sprite": 0,
+      "data": 0,
+      "data_size": 0,
+      "renderable": true
+    },
+    {
+      "mode": 1
+    },
+    {
+      "x": 100,
+      "y": 100
+    },
+    {
+      "width": 0,
+      "height": 0
+    },
+    {
+      "callback": 0
+    },
+    0
+  ]
+}
