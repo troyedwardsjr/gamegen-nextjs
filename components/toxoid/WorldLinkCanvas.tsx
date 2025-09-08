@@ -240,6 +240,100 @@ export default function WorldLinkCanvas({
 		setTimeout(updateCanvasSize, 100);
 	}, [updateCanvasSize]);
 
+	// Function to execute scripts via WASM
+	const executeScriptViaWasm = useCallback((scriptContent: string): Promise<string> => {
+		return new Promise((resolve, reject) => {
+			try {
+				// Check if WASM is loaded and scripting is available
+				if (!window.__GAME_HOST) {
+					reject(new Error('WASM module not loaded yet'));
+					return;
+				}
+				
+				// Try to execute through the dynamic script loader if available
+				if (typeof window.__GAME_HOST._worldlink_eval_script === 'function') {
+					// Convert script to C string format
+					const encoder = new TextEncoder();
+					const scriptBytes = encoder.encode(scriptContent + '\0'); // Null-terminated
+					
+					// Allocate memory in WASM heap
+					const scriptPtr = window.__GAME_HOST._r_alloc(scriptBytes.length);
+					window.__GAME_HOST.HEAPU8.set(scriptBytes, scriptPtr);
+					
+					// Call the script execution function
+					const resultPtr = window.__GAME_HOST._worldlink_eval_script(scriptPtr);
+					
+					// Free the input memory
+					window.__GAME_HOST._r_free(scriptPtr);
+					
+					// Get the result
+					if (resultPtr !== 0) {
+						const result = window.__GAME_HOST.UTF8ToString(resultPtr);
+						window.__GAME_HOST._worldlink_free_string(resultPtr);
+						resolve(result);
+					} else {
+						resolve('Script executed successfully (no return value)');
+					}
+				} else {
+					reject(new Error('Script execution function not available in WASM module'));
+				}
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}, []);
+
+	// Function to load and execute snake_game.js
+	const loadSnakeGameScript = useCallback(async () => {
+		console.log('[Auto-loader] Attempting to preload snake_game.js...');
+		
+		try {
+			// Check if we have the assets directory structure
+			const scriptPaths = [
+				'/assets/scripts/examples/snake_game.js', // Correct path based on public directory
+				'/snake_game.js', // Fallback to public root
+				'/toxoid/snake_game.js' // Another fallback
+			];
+			
+			let scriptContent = null;
+			let usedPath = null;
+			
+			// Try each path until we find the script
+			for (const path of scriptPaths) {
+				try {
+					const response = await fetch(path);
+					if (response.ok) {
+						scriptContent = await response.text();
+						usedPath = path;
+						break;
+					}
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					console.log(`[Auto-loader] Could not fetch from ${path}:`, errorMessage);
+				}
+			}
+			
+			if (!scriptContent) {
+				console.warn('[Auto-loader] Could not find snake_game.js in any expected location');
+				return;
+			}
+			
+			console.log(`[Auto-loader] Successfully fetched snake_game.js from ${usedPath}`);
+			
+			// Execute the script via WASM
+			const result = await executeScriptViaWasm(scriptContent);
+			
+			if (result.includes('error')) {
+				console.error('[Auto-loader] Script execution error:', result);
+			} else {
+				console.log('[Auto-loader] snake_game.js loaded successfully!');
+				console.log('[Auto-loader] Result:', result);
+			}
+		} catch (error) {
+			console.error('[Auto-loader] Failed to auto-load snake_game.js:', error);
+		}
+	}, [executeScriptViaWasm]);
+
 	// Main WASM initialization effect
 	useEffect(() => {
 		console.log('useEffect running - setting up canvas and WASM loading');
@@ -427,6 +521,11 @@ export default function WorldLinkCanvas({
 							canvas.style.height = `${newSize.height}px`;
 						}
 					}, 200);
+					
+					// Auto-load snake_game.js after WASM initialization
+					setTimeout(async () => {
+						await loadSnakeGameScript();
+					}, 2000); // Wait 2 seconds for full initialization
 					
 					// Call onReady callback if provided
 					if (onReady && window.__GAME_HOST) {
