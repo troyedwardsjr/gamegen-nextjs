@@ -12,7 +12,7 @@ interface UpdateSessionRequest {
 // GET /api/chat/sessions/[sessionId] - Get specific session with messages
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } },
+  { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
     const supabase = createClient();
@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const { searchParams } = new URL(request.url);
     const includeMessages = searchParams.get("includeMessages") === "true";
     const messageLimit = parseInt(searchParams.get("messageLimit") || "50");
@@ -85,7 +85,7 @@ export async function GET(
 // PUT /api/chat/sessions/[sessionId] - Update session
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { sessionId: string } },
+  { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
     const supabase = createClient();
@@ -98,7 +98,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const body: UpdateSessionRequest = await request.json();
     const { title, contextType, status, settings } = body;
 
@@ -155,7 +155,7 @@ export async function PUT(
 // DELETE /api/chat/sessions/[sessionId] - Delete session and all messages
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { sessionId: string } },
+  { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
     const supabase = createClient();
@@ -168,7 +168,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     // Verify ownership before deletion
     const { data: session, error: verifyError } = await supabase

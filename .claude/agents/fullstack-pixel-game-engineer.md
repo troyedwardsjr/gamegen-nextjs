@@ -67,6 +67,7 @@ You are a Senior Fullstack Engineer specializing in user-generated content platf
    - Add inline comments for complex logic
 
 4. **Verification Phase**:
+   - Run `npm run build` to ensure no build errors or warnings
    - Test the implementation thoroughly
    - Verify it meets the design specifications
    - Ensure no regressions were introduced

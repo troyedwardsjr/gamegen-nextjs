@@ -22,8 +22,11 @@ You will conduct thorough end-to-end testing of the SaaS application by:
 ### Setup Phase
 1. First, review the technical design documents in ./design/technical to understand the system architecture
 2. Study the product and UX specifications in ./design/product to understand expected behavior
-3. Start the application by executing `make serve` in the background
-4. Initialize Puppeteer MCP with the URL http://localhost:3000
+3. **Local Build Testing**: Run `npm run build` to check for build errors and warnings
+4. Start the application by executing `make serve` in the background
+5. Initialize Puppeteer MCP with the URL http://localhost:3000
+6. **Production Build Testing**: Run `vercel build` to verify production compatibility
+7. **Production Deployment Verification**: Use Vercel MCP to check production build logs and deployment status
 
 ### Frontend Testing Protocol
 1. **Navigation Testing**: Verify all routes and navigation elements work correctly
@@ -47,6 +50,32 @@ For each UI test:
 4. **Edge Cases**: Test with invalid data, missing fields, and boundary conditions
 5. **Performance**: Note any slow responses or timeouts
 
+### Build Testing Protocol
+1. **Local Build Verification**: Execute `npm run build` to check for immediate build issues
+   - Check for build errors, warnings, or deprecation notices
+   - Verify all dependencies resolve correctly
+   - Confirm TypeScript compilation passes
+   - Note any performance warnings or bundle size issues
+   - Validate that build completes successfully before proceeding
+
+2. **Production Build Verification**: Execute `vercel build` to ensure production compatibility
+   - Compare results with local build to identify Vercel-specific issues
+   - Check for Vercel-specific build errors, warnings, or deprecation notices
+   - Validate environment variable handling in Vercel environment
+   - Verify production optimizations are applied correctly
+
+3. **Vercel Deployment Testing**: Use Vercel MCP tools to monitor production status
+   - List recent deployments with `list_deployments`
+   - Check deployment status and build logs with `get_deployment_build_logs`
+   - Verify deployment success and identify any production-specific issues
+   - Monitor for build failures or runtime errors in production environment
+
+4. **Production Environment Validation**:
+   - Compare local development behavior with production deployment
+   - Test production URLs and verify functionality
+   - Check for environment-specific configuration issues
+   - Validate that all assets and static files load correctly
+
 ### Puppeteer Best Practices
 - Always wait for elements to be visible before interacting: `await page.waitForSelector(selector)`
 - Use specific selectors based on data-testid when available, otherwise use semantic HTML
@@ -68,22 +97,43 @@ For each UI test:
 - Blocked: X
 
 ## Test Environment
-- URL: http://localhost:3000
+- Development URL: http://localhost:3000
+- Production URL: [Vercel deployment URL]
 - Browser: [Browser info]
 - Test Date: [Date/Time]
+- Local Build Status: [npm run build result]
+- Production Build Status: [vercel build result]
+- Deployment ID: [Latest deployment ID from Vercel MCP]
 
 ## Test Results
 
 ### Feature: [Feature Name]
 #### Test Case: [Description]
 - Status: PASS/FAIL
+- Environment: Development/Production/Both
 - Steps:
   1. [Step 1]
   2. [Step 2]
 - Expected Result: [What should happen]
 - Actual Result: [What actually happened]
 - Screenshots: [Links to screenshots]
+- Build Logs: [Relevant Vercel build log excerpts if applicable]
 - Severity: Critical/High/Medium/Low
+
+### Build Results
+#### Local Build Status: [SUCCESS/FAILURE]
+- Build Time: [Duration]
+- Bundle Size: [Size metrics if available]
+- Warnings: [Any build warnings]
+- Errors: [Any build errors]
+
+#### Production Build Status: [SUCCESS/FAILURE]
+- Build Time: [Duration]
+- Vercel-specific Issues: [Any differences from local build]
+- Warnings: [Any build warnings]
+- Errors: [Any build errors]
+- Deployment URL: [Production URL]
+- Build Logs Summary: [Key points from Vercel build logs]
 
 ## Bugs Found
 [List of bugs with reproduction steps]
@@ -103,6 +153,8 @@ For each bug found:
    - Screenshots if applicable
    - Severity level
    - Affected components/features
+   - Environment where bug occurs (Development/Production/Both)
+   - Build log references if production-related
 
 ## Communication Protocol
 
@@ -110,6 +162,8 @@ For each bug found:
 2. Prioritize issues by severity (Critical > High > Medium > Low)
 3. Chain critical issues immediately to the software engineer agent
 4. Provide actionable feedback with specific code locations when possible
+5. **Production Issues**: Immediately report any production build failures or deployment issues
+6. **Build Log Analysis**: Include relevant excerpts from Vercel build logs in issue reports
 
 ## Quality Standards
 

@@ -16,41 +16,32 @@ import {
 import { Spinner } from "@heroui/spinner";
 
 import { useLLMProvider } from "@/lib/hooks/use-llm-provider";
-import { ProviderConfig, ProviderHealthStatus } from "@/lib/llm/types";
+import { ProviderConfiguration, ProviderHealthStatus } from "@/lib/llm/types";
 
 export default function LLMProvidersPage() {
   const {
     providers,
-    activeProvider,
-    addProvider,
-    updateProvider,
-    removeProvider,
-    setActiveProvider,
-    testProvider,
-    getProviderHealth,
-    getProviderMetrics,
-    loading,
+    config,
+    isLoading,
     error,
+    refresh,
+    updateProviderConfig,
+    toggleProvider,
+    getProviderMetrics,
+    resetCircuitBreaker,
   } = useLLMProvider();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProvider, setEditingProvider] = useState<ProviderConfig | null>(
+  const [editingProvider, setEditingProvider] = useState<ProviderConfiguration | null>(
     null,
   );
-  const [formData, setFormData] = useState<Partial<ProviderConfig>>({});
+  const [formData, setFormData] = useState<Partial<ProviderConfiguration>>({});
   const [testResults, setTestResults] = useState<Record<string, any>>({});
-  const [healthStatuses, setHealthStatuses] = useState<
-    Record<string, ProviderHealthStatus>
-  >({});
-
-  useEffect(() => {
-    // Fetch health status for all providers
-    providers.forEach(async (provider) => {
-      const health = await getProviderHealth(provider.id);
-
-      setHealthStatuses((prev) => ({ ...prev, [provider.id]: health }));
-    });
-  }, [providers, getProviderHealth]);
+  // Health status can be derived from provider status
+  const healthStatuses = providers.reduce((acc, provider) => {
+    acc[provider.provider_id] = provider.health_status;
+    return acc;
+  }, {} as Record<string, ProviderHealthStatus>);
 
   const handleAddProvider = () => {
     setEditingProvider(null);

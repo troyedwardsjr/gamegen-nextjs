@@ -5,11 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 // POST /api/chat/templates/[templateId]/use - Increment usage count and return template
 export async function POST(
   request: NextRequest,
-  { params }: { params: { templateId: string } },
+  { params }: { params: Promise<{ templateId: string }> },
 ) {
   try {
     const supabase = createClient();
-    const { templateId } = params;
+    const { templateId } = await params;
 
     // Get the template
     const { data: template, error: fetchError } = await supabase

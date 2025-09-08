@@ -195,7 +195,7 @@ const TestimonialsSection = memo(() => {
                 {/* Quote */}
                 <blockquote className="flex-1 mb-6">
                   <p className="text-sm sm:text-base text-white/80 leading-relaxed italic">
-                    "{testimonial.quote}"
+                    &ldquo;{testimonial.quote}&rdquo;
                   </p>
                 </blockquote>
 

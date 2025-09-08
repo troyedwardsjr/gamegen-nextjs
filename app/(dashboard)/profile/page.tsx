@@ -15,6 +15,10 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
+  if (!user?.id) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
@@ -23,10 +27,8 @@ export default function ProfilePage() {
     >
       <UserProfile
         className="mb-8"
-        currentUserId={user?.id}
-        showEditButton={true}
-        userId={user?.id}
-        variant="profile"
+        currentUserId={user.id}
+        userId={user.id}
       />
 
       <Tabs
@@ -46,15 +48,14 @@ export default function ProfilePage() {
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
             <ActivityFeed
-              maxActivities={10}
+              maxItems={10}
               showFilters={false}
-              userId={user?.id}
-              variant="compact"
+              userId={user.id}
             />
             <AchievementProgress
               maxRecentAchievements={5}
               showStats={true}
-              userId={user?.id}
+              userId={user.id}
               variant="compact"
             />
           </div>
@@ -71,7 +72,7 @@ export default function ProfilePage() {
         >
           <div className="mt-8">
             <GameGrid
-              currentUserId={user?.id}
+              currentUserId={user.id}
               showFilters={true}
               showSearch={true}
               variant="default"
@@ -92,7 +93,7 @@ export default function ProfilePage() {
             <AchievementProgress
               showFilters={true}
               showStats={true}
-              userId={user?.id}
+              userId={user.id}
               variant="dashboard"
             />
           </div>
@@ -110,8 +111,7 @@ export default function ProfilePage() {
           <div className="mt-8">
             <ActivityFeed
               showFilters={true}
-              userId={user?.id}
-              variant="default"
+              userId={user.id}
             />
           </div>
         </Tab>

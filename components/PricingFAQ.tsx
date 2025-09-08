@@ -178,7 +178,7 @@ export function PricingFAQ() {
           transition={{ duration: 0.6, delay: 0.8 }}
         >
           <p className="text-glass-text-muted mb-4">
-            Still have questions? We're here to help.
+            Still have questions? We&apos;re here to help.
           </p>
           <a
             className="inline-flex items-center space-x-2 text-primary hover:text-primary-300 transition-colors duration-200"
