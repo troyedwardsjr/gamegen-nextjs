@@ -20,7 +20,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-// import { Avatar } from "@heroui/avatar"; // Temporarily disabled for testing
+import { Avatar } from "@heroui/avatar";
 
 import {
   HomeIcon,

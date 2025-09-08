@@ -608,6 +608,9 @@ export const EyeOffIcon = (props: IconSvgProps) => (
   </svg>
 );
 
+// Alias for compatibility
+export const EyeSlashIcon = EyeOffIcon;
+
 export const CreditCardIcon = (props: IconSvgProps) => (
   <svg
     aria-hidden="true"
