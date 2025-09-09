@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 
 import { TabSystem, Tab } from "./TabSystem";
 
@@ -14,6 +14,7 @@ import { GlassmorphicInput } from "@/components/ui/GlassmorphicInput";
 import WorldLinkCanvas from "@/components/toxoid/WorldLinkCanvas";
 import { ScriptEditor } from "@/components/toxoid/ScriptEditor";
 import { ExportModal } from "@/components/export/ExportModal";
+import { useGame } from "@/contexts/GameContext";
 
 // Simple types for game state management
 interface ToxoidGameState {
@@ -295,8 +296,26 @@ const MapEditorTab = () => {
 };
 
 const CodeEditorTab = () => {
-  const [currentScript, setCurrentScript] = useState<GameScript | null>(null);
+  const { currentGame, updateGameScript, addGameScript } = useGame();
+  const [selectedScriptIndex, setSelectedScriptIndex] = useState<number>(0);
   const toxoidEngineRef = useRef<any>(null);
+
+  // Ensure we have at least one script
+  useEffect(() => {
+    if (currentGame && currentGame.scripts.length === 0) {
+      addGameScript({
+        name: 'Main Script',
+        javascript_code: defaultCode,
+        script_type: 'initialization',
+        description: 'Main game initialization script',
+        is_active: true,
+        execution_order: 0,
+        dependencies: []
+      });
+    }
+  }, [currentGame, addGameScript]);
+
+  const currentScript = currentGame?.scripts[selectedScriptIndex] || null;
 
   // Default Toxoid script
   const defaultCode = `// Toxoid Game Script
@@ -386,63 +405,98 @@ console.log("Game script loaded successfully!");`;
     [],
   );
 
-  const handleScriptSave = useCallback((script: GameScript) => {
-    setCurrentScript(script);
-    // TODO: Implement proper script saving to database
-    // In a real implementation, this would save to the database
-    // and sync with the project state
-  }, []);
+  const handleScriptSave = useCallback((script: { name: string; content: string; lastModified: Date }) => {
+    if (currentScript) {
+      updateGameScript(selectedScriptIndex, {
+        name: script.name,
+        javascript_code: script.content
+      });
+    }
+  }, [currentScript, selectedScriptIndex, updateGameScript]);
 
   const handleScriptChange = useCallback(
     (code: string) => {
-      // Update current script content
+      // Update current script content with auto-save
       if (currentScript) {
-        setCurrentScript((prev: GameScript | null) =>
-          prev
-            ? {
-                ...prev,
-                content: code,
-                lastModified: new Date(),
-              }
-            : null,
-        );
+        updateGameScript(selectedScriptIndex, {
+          javascript_code: code
+        });
       }
     },
-    [currentScript],
+    [currentScript, selectedScriptIndex, updateGameScript],
   );
 
+  if (!currentGame) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-white/60">Loading game data...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full">
-      <ScriptEditor
-        className="h-full"
-        initialCode={currentScript?.content || defaultCode}
-        showLineNumbers={true}
-        theme="dark"
-        onCodeChange={handleScriptChange}
-        onExecute={handleScriptExecute}
-        onSave={handleScriptSave}
-      />
+    <div className="h-full flex flex-col">
+      {/* Script Selector */}
+      {currentGame.scripts.length > 1 && (
+        <div className="p-4 border-b border-white/10">
+          <select
+            className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white"
+            value={selectedScriptIndex}
+            onChange={(e) => setSelectedScriptIndex(Number(e.target.value))}
+          >
+            {currentGame.scripts.map((script, index) => (
+              <option key={index} value={index} className="bg-gray-800">
+                {script.name} ({script.script_type})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Script Editor */}
+      <div className="flex-1">
+        <ScriptEditor
+          className="h-full"
+          initialCode={currentScript?.javascript_code || defaultCode}
+          showLineNumbers={true}
+          theme="dark"
+          onCodeChange={handleScriptChange}
+          onExecute={handleScriptExecute}
+          onSave={handleScriptSave}
+        />
+      </div>
     </div>
   );
 };
 
 const SettingsTab = () => {
-  const [settings, setSettings] = useState({
-    gameTitle: "My Cyberpunk Platformer",
-    resolution: "640x480",
-    fps: 60,
-    pixelPerfect: true,
-    showFPS: true,
-    enableSounds: true,
-    musicVolume: 70,
-    sfxVolume: 85,
-  });
-
+  const { currentGame, updateGame, updateGameSettings } = useGame();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
+  // Initialize local settings from game data
+  const settings = {
+    gameTitle: currentGame?.title || "My Cyberpunk Platformer",
+    resolution: currentGame?.game_data?.resolution || "640x480",
+    fps: currentGame?.game_data?.fps || 60,
+    pixelPerfect: currentGame?.game_data?.pixelPerfect || true,
+    showFPS: currentGame?.game_data?.showFPS || true,
+    enableSounds: currentGame?.game_data?.enableSounds || true,
+    musicVolume: currentGame?.game_data?.musicVolume || 70,
+    sfxVolume: currentGame?.game_data?.sfxVolume || 85,
+  };
+
   const updateSetting = (key: string, value: any) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    if (key === 'gameTitle') {
+      updateGame({ title: value });
+    } else {
+      updateGame({
+        game_data: {
+          ...currentGame?.game_data,
+          [key]: value
+        }
+      });
+    }
   };
 
   const handleExportClick = (platform: string) => {
@@ -605,13 +659,15 @@ const SettingsTab = () => {
       </GlassmorphicCard>
 
       {/* Export Modal */}
-      <ExportModal
-        gameId="demo-game-id" // TODO: Get actual game ID from context
-        gameTitle={settings.gameTitle}
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        onExportSuccess={handleExportSuccess}
-      />
+      {currentGame?.id && (
+        <ExportModal
+          gameId={currentGame.id}
+          gameTitle={settings.gameTitle}
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          onExportSuccess={handleExportSuccess}
+        />
+      )}
     </div>
   );
 };

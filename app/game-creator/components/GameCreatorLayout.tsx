@@ -12,6 +12,8 @@ import { AssetsPanel } from "./AssetsPanel";
 import { GlassmorphicButton } from "@/components/ui/GlassmorphicButton";
 import { GlassmorphicCard } from "@/components/ui/GlassmorphicCard";
 import { GameGenCardPresets } from "@/components/ui/GlassmorphicCard";
+import { SaveStatusIndicator, CompactSaveStatus } from "@/components/game/SaveStatusIndicator";
+import { useGame } from "@/contexts/GameContext";
 
 interface PanelState {
   chatCollapsed: boolean;
@@ -23,6 +25,9 @@ interface PanelState {
 type MobileView = "chat" | "editor" | "assets";
 
 export function GameCreatorLayout() {
+  // Game context for save status and data management
+  const { currentGame, forceSave, hasUnsavedChanges } = useGame();
+  
   // Panel state management
   const [panelState, setPanelState] = useState<PanelState>({
     chatCollapsed: false,
@@ -115,6 +120,10 @@ export function GameCreatorLayout() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case "s": // Save shortcut
+            e.preventDefault();
+            forceSave();
+            break;
           case "1":
             e.preventDefault();
             if (isMobile) {
@@ -162,6 +171,7 @@ export function GameCreatorLayout() {
     handleChatCollapse,
     handleAssetsCollapse,
     updatePanelState,
+    forceSave,
   ]);
 
   // Online status simulation
@@ -258,14 +268,22 @@ export function GameCreatorLayout() {
       >
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              GameGen Creator
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                {currentGame?.title || 'GameGen Creator'}
+              </h1>
+              <CompactSaveStatus />
+            </div>
 
             {/* Quick Actions */}
             <div className="flex items-center space-x-2">
-              <GlassmorphicButton size="sm" variant="glass-ghost">
-                Save (Ctrl+S)
+              <GlassmorphicButton 
+                size="sm" 
+                variant={hasUnsavedChanges ? "gaming" : "glass-ghost"}
+                onClick={() => forceSave()}
+                disabled={!hasUnsavedChanges}
+              >
+                {hasUnsavedChanges ? "Save Changes" : "Saved"} (Ctrl+S)
               </GlassmorphicButton>
               <GlassmorphicButton size="sm" variant="gaming">
                 Play Test

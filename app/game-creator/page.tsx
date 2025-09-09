@@ -5,6 +5,7 @@ import React, { Suspense } from "react";
 import { GameCreatorLayout } from "./components/GameCreatorLayout";
 import { GameCreatorErrorBoundary } from "./components/GameCreatorErrorBoundary";
 import { GameCreatorLoading } from "./components/GameCreatorLoading";
+import { GameProvider } from "@/contexts/GameContext";
 
 export default function GameCreatorPage() {
   return (
@@ -23,7 +24,9 @@ export default function GameCreatorPage() {
       <div className="relative z-10 h-screen">
         <GameCreatorErrorBoundary>
           <Suspense fallback={<GameCreatorLoading />}>
-            <GameCreatorLayout />
+            <GameProvider>
+              <GameCreatorLayout />
+            </GameProvider>
           </Suspense>
         </GameCreatorErrorBoundary>
       </div>
