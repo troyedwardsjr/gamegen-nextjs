@@ -16,6 +16,10 @@ import QuickActions from "@/components/dashboard/QuickActions";
 import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
 import NotificationCenter from "@/components/dashboard/NotificationCenter";
 
+// Hooks
+import { useDashboardProjects } from "@/hooks/useDashboardProjects";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+
 import {
   GameIcon,
   SparklesIcon,
@@ -60,150 +64,51 @@ export default function EnhancedDashboardPage() {
   // State Management
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
-  const [projectsLoading, setProjectsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentFilters, setCurrentFilters] = useState<ProjectFilter>({});
-  const [currentSort, setCurrentSort] = useState<ProjectSort>({
-    field: 'updated_at',
-    direction: 'desc'
-  });
   
-  // Mock data - replace with real data from your API
-  const stats: DashboardStats = {
-    gamesCreated: 15,
-    totalPlays: 12847,
-    communityFollowers: 389,
-    achievementsUnlocked: 24,
-    totalAssets: 156,
-    totalCollaborations: 8,
-    creditsUsed: 1200,
-    creditsRemaining: 2800,
-  };
+  // Real data hooks
+  const { stats } = useDashboardStats();
+  const {
+    projects,
+    totalCount,
+    loading: projectsLoading,
+    error: projectsError,
+    setPage: setCurrentPage,
+    setSearch: setSearchQuery,
+    setFilters: setCurrentFilters,
+    setSort: setCurrentSort,
+    currentPage,
+    currentSearch: searchQuery,
+    currentFilters,
+    currentSort,
+  } = useDashboardProjects();
 
-  // Mock Projects Data
-  const mockProjects: ProjectGridItem[] = [
-    {
-      id: '1',
-      user_id: 'user1',
-      title: 'Pixel Adventure Quest',
-      description: 'An epic pixel art adventure game with multiple levels and boss battles',
-      slug: 'pixel-adventure-quest',
-      game_type: 'platformer',
-      status: 'published',
-      visibility: 'public',
-      thumbnail_url: '/api/placeholder/300/200',
-      lastModified: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      tags: ['platformer', 'pixel-art', 'adventure'],
-      analyticsPreview: { plays: 1247, likes: 89, comments: 23 },
-      genre_tags: ['adventure', 'action'],
-      target_audience: 'teen',
-      difficulty_level: 'intermediate',
-      estimated_playtime_minutes: 45,
-      game_config: {},
-      source_code: {},
-      compiled_game_url: null,
-      screenshots: [],
-      is_template: false,
-      template_category: null,
-      play_count: 1247,
-      like_count: 89,
-      comment_count: 23,
-      rating_average: 4.2,
-      rating_count: 45,
-      featured_at: null,
-      published_at: null,
-      last_played_at: null,
-      version: 1,
-      toxoid_version: '1.0.0',
-      build_status: 'success',
-      build_log: null,
-      seo_title: null,
-      seo_description: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      user_id: 'user1',
-      title: 'Space Shooter Deluxe',
-      description: 'Fast-paced space combat with power-ups and multiple ship types',
-      slug: 'space-shooter-deluxe',
-      game_type: 'bullet_hell',
-      status: 'in_development',
-      visibility: 'private',
-      thumbnail_url: '/api/placeholder/300/200',
-      lastModified: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      tags: ['space', 'shooter', 'action'],
-      analyticsPreview: { plays: 542, likes: 34, comments: 12 },
-      genre_tags: ['action', 'arcade'],
-      target_audience: 'adult',
-      difficulty_level: 'advanced',
-      estimated_playtime_minutes: 30,
-      game_config: {},
-      source_code: {},
-      compiled_game_url: null,
-      screenshots: [],
-      is_template: false,
-      template_category: null,
-      play_count: 542,
-      like_count: 34,
-      comment_count: 12,
-      rating_average: 3.8,
-      rating_count: 18,
-      featured_at: null,
-      published_at: null,
-      last_played_at: null,
-      version: 1,
-      toxoid_version: '1.0.0',
-      build_status: 'pending',
-      build_log: null,
-      seo_title: null,
-      seo_description: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      user_id: 'user1',
-      title: 'Puzzle Master',
-      description: 'Mind-bending puzzles that challenge your logic and creativity',
-      slug: 'puzzle-master',
-      game_type: 'puzzle',
-      status: 'draft',
-      visibility: 'private',
-      thumbnail_url: '/api/placeholder/300/200',
-      lastModified: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-      tags: ['puzzle', 'logic', 'brain-teaser'],
-      analyticsPreview: { plays: 0, likes: 0, comments: 0 },
-      genre_tags: ['puzzle'],
-      target_audience: 'all',
-      difficulty_level: 'beginner',
-      estimated_playtime_minutes: 60,
-      game_config: {},
-      source_code: {},
-      compiled_game_url: null,
-      screenshots: [],
-      is_template: false,
-      template_category: null,
-      play_count: 0,
-      like_count: 0,
-      comment_count: 0,
-      rating_average: 0,
-      rating_count: 0,
-      featured_at: null,
-      published_at: null,
-      last_played_at: null,
-      version: 1,
-      toxoid_version: '1.0.0',
-      build_status: null,
-      build_log: null,
-      seo_title: null,
-      seo_description: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ];
+  // Get recent games for overview tab (first 3 projects)
+  const recentGames: RecentGame[] = projects.slice(0, 3).map(project => ({
+    id: project.id,
+    title: project.title,
+    lastModified: formatRelativeTime(project.lastModified),
+    status: getGameStatus(project),
+    thumbnail: project.thumbnail_url || undefined,
+  }));
+
+  // Helper functions
+  function formatRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  function getGameStatus(project: ProjectGridItem): "draft" | "published" | "in_review" {
+    // Map project status to RecentGame status
+    if (project.status === 'published') return 'published';
+    if (project.status === 'in_development' || project.status === 'testing') return 'in_review';
+    return 'draft';
+  }
 
   // Mock Activity Data
   const mockActivities: ActivityItem[] = [
@@ -345,49 +250,22 @@ export default function EnhancedDashboardPage() {
     },
   };
 
-  const recentGames: RecentGame[] = [
-    {
-      id: "1",
-      title: "Pixel Adventure Quest",
-      lastModified: "2 hours ago",
-      status: "published",
-    },
-    {
-      id: "2",
-      title: "Space Invaders Remix",
-      lastModified: "1 day ago",
-      status: "draft",
-    },
-    {
-      id: "3",
-      title: "Puzzle Platformer",
-      lastModified: "3 days ago",
-      status: "in_review",
-    },
-  ];
 
-  // Event Handlers
+  // Event Handlers - now using real API calls
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
-    // In real app, trigger API call here
   };
 
   const handleFilter = (filters: ProjectFilter) => {
     setCurrentFilters(filters);
-    setCurrentPage(1);
-    // In real app, trigger API call here
   };
 
   const handleSort = (sort: ProjectSort) => {
     setCurrentSort(sort);
-    setCurrentPage(1);
-    // In real app, trigger API call here
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // In real app, trigger API call here
   };
 
   const handleCreateFromTemplate = async (templateId: string, projectData: { title: string; description: string }) => {
@@ -609,7 +487,7 @@ export default function EnhancedDashboardPage() {
                           Games Created
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats.gamesCreated}
+                          {stats?.gamesCreated || 0}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
@@ -627,7 +505,7 @@ export default function EnhancedDashboardPage() {
                           Total Plays
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats.totalPlays.toLocaleString()}
+                          {stats?.totalPlays?.toLocaleString() || '0'}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -645,7 +523,7 @@ export default function EnhancedDashboardPage() {
                           Followers
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats.communityFollowers}
+                          {stats?.communityFollowers || 0}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
@@ -663,7 +541,7 @@ export default function EnhancedDashboardPage() {
                           Achievements
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats.achievementsUnlocked}
+                          {stats?.achievementsUnlocked || 0}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
@@ -852,20 +730,28 @@ export default function EnhancedDashboardPage() {
           )}
 
           {activeTab === 'projects' && (
-            <ProjectGrid
-              projects={mockProjects}
-              totalCount={mockProjects.length}
-              loading={projectsLoading}
-              onSearch={handleSearch}
-              onFilter={handleFilter}
-              onSort={handleSort}
-              onPageChange={handlePageChange}
-              currentPage={currentPage}
-              pageSize={12}
-              searchQuery={searchQuery}
-              currentFilters={currentFilters}
-              currentSort={currentSort}
-            />
+            <>
+              {projectsError && (
+                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-4 mb-4">
+                  <p className="text-red-400 font-medium">Error loading projects</p>
+                  <p className="text-red-300 text-sm">{projectsError}</p>
+                </div>
+              )}
+              <ProjectGrid
+                projects={projects}
+                totalCount={totalCount}
+                loading={projectsLoading}
+                onSearch={handleSearch}
+                onFilter={handleFilter}
+                onSort={handleSort}
+                onPageChange={handlePageChange}
+                currentPage={currentPage}
+                pageSize={12}
+                searchQuery={searchQuery}
+                currentFilters={currentFilters}
+                currentSort={currentSort}
+              />
+            </>
           )}
 
           {activeTab === 'analytics' && (
@@ -934,7 +820,7 @@ export default function EnhancedDashboardPage() {
                 <Card className="bg-gradient-to-br from-green-900/50 to-green-800/30 border-green-500/20">
                   <CardBody className="p-6 text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Credits Remaining</h4>
-                    <p className="text-3xl font-bold text-green-400">{stats.creditsRemaining}</p>
+                    <p className="text-3xl font-bold text-green-400">{stats?.creditsRemaining || 0}</p>
                   </CardBody>
                 </Card>
                 <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 border-blue-500/20">
@@ -946,7 +832,7 @@ export default function EnhancedDashboardPage() {
                 <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border-purple-500/20">
                   <CardBody className="p-6 text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Usage This Month</h4>
-                    <p className="text-2xl font-bold text-purple-400">{stats.creditsUsed}</p>
+                    <p className="text-2xl font-bold text-purple-400">{stats?.creditsUsed || 0}</p>
                   </CardBody>
                 </Card>
               </div>
