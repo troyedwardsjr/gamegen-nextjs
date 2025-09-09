@@ -362,7 +362,7 @@ export function GameComments({
                 {comment.author.display_name || comment.author.username}
               </span>
               <span className="text-xs text-foreground/50">
-                {formatDistanceToNow(new Date(comment.created_at), {
+                {formatDistanceToNow(new Date(comment.created_at || new Date()), {
                   addSuffix: true,
                 })}
               </span>

@@ -175,7 +175,7 @@ export class WebExportStrategy implements ExportStrategy {
   private extractGameAssets(gameData: Tables<"games">): any[] {
     return [
       { type: "thumbnail", url: gameData.thumbnail_url },
-      ...gameData.screenshot_urls.map((url) => ({ type: "screenshot", url })),
+      ...(gameData.screenshot_urls || []).map((url) => ({ type: "screenshot", url })),
     ].filter((asset) => asset.url);
   }
 

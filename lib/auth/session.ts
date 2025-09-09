@@ -391,7 +391,7 @@ export class SessionManager {
       }
 
       // Generate permissions based on subscription tier
-      const tier: ExtendedSession["tier"] = profile.subscription_tier || "free";
+      const tier: ExtendedSession["tier"] = (profile.subscription_tier as ExtendedSession["tier"]) || "free";
       const permissions = this.getPermissionsForTier(tier);
 
       return {

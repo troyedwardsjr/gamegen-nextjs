@@ -117,7 +117,7 @@ export function TrendingGames({
         // Calculate trending scores
         const gamesWithScores = data.map((game) => {
           const gameAge =
-            (now.getTime() - new Date(game.created_at).getTime()) /
+            (now.getTime() - new Date(game.created_at || new Date()).getTime()) /
             (1000 * 60 * 60 * 24); // days
           const recentActivity = (game.play_count || 0) / Math.max(gameAge, 1); // plays per day
           const engagement =
