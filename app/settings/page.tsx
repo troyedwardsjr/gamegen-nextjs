@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -9,6 +9,7 @@ import { Switch } from "@heroui/switch";
 import { Select, SelectItem } from "@heroui/select";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Divider } from "@heroui/divider";
+import { Textarea } from "@heroui/input";
 import {
   Modal,
   ModalContent,
@@ -30,6 +31,11 @@ import {
   CheckIcon,
 } from "@/components/icons";
 import { useAuth } from "@/lib/auth/context";
+import { ProfilePictureUpload } from "@/components/profile/ProfilePictureUpload";
+import { createClient } from "@/lib/supabase/client";
+import { Database } from "@/lib/supabase/database.types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface NotificationSettings {
   emailNotifications: boolean;
@@ -58,13 +64,27 @@ interface AccountSettings {
 }
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateProfile } = useAuth();
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
-  const [activeSection, setActiveSection] = useState("account");
+  const [activeSection, setActiveSection] = useState("profile");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  
+  const supabase = createClient();
+
+  // Profile state
+  const [profileData, setProfileData] = useState<Profile | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    display_name: "",
+    username: "",
+    bio: "",
+    website_url: "",
+  });
 
   // Settings state
   const [notificationSettings, setNotificationSettings] =
@@ -98,26 +118,219 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("en");
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveSettings = async () => {
+  // Load user profile data
+  useEffect(() => {
+    if (user?.id) {
+      loadUserProfile();
+    }
+  }, [user?.id]);
+
+  const loadUserProfile = async () => {
+    if (!user?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading profile:', error);
+        setError('Failed to load profile data');
+        return;
+      }
+
+      if (profile) {
+        setProfileData(profile);
+        setProfileForm({
+          display_name: profile.display_name || '',
+          username: profile.username || '',
+          bio: profile.bio || '',
+          website_url: profile.website_url || '',
+        });
+        
+        // Load preferences if available
+        if (profile.preferences) {
+          const prefs = profile.preferences as any;
+          if (prefs.notifications) {
+            setNotificationSettings(prev => ({ ...prev, ...prefs.notifications }));
+          }
+          if (prefs.privacy) {
+            setPrivacySettings(prev => ({ ...prev, ...prefs.privacy }));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      setError('Failed to load profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user?.id || !profileForm.username.trim()) {
+      setError('Username is required');
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Check if username is unique (excluding current user)
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', profileForm.username.trim())
+        .neq('id', user.id)
+        .single();
+
+      if (existingUser) {
+        setError('Username is already taken');
+        return;
+      }
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          display_name: profileForm.display_name.trim() || null,
+          username: profileForm.username.trim(),
+          bio: profileForm.bio.trim() || null,
+          website_url: profileForm.website_url.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSuccess('Profile updated successfully!');
+      await loadUserProfile(); // Reload profile data
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update preferences in the database
+      const preferences = {
+        notifications: notificationSettings,
+        privacy: privacySettings,
+        theme,
+        language,
+      } as any; // Cast to avoid TypeScript Json type issues
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          preferences,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSuccess('Settings saved successfully!');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
     // Handle account deletion
-    console.log("Account deletion requested");
+    if (!user?.id) return;
+    
+    try {
+      // Call delete account API endpoint
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      // Sign out user
+      await signOut();
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
+    }
+    
     onDeleteOpenChange();
   };
 
   const handlePasswordChange = async () => {
     if (accountSettings.newPassword !== accountSettings.confirmPassword) {
-      // Handle password mismatch
+      setError('Passwords do not match');
       return;
     }
-    // Handle password change
-    console.log("Password change requested");
+
+    if (accountSettings.newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const result = await updateProfile({ password: accountSettings.newPassword });
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update password');
+      }
+
+      setSuccess('Password updated successfully!');
+      setAccountSettings({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+        twoFactorEnabled: accountSettings.twoFactorEnabled,
+      });
+    } catch (err) {
+      console.error('Error updating password:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update password');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = (url: string) => {
+    setSuccess('Profile picture updated successfully!');
+    if (profileData) {
+      setProfileData({ ...profileData, avatar_url: url });
+    }
+  };
+
+  const handleAvatarError = (error: string) => {
+    setError(error);
   };
 
   return (
@@ -141,6 +354,31 @@ export default function SettingsPage() {
           </p>
         </motion.div>
 
+        {/* Error/Success Messages */}
+        {error && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+            initial={{ opacity: 0, y: -10 }}
+          >
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm backdrop-blur-xl">
+              {error}
+            </div>
+          </motion.div>
+        )}
+
+        {success && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+            initial={{ opacity: 0, y: -10 }}
+          >
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 text-green-300 text-sm backdrop-blur-xl">
+              {success}
+            </div>
+          </motion.div>
+        )}
+
         {/* Settings Tabs */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
@@ -154,7 +392,118 @@ export default function SettingsPage() {
               tab: "text-gray-400 data-[selected=true]:text-white",
               cursor: "bg-purple-500",
             }}
+            selectedKey={activeSection}
+            onSelectionChange={(key) => setActiveSection(key as string)}
           >
+            <Tab
+              key="profile"
+              title={
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-4 h-4" />
+                  Profile
+                </div>
+              }
+            >
+              <div className="mt-6 space-y-6">
+                {/* Profile Information */}
+                <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-white">
+                      Profile Information
+                    </h3>
+                  </CardHeader>
+                  <CardBody className="space-y-6">
+                    {/* Avatar Upload */}
+                    <div className="flex flex-col items-center">
+                      <ProfilePictureUpload
+                        currentAvatarUrl={profileData?.avatar_url}
+                        onUploadSuccess={handleAvatarUpload}
+                        onUploadError={handleAvatarError}
+                        size="lg"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        isRequired
+                        classNames={{
+                          input: "text-white",
+                          label: "text-gray-400",
+                          inputWrapper:
+                            "border-purple-500/30 hover:border-purple-500/50",
+                        }}
+                        description="Your unique username (3-30 characters)"
+                        label="Username"
+                        value={profileForm.username}
+                        variant="bordered"
+                        onChange={(e) =>
+                          setProfileForm({ ...profileForm, username: e.target.value })
+                        }
+                      />
+                      <Input
+                        classNames={{
+                          input: "text-white",
+                          label: "text-gray-400",
+                          inputWrapper:
+                            "border-purple-500/30 hover:border-purple-500/50",
+                        }}
+                        description="Your display name (optional)"
+                        label="Display Name"
+                        value={profileForm.display_name}
+                        variant="bordered"
+                        onChange={(e) =>
+                          setProfileForm({ ...profileForm, display_name: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <Textarea
+                      classNames={{
+                        input: "text-white",
+                        label: "text-gray-400",
+                        inputWrapper:
+                          "border-purple-500/30 hover:border-purple-500/50",
+                      }}
+                      description="Tell others about yourself (max 500 characters)"
+                      label="Bio"
+                      maxLength={500}
+                      rows={3}
+                      value={profileForm.bio}
+                      variant="bordered"
+                      onChange={(e) =>
+                        setProfileForm({ ...profileForm, bio: e.target.value })
+                      }
+                    />
+
+                    <Input
+                      classNames={{
+                        input: "text-white",
+                        label: "text-gray-400",
+                        inputWrapper:
+                          "border-purple-500/30 hover:border-purple-500/50",
+                      }}
+                      description="Your personal website or portfolio"
+                      label="Website URL"
+                      type="url"
+                      value={profileForm.website_url}
+                      variant="bordered"
+                      onChange={(e) =>
+                        setProfileForm({ ...profileForm, website_url: e.target.value })
+                      }
+                    />
+
+                    <Button
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                      isLoading={isSaving}
+                      startContent={<CheckIcon className="w-4 h-4" />}
+                      onPress={handleSaveProfile}
+                    >
+                      {isSaving ? 'Saving...' : 'Update Profile'}
+                    </Button>
+                  </CardBody>
+                </Card>
+              </div>
+            </Tab>
             <Tab
               key="account"
               title={

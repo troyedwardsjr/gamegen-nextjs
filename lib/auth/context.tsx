@@ -383,24 +383,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const getUserTier = useCallback((): string => {
-    if (!state.session || !("tier" in state.session)) {
+    // Get tier from user metadata in the session, which comes from profiles table
+    if (!state.user?.user_metadata?.subscription_tier) {
       return "free";
     }
 
-    return ((state.session as any).tier as string) || "free";
-  }, [state.session]);
+    return state.user.user_metadata.subscription_tier || "free";
+  }, [state.user]);
 
   const getSubscriptionStatus = useCallback(():
     | "active"
     | "canceled"
     | "past_due"
     | "none" => {
-    // This would typically come from Stripe subscription data
-    // For now, we'll derive it from the user tier
+    if (!state.user?.user_metadata) {
+      return "none";
+    }
+
+    const subscriptionStatus = state.user.user_metadata.subscription_status;
     const tier = getUserTier();
 
-    return tier === "free" ? "none" : "active";
-  }, [getUserTier]);
+    if (tier === "free") {
+      return "none";
+    }
+
+    // Map Stripe subscription statuses to our app statuses
+    switch (subscriptionStatus) {
+      case "active":
+      case "trialing":
+        return "active";
+      case "cancelled":
+      case "expired":
+        return "canceled";
+      case "past_due":
+        return "past_due";
+      default:
+        return tier === "free" ? "none" : "active";
+    }
+  }, [state.user, getUserTier]);
 
   const contextValue: AuthContextType = {
     // State

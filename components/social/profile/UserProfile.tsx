@@ -312,7 +312,7 @@ export function UserProfile({
                 <Button
                   as="a"
                   color="secondary"
-                  href="/settings/profile"
+                  href="/settings"
                   startContent={<LinkIcon size={16} />}
                   variant="flat"
                 >
