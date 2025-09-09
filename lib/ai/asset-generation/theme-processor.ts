@@ -142,7 +142,7 @@ export const GAME_THEMES: { [key: string]: GameTheme } = {
     name: 'Space Shooter',
     description: 'Sci-fi space theme with metallic textures and neon accents',
     tags: ['space', 'sci-fi', 'shooter', 'neon', 'metallic'],
-    stylePreferences: ['pixel-art', '16bit', 'sci-fi'],
+    stylePreferences: ['pixel-art', '16bit', 'modern'],
     colorPalette: {
       primary: ['#0F3460', '#16213E', '#1A1A2E'],
       secondary: ['#E94560', '#0F4C75', '#3282B8'],
@@ -166,7 +166,7 @@ export const GAME_THEMES: { [key: string]: GameTheme } = {
     name: 'Fantasy RPG',
     description: 'Medieval fantasy with rich textures and mystical elements',
     tags: ['fantasy', 'medieval', 'rpg', 'magic', 'mystical'],
-    stylePreferences: ['pixel-art', '16bit', 'fantasy'],
+    stylePreferences: ['pixel-art', '16bit', 'cartoon'],
     colorPalette: {
       primary: ['#8B4513', '#228B22', '#4169E1'],
       secondary: ['#DAA520', '#DC143C', '#9370DB'],
@@ -422,11 +422,8 @@ export class ThemeAssetProcessor {
       maintainConsistency: packConfig.consistency.maintainColorPalette,
       parallelGeneration: packConfig.generation.maxConcurrent,
       stopOnFailure: false,
-      metadata: {
-        packId,
-        themeId,
-        categoryMapping: this.createCategoryMapping(packConfig, assetRequests),
-      },
+      // Note: metadata moved to be handled separately as BatchGenerationRequest doesn't support it
+      projectId: packId, // Use projectId from baseRequest interface
     };
 
     // Add to generation queue
@@ -695,13 +692,9 @@ export class ThemeAssetProcessor {
             quality: 'high',
             dimensions: config.theme.artDirection.resolution,
             userId,
-            metadata: {
-              packId,
-              category,
-              template,
-              variation: v,
-              themeId: config.theme.id,
-            },
+            gameId: packId, // Store pack ID as game ID
+            projectTheme: config.theme.name, // Store theme name
+            sessionId: `${packId}_${category}_${template}`, // Create unique session ID
           });
         }
       }
@@ -750,11 +743,15 @@ export class ThemeAssetProcessor {
     const mapping: { [index: number]: { category: string; template: string } } = {};
     
     requests.forEach((request, index) => {
-      if (request.metadata) {
-        mapping[index] = {
-          category: request.metadata.category,
-          template: request.metadata.template,
-        };
+      // Extract category and template from sessionId since metadata is not available
+      // sessionId format: `${packId}_${category}_${template}`
+      if (request.sessionId) {
+        const parts = request.sessionId.split('_');
+        if (parts.length >= 3) {
+          const category = parts[1];
+          const template = parts[2];
+          mapping[index] = { category, template };
+        }
       }
     });
     

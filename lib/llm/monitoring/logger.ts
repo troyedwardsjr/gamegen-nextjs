@@ -718,3 +718,24 @@ export class LLMLogger {
     // - Update security dashboards
   }
 }
+
+/**
+ * Create a complete LoggerConfig with default values for all required properties
+ */
+export function createLoggerConfig(overrides: Partial<LoggerConfig> = {}): LoggerConfig {
+  const defaultConfig: LoggerConfig = {
+    enabled: true,
+    log_requests: true,
+    log_responses: true,
+    log_errors: true,
+    log_performance: true,
+    sensitive_data_masking: true,
+    retention_days: 30,
+    max_payload_size: 10000, // 10KB
+    async_logging: false,
+    buffer_size: 100,
+    flush_interval: 60000, // 1 minute
+  };
+
+  return { ...defaultConfig, ...overrides };
+}

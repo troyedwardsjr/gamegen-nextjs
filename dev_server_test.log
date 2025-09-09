@@ -1,0 +1,56 @@
+
+> next-app-template@0.0.1 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.1 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.168:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 79ms
+ ✓ Ready in 651ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/generate-asset
+ ✓ Compiled /api/ai/generate-asset in 273ms
+Initialized asset generation provider: dalle
+[BillingTracker] Billing tracker initialized { enabled: true }
+[LLMLogger] Logger initialized {
+  config: {
+    enabled: true,
+    log_requests: true,
+    log_responses: true,
+    log_errors: true,
+    log_performance: true,
+    sensitive_data_masking: true,
+    retention_days: 30,
+    max_payload_size: 10000,
+    async_logging: false,
+    buffer_size: 100,
+    flush_interval: 60000
+  }
+}
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: Server-side API authentication bypass
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+[LLMLogger] Failed to store logs: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.script_execution_logs'",
+  message: "Could not find the table 'public.llm_request_logs' in the schema cache"
+}
+[Asset Generation API] Unexpected error: Error: Failed to get credit balance: Could not find the table 'public.user_credit_balances' in the schema cache
+    at BillingTracker.getCreditBalance (lib/llm/billing/tracker.ts:268:12)
+    at async BillingTracker.checkCredits (lib/llm/billing/tracker.ts:105:20)
+    at async POST (app/api/ai/generate-asset/route.ts:183:23)
+  266 |
+  267 |     if (error) {
+> 268 |       throw new Error(`Failed to get credit balance: ${error.message}`);
+      |            ^
+  269 |     }
+  270 |
+  271 |     return {
+ POST /api/ai/generate-asset 500 in 1313ms
+[?25h

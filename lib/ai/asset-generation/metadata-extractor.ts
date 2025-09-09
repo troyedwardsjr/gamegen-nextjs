@@ -396,7 +396,7 @@ export class AssetMetadataExtractor {
     tags.push(...semanticTags);
 
     // Remove duplicates and return
-    return [...new Set(tags)];
+    return Array.from(new Set(tags));
   }
 
   /**
@@ -524,7 +524,7 @@ export class AssetMetadataExtractor {
    */
   private classifyContentType(prompt: string, assetType?: string): string {
     if (assetType) {
-      const typeMap = {
+      const typeMap: Record<string, string> = {
         sprite: 'character',
         background: 'environment',
         tile: 'texture',
@@ -606,7 +606,7 @@ export class AssetMetadataExtractor {
     // Count descriptive words
     const words = lowerPrompt.split(/\s+/);
     const descriptiveWords = words.filter(word => 
-      word.length > 4 && !/the|and|with|for|from/.includes(word)
+      word.length > 4 && !/the|and|with|for|from/.test(word)
     );
     
     complexity += Math.min(descriptiveWords.length * 0.05, 0.3);

@@ -78,6 +78,9 @@ export interface AssetGenerationRequest {
     generateThumbnail?: boolean;
     extractColors?: boolean;
   };
+  
+  // Queue management
+  priority?: "low" | "normal" | "high" | "urgent";
 }
 
 // Generation Response Types
@@ -100,6 +103,7 @@ export interface GeneratedAsset {
   type: AssetType;
   url: string;
   thumbnailUrl?: string;
+  buffer?: Buffer; // Raw asset data
   
   metadata: AssetMetadata;
   generatedBy: GenerationProvider;
@@ -133,7 +137,14 @@ export interface AssetMetadata {
     dominant: string;
   };
   tags: string[];
+  category?: string; // Asset category for organization
   hash?: string; // Content hash for deduplication
+  
+  // Animation-specific metadata
+  frameCount?: number; // Number of animation frames
+  frameRate?: number; // Frames per second
+  duration?: number; // Animation duration in milliseconds
+  motionQuality?: any; // Motion analysis results
   
   // Quality metrics
   pixelArtScore?: number; // How pixel-art-like it is
@@ -339,9 +350,8 @@ export interface AnimationGenerationRequest extends AssetGenerationRequest {
     description: string;
   }[];
   
-  // Additional animation properties
-  priority?: "low" | "normal" | "high" | "urgent";
-  provider?: GenerationProvider;
+  // Additional animation properties (provider is already inherited)
+  // provider?: GenerationProvider; // Inherited from AssetGenerationRequest
 }
 
 export interface AnimationResult extends GeneratedAsset {
@@ -383,6 +393,7 @@ export const ERROR_CODES = {
   
   // Request Validation
   INVALID_REQUEST: 'INVALID_REQUEST',
+  NOT_FOUND: 'NOT_FOUND',
   UNSUPPORTED_ASSET_TYPE: 'UNSUPPORTED_ASSET_TYPE',
   UNSUPPORTED_STYLE: 'UNSUPPORTED_STYLE',
   INVALID_DIMENSIONS: 'INVALID_DIMENSIONS',
@@ -427,6 +438,7 @@ export interface GenerationJob {
   // Progress tracking
   progress: number; // 0-100
   currentStep?: string;
+  queuePosition?: number;
   
   // Results
   result?: AssetGenerationResponse | BatchGenerationResponse;

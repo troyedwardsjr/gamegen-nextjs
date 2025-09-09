@@ -130,7 +130,13 @@ export class RetrodiffusionProvider {
     retroRequest.crt_effect = request.style === '8bit' || request.style === 'retro';
 
     // Quality and other parameters
-    retroRequest.quality = request.quality || 'standard';
+    const qualityMap = {
+      'draft': 'draft' as const,
+      'standard': 'standard' as const,
+      'high': 'high' as const,
+      'ultra': 'high' as const, // Map ultra to high for RetroDiffusion
+    };
+    retroRequest.quality = qualityMap[request.quality || 'standard'];
     
     if (request.negativePrompt) {
       retroRequest.negative_prompt = request.negativePrompt;
@@ -196,6 +202,7 @@ export class RetrodiffusionProvider {
       'pixel-art': 'classic_pixel',
       '8bit': 'eighties_arcade',
       '16bit': 'nineties_console',
+      '32bit': 'highcolor_retro',
       'retro': 'vintage_gaming',
       'modern': 'modern_retro',
       'minimalist': 'minimal_retro',
@@ -235,10 +242,10 @@ export class RetrodiffusionProvider {
 
     // Map styles to classic palettes
     const paletteMapping = {
-      '8bit': 'nes',
-      'retro': 'c64',
-      'pixel-art': 'nes',
-      '16bit': 'nes',
+      '8bit': 'nes' as const,
+      'retro': 'c64' as const,
+      'pixel-art': 'nes' as const,
+      '16bit': 'nes' as const,
     };
 
     return paletteMapping[style as keyof typeof paletteMapping] || 'nes';
@@ -520,6 +527,7 @@ export class RetrodiffusionProvider {
       draft: 0.8,
       standard: 1.0,
       high: 1.4,
+      ultra: 1.8,
     };
     baseTime *= qualityMultipliers[request.quality || 'standard'];
 

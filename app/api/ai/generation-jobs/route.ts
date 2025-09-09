@@ -15,7 +15,7 @@ import { AssetGenerationQueue } from "@/lib/ai/asset-generation/queue";
 import { AssetGenerationError, ERROR_CODES, GenerationJob } from "@/lib/ai/asset-generation/types";
 
 interface GetJobsParams {
-  status?: string[];
+  status?: ("queued" | "processing" | "completed" | "failed" | "cancelled")[];
   limit?: number;
   offset?: number;
   orderBy?: 'created_at' | 'updated_at' | 'priority';
@@ -59,7 +59,15 @@ export async function GET(request: NextRequest): Promise<Response> {
     // Parse status filter
     const statusParam = searchParams.get('status');
     if (statusParam) {
-      params.status = statusParam.split(',') as GenerationJob['status'][];
+      const validStatuses = ["queued", "processing", "completed", "failed", "cancelled"];
+      const requestedStatuses = statusParam.split(',');
+      const filteredStatuses = requestedStatuses.filter(s => 
+        validStatuses.includes(s)
+      ) as GenerationJob['status'][];
+      
+      if (filteredStatuses.length > 0) {
+        params.status = filteredStatuses;
+      }
     }
 
     // Parse pagination

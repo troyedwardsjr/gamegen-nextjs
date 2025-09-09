@@ -121,7 +121,13 @@ export class PixellabProvider {
     }
 
     // Quality mapping
-    pixellabRequest.quality = request.quality || 'standard';
+    const qualityMap = {
+      'draft': 'draft' as const,
+      'standard': 'standard' as const,
+      'high': 'high' as const,
+      'ultra': 'high' as const, // Map ultra to high for PixelLab
+    };
+    pixellabRequest.quality = qualityMap[request.quality || 'standard'];
 
     // Negative prompt
     if (request.negativePrompt) {
@@ -196,6 +202,7 @@ export class PixellabProvider {
       'pixel-art': 'pixel_art',
       '8bit': '8bit_retro',
       '16bit': '16bit_retro',
+      '32bit': '32bit_detailed',
       'retro': 'retro_game',
       'modern': 'modern_pixel',
       'minimalist': 'minimal_pixel',
@@ -356,12 +363,16 @@ export class PixellabProvider {
    */
   async generateAnimation(request: AssetGenerationRequest & { frameCount: number }): Promise<any> {
     const frames = [];
+    const baseSeed = request.seed || Math.floor(Math.random() * 1000000);
+    
+    // Pre-calculate animation progression
+    const animationPrompts = this.generateAnimationPrompts(request);
     
     for (let i = 0; i < request.frameCount; i++) {
       const frameRequest = {
         ...request,
-        prompt: `${request.prompt}, animation frame ${i + 1} of ${request.frameCount}`,
-        seed: request.seed ? request.seed + i : undefined,
+        prompt: animationPrompts[i] || `${request.prompt}, animation frame ${i + 1} of ${request.frameCount}`,
+        seed: baseSeed + i, // Consistent seeding for animation
       };
 
       try {
@@ -370,20 +381,290 @@ export class PixellabProvider {
           frameNumber: i,
           ...frame,
         });
+        
+        // Apply frame consistency validation
+        if (i > 0) {
+          const consistencyScore = await this.validateFrameConsistency(frames[i-1], frame);
+          frame.metadata.consistencyScore = consistencyScore;
+        }
       } catch (error) {
         console.error(`Failed to generate frame ${i + 1}:`, error);
-        // Continue with other frames
+        // Continue with other frames but track failures
       }
     }
 
+    // Post-process animation for consistency
+    const processedFrames = await this.enhanceAnimationConsistency(frames, request);
+
     return {
-      frames,
+      frames: processedFrames,
       metadata: {
         totalFrames: request.frameCount,
-        successfulFrames: frames.length,
+        successfulFrames: processedFrames.length,
         provider: 'pixellab',
+        consistencyScore: this.calculateAnimationConsistency(processedFrames),
+        animationType: request.assetType,
       },
     };
+  }
+
+  /**
+   * Generate contextual animation prompts for better consistency
+   */
+  private generateAnimationPrompts(request: AssetGenerationRequest & { frameCount: number }): string[] {
+    const basePrompt = request.prompt;
+    const prompts: string[] = [];
+    
+    // Generate frame-specific prompts based on animation type
+    for (let i = 0; i < request.frameCount; i++) {
+      const frameProgress = i / (request.frameCount - 1);
+      let framePrompt = basePrompt;
+      
+      // Add frame-specific context
+      if (basePrompt.toLowerCase().includes('walk') || basePrompt.toLowerCase().includes('running')) {
+        const walkCycle = ['standing', 'lift leg', 'step forward', 'plant foot', 'push off', 'lift other leg', 'step forward', 'plant foot'];
+        const cycleIndex = Math.floor(frameProgress * walkCycle.length);
+        framePrompt += `, ${walkCycle[cycleIndex] || 'walking'}`;
+      } else if (basePrompt.toLowerCase().includes('idle') || basePrompt.toLowerCase().includes('breathing')) {
+        const idleCycle = ['neutral pose', 'slight lean', 'breath in', 'breath hold', 'breath out', 'return neutral'];
+        const cycleIndex = Math.floor(frameProgress * idleCycle.length);
+        framePrompt += `, ${idleCycle[cycleIndex] || 'idle'}`;
+      } else {
+        // Generic animation progression
+        if (frameProgress < 0.25) framePrompt += ', beginning pose';
+        else if (frameProgress < 0.5) framePrompt += ', quarter motion';
+        else if (frameProgress < 0.75) framePrompt += ', mid motion';
+        else framePrompt += ', end motion';
+      }
+      
+      framePrompt += `, frame ${i + 1} of ${request.frameCount}, maintain character consistency`;
+      prompts.push(framePrompt);
+    }
+    
+    return prompts;
+  }
+
+  /**
+   * Validate consistency between animation frames
+   */
+  private async validateFrameConsistency(frame1: any, frame2: any): Promise<number> {
+    try {
+      // This would use image comparison algorithms to validate consistency
+      // For now, return a basic consistency score based on metadata
+      
+      let score = 0.8; // Base score
+      
+      // Check dimension consistency
+      if (frame1.metadata.width === frame2.metadata.width && 
+          frame1.metadata.height === frame2.metadata.height) {
+        score += 0.1;
+      }
+      
+      // Check style score consistency
+      if (Math.abs((frame1.metadata.styleScore || 0.8) - (frame2.metadata.styleScore || 0.8)) < 0.2) {
+        score += 0.1;
+      }
+      
+      return Math.min(score, 1.0);
+    } catch (error) {
+      return 0.5;
+    }
+  }
+
+  /**
+   * Enhance animation consistency across frames
+   */
+  private async enhanceAnimationConsistency(frames: any[], request: AssetGenerationRequest): Promise<any[]> {
+    // This would apply post-processing to ensure consistent style across frames
+    // For now, return frames as-is with consistency metadata
+    return frames.map((frame, index) => ({
+      ...frame,
+      metadata: {
+        ...frame.metadata,
+        frameIndex: index,
+        animationContext: {
+          totalFrames: frames.length,
+          frameProgress: index / (frames.length - 1),
+          isKeyFrame: index === 0 || index === frames.length - 1 || index === Math.floor(frames.length / 2),
+        },
+      },
+    }));
+  }
+
+  /**
+   * Calculate overall animation consistency score
+   */
+  private calculateAnimationConsistency(frames: any[]): number {
+    if (frames.length < 2) return 1.0;
+    
+    let totalConsistency = 0;
+    let validComparisons = 0;
+    
+    for (let i = 1; i < frames.length; i++) {
+      if (frames[i].metadata.consistencyScore !== undefined) {
+        totalConsistency += frames[i].metadata.consistencyScore;
+        validComparisons++;
+      }
+    }
+    
+    return validComparisons > 0 ? totalConsistency / validComparisons : 0.8;
+  }
+
+  /**
+   * Generate batch assets with style consistency
+   */
+  async generateBatch(requests: AssetGenerationRequest[], options: {
+    maintainConsistency: boolean;
+    parallelGeneration: number;
+    baseStyle?: any;
+  }): Promise<any[]> {
+    const results: any[] = [];
+    
+    // If maintaining consistency, establish base parameters
+    let baseStyleParameters: any = null;
+    if (options.maintainConsistency && requests.length > 0) {
+      baseStyleParameters = await this.establishBaseStyle(requests[0], options.baseStyle);
+    }
+    
+    // Process requests in batches for parallel generation
+    const batchSize = Math.min(options.parallelGeneration || 3, requests.length);
+    
+    for (let i = 0; i < requests.length; i += batchSize) {
+      const batchRequests = requests.slice(i, i + batchSize);
+      
+      const batchPromises = batchRequests.map(async (request, batchIndex) => {
+        try {
+          // Apply consistency parameters if enabled
+          const enhancedRequest = options.maintainConsistency && baseStyleParameters 
+            ? this.applyConsistencyParameters(request, baseStyleParameters)
+            : request;
+            
+          const result = await this.generateAsset(enhancedRequest);
+          
+          // Add batch metadata
+          result.metadata.batchInfo = {
+            batchIndex: Math.floor(i / batchSize),
+            requestIndex: i + batchIndex,
+            totalRequests: requests.length,
+            consistencyApplied: options.maintainConsistency,
+          };
+          
+          return result;
+        } catch (error) {
+          console.error(`Batch generation failed for request ${i + batchIndex}:`, error);
+          return {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            requestIndex: i + batchIndex,
+          };
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+    
+    // Post-process for consistency validation if enabled
+    if (options.maintainConsistency) {
+      return await this.validateBatchConsistency(results);
+    }
+    
+    return results;
+  }
+
+  /**
+   * Establish base style parameters for consistency
+   */
+  private async establishBaseStyle(referenceRequest: AssetGenerationRequest, baseStyle?: any): Promise<any> {
+    return {
+      style: baseStyle?.style || referenceRequest.style || 'pixel-art',
+      colorPalette: baseStyle?.colorPalette || referenceRequest.colorPalette,
+      dimensions: baseStyle?.dimensions || referenceRequest.dimensions,
+      quality: baseStyle?.quality || referenceRequest.quality || 'standard',
+      projectTheme: baseStyle?.projectTheme || referenceRequest.projectTheme,
+      
+      // Pixellab-specific consistency parameters
+      pixelSize: baseStyle?.pixelSize || (referenceRequest.style === '8bit' ? 8 : 4),
+      colorCount: baseStyle?.colorCount || referenceRequest.colorCount,
+    };
+  }
+
+  /**
+   * Apply consistency parameters to a request
+   */
+  private applyConsistencyParameters(request: AssetGenerationRequest, baseStyle: any): AssetGenerationRequest {
+    return {
+      ...request,
+      style: baseStyle.style,
+      colorPalette: request.colorPalette || baseStyle.colorPalette,
+      dimensions: request.dimensions || baseStyle.dimensions,
+      quality: request.quality || baseStyle.quality,
+      projectTheme: request.projectTheme || baseStyle.projectTheme,
+      colorCount: request.colorCount || baseStyle.colorCount,
+    };
+  }
+
+  /**
+   * Validate and enhance batch consistency
+   */
+  private async validateBatchConsistency(results: any[]): Promise<any[]> {
+    const validResults = results.filter(result => !result.error);
+    
+    if (validResults.length < 2) {
+      return results;
+    }
+    
+    // Calculate consistency scores between results
+    const consistencyScores: number[] = [];
+    
+    for (let i = 1; i < validResults.length; i++) {
+      const score = await this.calculateStyleConsistency(validResults[0], validResults[i]);
+      consistencyScores.push(score);
+      validResults[i].metadata.batchConsistencyScore = score;
+    }
+    
+    // Add overall batch consistency metadata
+    const overallConsistency = consistencyScores.reduce((sum, score) => sum + score, 0) / consistencyScores.length;
+    
+    return results.map(result => {
+      if (!result.error) {
+        result.metadata.overallBatchConsistency = overallConsistency;
+      }
+      return result;
+    });
+  }
+
+  /**
+   * Calculate style consistency between two assets
+   */
+  private async calculateStyleConsistency(asset1: any, asset2: any): Promise<number> {
+    let score = 0.5; // Base score
+    
+    // Compare metadata for consistency indicators
+    const meta1 = asset1.metadata;
+    const meta2 = asset2.metadata;
+    
+    // Dimension consistency
+    if (meta1.width === meta2.width && meta1.height === meta2.height) {
+      score += 0.15;
+    }
+    
+    // Style score consistency
+    if (Math.abs((meta1.styleScore || 0.8) - (meta2.styleScore || 0.8)) < 0.1) {
+      score += 0.15;
+    }
+    
+    // Color count consistency
+    if (meta1.colors && meta2.colors && 
+        Math.abs(meta1.colors.count - meta2.colors.count) <= 2) {
+      score += 0.1;
+    }
+    
+    // Format consistency
+    if (meta1.format === meta2.format) {
+      score += 0.1;
+    }
+    
+    return Math.min(score, 1.0);
   }
 
   /**

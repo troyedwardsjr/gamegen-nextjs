@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 
 import { getAuthenticatedUser, createAuthErrorResponse } from "@/lib/auth/dev-server-auth";
 import { AssetApprovalWorkflow, ApprovalWorkflowConfig } from "@/lib/ai/asset-generation/approval-workflow";
-import { LLMLogger } from "@/lib/llm/monitoring/logger";
+import { LLMLogger, createLoggerConfig } from "@/lib/llm/monitoring/logger";
 import {
   AssetGenerationError,
   ERROR_CODES,
@@ -36,13 +36,13 @@ export async function POST(request: NextRequest): Promise<Response> {
   let userId: string | undefined;
   let submissionRequest: ApprovalSubmissionRequest | undefined;
 
-  const logger = new LLMLogger({
+  const logger = new LLMLogger(createLoggerConfig({
     enabled: true,
     log_requests: true,
     log_responses: true,
     log_errors: true,
     sensitive_data_masking: true,
-  });
+  }));
 
   try {
     // Authentication
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       thumbnailUrl: asset.thumbnail_url,
       metadata: asset.metadata || {},
       qualityScore: asset.metadata?.qualityScore || 0.6, // Default quality score
-      generatedBy: 'ai_generation', // Assuming AI-generated
+      generatedBy: 'pixellab', // Default AI generation provider
       prompt: asset.metadata?.prompt || '',
       style: asset.metadata?.style || 'pixel-art',
       createdAt: asset.created_at,
@@ -394,6 +394,7 @@ function estimateReviewTime(assetType: AssetType): string {
     sprite: "2-4 hours",
     background: "4-8 hours",
     tile: "1-3 hours",
+    animation: "3-6 hours",
     ui: "1-2 hours",
     tileset: "6-12 hours",
   };

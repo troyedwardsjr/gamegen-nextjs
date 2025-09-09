@@ -131,7 +131,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (authError || !user) {
       const errorResponse = createAuthErrorResponse(authError, true);
       return NextResponse.json(
-        { error: "Authentication required", code: "UNAUTHORIZED", ...errorResponse },
+        { code: "UNAUTHORIZED", ...errorResponse },
         { status: 401 },
       );
     }

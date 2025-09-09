@@ -20,8 +20,9 @@ import { AssetGenerationError, ERROR_CODES } from "@/lib/ai/asset-generation/typ
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ): Promise<Response> {
+  const { jobId } = await params;
   try {
     // Authentication
     const cookieStore = await cookies();
@@ -73,7 +74,7 @@ export async function GET(
     const assetQueue = new AssetGenerationQueue(assetManager, {}, true);
 
     // Get job status
-    const job = await assetQueue.getJobStatus(params.jobId, user.id);
+    const job = await assetQueue.getJobStatus(jobId, user.id);
 
     return NextResponse.json({
       success: true,
@@ -112,8 +113,9 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ): Promise<Response> {
+  const { jobId } = await params;
   try {
     // Authentication
     const cookieStore = await cookies();
@@ -165,12 +167,12 @@ export async function DELETE(
     const assetQueue = new AssetGenerationQueue(assetManager, {}, true);
 
     // Cancel the job
-    await assetQueue.cancelJob(params.jobId, user.id);
+    await assetQueue.cancelJob(jobId, user.id);
 
     return NextResponse.json({
       success: true,
       message: "Generation job cancelled successfully",
-      jobId: params.jobId,
+      jobId: jobId,
     });
 
   } catch (error) {

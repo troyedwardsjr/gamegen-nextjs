@@ -13,7 +13,7 @@ import { getAuthenticatedUser, createAuthErrorResponse } from "@/lib/auth/dev-se
 import { AssetGenerationManager } from "@/lib/ai/asset-generation/manager";
 import { AssetGenerationQueue } from "@/lib/ai/asset-generation/queue";
 import { BillingTracker } from "@/lib/llm/billing/tracker";
-import { LLMLogger } from "@/lib/llm/monitoring/logger";
+import { LLMLogger, createLoggerConfig } from "@/lib/llm/monitoring/logger";
 import {
   BatchGenerationRequest,
   AssetGenerationError,
@@ -67,20 +67,31 @@ export async function POST(request: NextRequest): Promise<Response> {
     credit_system_enabled: true,
     auto_deduct_credits: true,
     minimum_balance: 1.0,
-    cost_per_generation: {
-      pixellab: 2.0,
-      retrodiffusion: 1.5,
-      dalle: 3.0,
+    low_balance_threshold: 5.0,
+    billing_cycle: "monthly",
+    cost_per_token: {
+      pixellab: { input: 0.002, output: 0.010 },
+      retrodiffusion: { input: 0.0015, output: 0.0075 },
+      dalle: { input: 0.003, output: 0.015 },
+    },
+    user_tier_discounts: {
+      free: 0,
+      pro: 0.1,
+      max: 0.2,
+    },
+    free_tier_limits: {
+      monthly_tokens: 10000,
+      monthly_requests: 100,
     },
   });
 
-  const logger = new LLMLogger({
+  const logger = new LLMLogger(createLoggerConfig({
     enabled: true,
     log_requests: true,
     log_responses: true,
     log_errors: true,
     sensitive_data_masking: true,
-  });
+  }));
 
   try {
     // Authentication

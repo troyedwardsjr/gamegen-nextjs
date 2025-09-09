@@ -1,0 +1,36 @@
+
+> next-app-template@0.0.1 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.1 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.168:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 83ms
+ ✓ Ready in 662ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/queue-status
+ ✓ Compiled /api/ai/queue-status in 262ms
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: Server-side API authentication bypass
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+Initialized asset generation provider: dalle
+Failed to get queue status: Error [DatabaseError]: Failed to fetch generation jobs for user: 00000000-0000-4000-8000-000000000001
+    at AssetGenerationQueue.getUserJobs (lib/ai/asset-generation/queue.ts:360:12)
+    at async GET (app/api/ai/queue-status/route.ts:105:23)
+  358 |
+  359 |     if (error) {
+> 360 |       throw new DatabaseError(
+      |            ^
+  361 |         `Failed to fetch generation jobs for user: ${userId}`,
+  362 |         error.code,
+  363 |         error.details {
+  code: 'PGRST205',
+  details: null,
+  hint: undefined
+}
+ GET /api/ai/queue-status 500 in 3581ms
+[?25h

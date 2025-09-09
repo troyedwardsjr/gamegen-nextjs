@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody, CardHeader } from '@heroui/card';
 import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
 import { Select, SelectItem } from '@heroui/select';
 import { Chip } from '@heroui/chip';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
-// Pagination will be implemented with simple buttons
 import { Badge } from '@heroui/badge';
 import { Spinner } from '@heroui/spinner';
 import { Tooltip } from '@heroui/tooltip';
+import { Switch } from '@heroui/switch';
+// DatePicker import removed - using Input type="date" instead
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useInView } from 'react-intersection-observer';
 
 import {
   SearchIcon,
@@ -42,15 +45,21 @@ interface ProjectGridProps {
   projects: ProjectGridItem[];
   totalCount: number;
   loading?: boolean;
+  loadingMore?: boolean;
   onSearch: (query: string) => void;
   onFilter: (filters: ProjectFilter) => void;
   onSort: (sort: ProjectSort) => void;
   onPageChange: (page: number) => void;
+  onLoadMore?: () => void;
   currentPage: number;
   pageSize: number;
   searchQuery?: string;
   currentFilters?: ProjectFilter;
   currentSort?: ProjectSort;
+  hasNextPage?: boolean;
+  enableInfiniteScroll?: boolean;
+  onProjectAction?: (projectId: string, action: string, data?: any) => void;
+  onBulkAction?: (projectIds: string[], action: string) => void;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -90,19 +99,40 @@ export default function ProjectGrid({
   projects,
   totalCount,
   loading = false,
+  loadingMore = false,
   onSearch,
   onFilter,
   onSort,
   onPageChange,
+  onLoadMore,
   currentPage,
   pageSize,
   searchQuery = '',
   currentFilters = {},
   currentSort,
+  hasNextPage = false,
+  enableInfiniteScroll = false,
+  onProjectAction,
+  onBulkAction,
 }: ProjectGridProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
+  const [bulkActionMode, setBulkActionMode] = useState(false);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [dateFilter, setDateFilter] = useState<{ start?: Date; end?: Date }>({});
+  
+  // Modal for project actions
+  const { isOpen: isActionModalOpen, onOpen: onActionModalOpen, onClose: onActionModalClose } = useDisclosure();
+  const [actionModalData, setActionModalData] = useState<{ projectId: string; action: string; project?: ProjectGridItem } | null>(null);
+  
+  // Infinite scroll
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0,
+    rootMargin: '100px',
+  });
 
   // Debounced search
   useEffect(() => {
@@ -114,6 +144,45 @@ export default function ProjectGrid({
 
     return () => clearTimeout(timer);
   }, [searchInput, searchQuery, onSearch]);
+  
+  // Infinite scroll trigger
+  useEffect(() => {
+    if (enableInfiniteScroll && inView && hasNextPage && !loading && !loadingMore && onLoadMore) {
+      onLoadMore();
+    }
+  }, [inView, hasNextPage, loading, loadingMore, onLoadMore, enableInfiniteScroll]);
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'a':
+            event.preventDefault();
+            if (bulkActionMode) {
+              const allIds = new Set(projects.map(p => p.id));
+              setSelectedProjects(selectedProjects.size === projects.length ? new Set() : allIds);
+            }
+            break;
+          case 'f':
+            event.preventDefault();
+            setShowFilters(!showFilters);
+            break;
+        }
+      } else if (event.key === 'Escape') {
+        if (bulkActionMode) {
+          setBulkActionMode(false);
+          setSelectedProjects(new Set());
+        }
+        if (showFilters) {
+          setShowFilters(false);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  }, [bulkActionMode, selectedProjects.size, projects.length, showFilters]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -150,6 +219,56 @@ export default function ProjectGrid({
       });
     }
   };
+  
+  // Bulk action handlers
+  const handleProjectSelect = (projectId: string, selected: boolean) => {
+    const newSelected = new Set(selectedProjects);
+    if (selected) {
+      newSelected.add(projectId);
+    } else {
+      newSelected.delete(projectId);
+    }
+    setSelectedProjects(newSelected);
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedProjects.size === projects.length) {
+      setSelectedProjects(new Set());
+    } else {
+      setSelectedProjects(new Set(projects.map(p => p.id)));
+    }
+  };
+  
+  const handleBulkAction = (action: string) => {
+    if (onBulkAction && selectedProjects.size > 0) {
+      onBulkAction(Array.from(selectedProjects), action);
+      setSelectedProjects(new Set());
+      setBulkActionMode(false);
+    }
+  };
+  
+  // Project action handlers
+  const handleProjectAction = (projectId: string, action: string, project?: ProjectGridItem) => {
+    if (action === 'delete' || action === 'duplicate' || action === 'export') {
+      setActionModalData({ projectId, action, project });
+      onActionModalOpen();
+    } else if (onProjectAction) {
+      onProjectAction(projectId, action);
+    }
+  };
+  
+  // Advanced filter handlers
+  const handleAdvancedFilter = () => {
+    const advancedFilters: ProjectFilter = {
+      ...currentFilters,
+      dateRange: dateFilter.start && dateFilter.end ? {
+        start: dateFilter.start,
+        end: dateFilter.end
+      } : undefined
+    };
+    onFilter(advancedFilters);
+    setShowAdvancedFilters(false);
+  };
 
   const getStatusColor = (status: string) => {
     const statusConfig = PROJECT_STATUSES.find(s => s.key === status);
@@ -172,15 +291,36 @@ export default function ProjectGrid({
     return date.toLocaleDateString();
   };
 
-  const ProjectCard = ({ project }: { project: ProjectGridItem }) => (
+  const ProjectCard = ({ project }: { project: ProjectGridItem }) => {
+    const isSelected = selectedProjects.has(project.id);
+    
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       layout
     >
-      <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl hover:border-purple-500/40 transition-all duration-300 group">
+      <Card className={`bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl hover:border-purple-500/40 transition-all duration-300 group relative ${
+        isSelected ? 'ring-2 ring-purple-500 border-purple-500' : ''
+      } ${
+        bulkActionMode ? 'cursor-pointer' : ''
+      }`}
+      onClick={bulkActionMode ? () => handleProjectSelect(project.id, !isSelected) : undefined}>
         <CardHeader className="pb-2">
+          {bulkActionMode && (
+            <div className="absolute top-2 left-2 z-10">
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-400 hover:border-purple-400'
+              }`}>
+                {isSelected && (
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <Link 
@@ -207,12 +347,55 @@ export default function ProjectGrid({
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                <DropdownItem key="edit">Edit Project</DropdownItem>
-                <DropdownItem key="duplicate">Duplicate</DropdownItem>
-                <DropdownItem key="export">Export</DropdownItem>
-                <DropdownItem key="analytics">View Analytics</DropdownItem>
-                <DropdownItem key="settings">Settings</DropdownItem>
-                <DropdownItem key="delete" className="text-danger">Delete</DropdownItem>
+                <DropdownItem 
+                  key="edit"
+                  onClick={() => handleProjectAction(project.id, 'edit', project)}
+                >
+                  Edit Project
+                </DropdownItem>
+                <DropdownItem 
+                  key="duplicate"
+                  onClick={() => handleProjectAction(project.id, 'duplicate', project)}
+                >
+                  Duplicate
+                </DropdownItem>
+                <DropdownItem 
+                  key="export"
+                  onClick={() => handleProjectAction(project.id, 'export', project)}
+                >
+                  Export
+                </DropdownItem>
+                <DropdownItem 
+                  key="analytics"
+                  onClick={() => handleProjectAction(project.id, 'analytics', project)}
+                >
+                  View Analytics
+                </DropdownItem>
+                <DropdownItem 
+                  key="backup"
+                  onClick={() => handleProjectAction(project.id, 'backup', project)}
+                >
+                  Create Backup
+                </DropdownItem>
+                <DropdownItem 
+                  key="share"
+                  onClick={() => handleProjectAction(project.id, 'share', project)}
+                >
+                  Share Project
+                </DropdownItem>
+                <DropdownItem 
+                  key="settings"
+                  onClick={() => handleProjectAction(project.id, 'settings', project)}
+                >
+                  Settings
+                </DropdownItem>
+                <DropdownItem 
+                  key="delete" 
+                  className="text-danger"
+                  onClick={() => handleProjectAction(project.id, 'delete', project)}
+                >
+                  Delete
+                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -307,17 +490,37 @@ export default function ProjectGrid({
       </Card>
     </motion.div>
   );
+  };
 
-  const ProjectListItem = ({ project }: { project: ProjectGridItem }) => (
-    <motion.div
+  const ProjectListItem = ({ project }: { project: ProjectGridItem }) => {
+    const isSelected = selectedProjects.has(project.id);
+    
+    return (
+      <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       layout
     >
-      <Card className="bg-gradient-to-r from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl hover:border-purple-500/40 transition-all duration-300">
+      <Card className={`bg-gradient-to-r from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl hover:border-purple-500/40 transition-all duration-300 relative ${
+        isSelected ? 'ring-2 ring-purple-500 border-purple-500' : ''
+      } ${
+        bulkActionMode ? 'cursor-pointer' : ''
+      }`}
+      onClick={bulkActionMode ? () => handleProjectSelect(project.id, !isSelected) : undefined}>
         <CardBody className="p-4">
           <div className="flex items-center space-x-4">
+            {bulkActionMode && (
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-400 hover:border-purple-400'
+              }`}>
+                {isSelected && (
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            )}
             {/* Thumbnail */}
             <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/20 to-blue-900/20 flex-shrink-0">
               {project.thumbnail_url ? (
@@ -398,37 +601,160 @@ export default function ProjectGrid({
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                <DropdownItem key="edit">Edit Project</DropdownItem>
-                <DropdownItem key="duplicate">Duplicate</DropdownItem>
-                <DropdownItem key="export">Export</DropdownItem>
-                <DropdownItem key="analytics">View Analytics</DropdownItem>
-                <DropdownItem key="settings">Settings</DropdownItem>
-                <DropdownItem key="delete" className="text-danger">Delete</DropdownItem>
+                <DropdownItem 
+                  key="edit"
+                  onClick={() => handleProjectAction(project.id, 'edit', project)}
+                >
+                  Edit Project
+                </DropdownItem>
+                <DropdownItem 
+                  key="duplicate"
+                  onClick={() => handleProjectAction(project.id, 'duplicate', project)}
+                >
+                  Duplicate
+                </DropdownItem>
+                <DropdownItem 
+                  key="export"
+                  onClick={() => handleProjectAction(project.id, 'export', project)}
+                >
+                  Export
+                </DropdownItem>
+                <DropdownItem 
+                  key="analytics"
+                  onClick={() => handleProjectAction(project.id, 'analytics', project)}
+                >
+                  View Analytics
+                </DropdownItem>
+                <DropdownItem 
+                  key="backup"
+                  onClick={() => handleProjectAction(project.id, 'backup', project)}
+                >
+                  Create Backup
+                </DropdownItem>
+                <DropdownItem 
+                  key="share"
+                  onClick={() => handleProjectAction(project.id, 'share', project)}
+                >
+                  Share Project
+                </DropdownItem>
+                <DropdownItem 
+                  key="settings"
+                  onClick={() => handleProjectAction(project.id, 'settings', project)}
+                >
+                  Settings
+                </DropdownItem>
+                <DropdownItem 
+                  key="delete" 
+                  className="text-danger"
+                  onClick={() => handleProjectAction(project.id, 'delete', project)}
+                >
+                  Delete
+                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
         </CardBody>
-      </Card>
-    </motion.div>
-  );
+        </Card>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="space-y-6">
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {bulkActionMode && selectedProjects.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-purple-900/50 border border-purple-500/30 rounded-lg p-4 mb-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-white font-medium">
+                  {selectedProjects.size} project{selectedProjects.size > 1 ? 's' : ''} selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="bordered"
+                  onClick={handleSelectAll}
+                  className="border-purple-500/50 text-purple-400"
+                >
+                  {selectedProjects.size === projects.length ? 'Deselect All' : 'Select All'}
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  color="primary"
+                  onClick={() => handleBulkAction('export')}
+                >
+                  Export Selected
+                </Button>
+                <Button
+                  size="sm"
+                  color="warning"
+                  onClick={() => handleBulkAction('duplicate')}
+                >
+                  Duplicate
+                </Button>
+                <Button
+                  size="sm"
+                  color="danger"
+                  onClick={() => handleBulkAction('delete')}
+                >
+                  Delete Selected
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setBulkActionMode(false);
+                    setSelectedProjects(new Set());
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Search and Controls */}
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Search */}
         <div className="flex-1">
           <Input
-            placeholder="Search projects..."
+            placeholder="Search projects by title, description, or tags..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             startContent={<SearchIcon className="w-4 h-4 text-gray-400" />}
             className="max-w-md"
+            isClearable
+            onClear={() => setSearchInput('')}
           />
         </div>
 
         {/* Controls */}
         <div className="flex items-center gap-2">
+          {/* Bulk Select Toggle */}
+          <Button
+            variant={bulkActionMode ? "solid" : "bordered"}
+            color={bulkActionMode ? "primary" : "default"}
+            size="sm"
+            onClick={() => {
+              setBulkActionMode(!bulkActionMode);
+              if (bulkActionMode) {
+                setSelectedProjects(new Set());
+              }
+            }}
+            className={bulkActionMode ? "" : "border-gray-600 text-gray-400"}
+          >
+            {bulkActionMode ? "Exit Select" : "Select Multiple"}
+          </Button>
+
           {/* Filters */}
           <Button
             variant="bordered"
@@ -446,6 +772,16 @@ export default function ProjectGrid({
                 {activeFiltersCount}
               </Badge>
             )}
+          </Button>
+
+          {/* Advanced Filters */}
+          <Button
+            variant="bordered"
+            size="sm"
+            onClick={() => setShowAdvancedFilters(true)}
+            className="border-gray-600 text-gray-400"
+          >
+            Advanced
           </Button>
 
           {/* Sort */}
@@ -601,30 +937,181 @@ export default function ProjectGrid({
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2">
-          <Button
-            size="sm"
-            variant="bordered"
-            isDisabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-gray-400">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="bordered"
-            isDisabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-          >
-            Next
-          </Button>
+      {/* Load More / Pagination */}
+      {enableInfiniteScroll ? (
+        <>
+          {/* Infinite Scroll Trigger */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="flex justify-center py-8">
+              {loadingMore ? (
+                <div className="flex items-center space-x-2">
+                  <Spinner size="sm" color="primary" />
+                  <span className="text-gray-400">Loading more projects...</span>
+                </div>
+              ) : (
+                <Button
+                  variant="bordered"
+                  onClick={onLoadMore}
+                  className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                >
+                  Load More Projects
+                </Button>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        /* Traditional Pagination */
+        totalPages > 1 && (
+          <div className="flex justify-center items-center space-x-2">
+            <Button
+              size="sm"
+              variant="bordered"
+              isDisabled={currentPage === 1 || loading}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="border-gray-600 text-gray-400"
+            >
+              Previous
+            </Button>
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    size="sm"
+                    variant={pageNum === currentPage ? "solid" : "bordered"}
+                    color={pageNum === currentPage ? "primary" : "default"}
+                    onClick={() => onPageChange(pageNum)}
+                    isDisabled={loading}
+                    className={pageNum === currentPage ? "" : "border-gray-600 text-gray-400"}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              size="sm"
+              variant="bordered"
+              isDisabled={currentPage === totalPages || loading}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="border-gray-600 text-gray-400"
+            >
+              Next
+            </Button>
+          </div>
+        )
+      )}
+
+      {/* Pagination Info */}
+      {totalCount > 0 && (
+        <div className="text-center">
+          <p className="text-sm text-gray-400">
+            Showing {projects.length} of {totalCount.toLocaleString()} projects
+            {enableInfiniteScroll && hasNextPage && (
+              <span> • Scroll down or click "Load More" for additional results</span>
+            )}
+          </p>
         </div>
       )}
+
+      {/* Advanced Filters Modal */}
+      <Modal isOpen={showAdvancedFilters} onClose={() => setShowAdvancedFilters(false)} size="2xl">
+        <ModalContent>
+          <ModalHeader>Advanced Filters</ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Created Date Range</label>
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      placeholder="Start Date"
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, start: e.target.value ? new Date(e.target.value) : undefined }))}
+                    />
+                    <Input
+                      type="date"
+                      placeholder="End Date"
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, end: e.target.value ? new Date(e.target.value) : undefined }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Visibility</label>
+                  <Select
+                    placeholder="Select Visibility"
+                    selectionMode="multiple"
+                  >
+                    <SelectItem key="public">Public</SelectItem>
+                    <SelectItem key="private">Private</SelectItem>
+                    <SelectItem key="shared">Shared</SelectItem>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={() => setShowAdvancedFilters(false)}>
+              Cancel
+            </Button>
+            <Button color="primary" onClick={handleAdvancedFilter}>
+              Apply Filters
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Action Modal */}
+      <Modal isOpen={isActionModalOpen} onClose={onActionModalClose}>
+        <ModalContent>
+          <ModalHeader>
+            {actionModalData?.action === 'delete' && 'Delete Project'}
+            {actionModalData?.action === 'duplicate' && 'Duplicate Project'}
+            {actionModalData?.action === 'export' && 'Export Project'}
+          </ModalHeader>
+          <ModalBody>
+            {actionModalData?.action === 'delete' && (
+              <p>Are you sure you want to delete "{actionModalData.project?.title}"? This action cannot be undone.</p>
+            )}
+            {actionModalData?.action === 'duplicate' && (
+              <p>Create a copy of "{actionModalData.project?.title}"?</p>
+            )}
+            {actionModalData?.action === 'export' && (
+              <p>Export "{actionModalData.project?.title}" to download?</p>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onActionModalClose}>
+              Cancel
+            </Button>
+            <Button 
+              color={actionModalData?.action === 'delete' ? 'danger' : 'primary'}
+              onClick={() => {
+                if (actionModalData && onProjectAction) {
+                  onProjectAction(actionModalData.projectId, actionModalData.action);
+                }
+                onActionModalClose();
+              }}
+            >
+              {actionModalData?.action === 'delete' && 'Delete'}
+              {actionModalData?.action === 'duplicate' && 'Duplicate'}
+              {actionModalData?.action === 'export' && 'Export'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

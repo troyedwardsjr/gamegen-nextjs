@@ -19,10 +19,9 @@ export class AssetQualityValidator {
 
   constructor(config: QualityValidationConfig) {
     this.config = {
-      contentFiltering: true,
-      nsfw: true,
-      violenceFilter: true,
-      copyrightFilter: false, // Requires external service
+      nsfw: config.nsfw ?? true,
+      violenceFilter: config.violenceFilter ?? true,
+      copyrightFilter: config.copyrightFilter ?? false, // Requires external service
       ...config,
     };
   }
@@ -158,32 +157,28 @@ export class AssetQualityValidator {
 
     const metadata = asset.metadata || {};
 
-    // Check for pixel art quality if applicable
+    // Enhanced pixel art quality validation
     if (metadata.pixelArtScore !== undefined) {
-      if (metadata.pixelArtScore < 0.5) {
-        warnings.push('Low pixel art quality detected');
-        score *= 0.9;
-      } else if (metadata.pixelArtScore > 0.8) {
-        // Bonus for good pixel art
-        score = Math.min(score * 1.1, 1.0);
-      }
+      const pixelArtValidation = await this.validatePixelArtQuality(asset, metadata);
+      score *= pixelArtValidation.score;
+      issues.push(...pixelArtValidation.issues);
+      warnings.push(...pixelArtValidation.warnings);
     }
 
-    // Check color quality
+    // Enhanced color quality validation
     if (metadata.colors) {
-      const { count } = metadata.colors;
-      
-      // Too many colors for pixel art
-      if (count > 256 && metadata.pixelArtScore > 0.7) {
-        warnings.push('High color count for pixel art style');
-        score *= 0.95;
-      }
+      const colorValidation = await this.validateColorQuality(asset, metadata);
+      score *= colorValidation.score;
+      issues.push(...colorValidation.issues);
+      warnings.push(...colorValidation.warnings);
+    }
 
-      // Too few colors
-      if (count < 4) {
-        warnings.push('Very limited color palette');
-        score *= 0.9;
-      }
+    // Animation consistency validation (for animated assets)
+    if (metadata.animationContext) {
+      const animationValidation = await this.validateAnimationQuality(asset, metadata);
+      score *= animationValidation.score;
+      issues.push(...animationValidation.issues);
+      warnings.push(...animationValidation.warnings);
     }
 
     // Check visual complexity
@@ -477,7 +472,18 @@ export class AssetQualityValidator {
   private getQualityThreshold(assetType?: AssetType): number {
     if (!assetType) return 0.7;
 
-    return this.config.qualityThresholds[assetType] || 0.7;
+    // Map asset type to threshold property name
+    const thresholdMap = {
+      sprite: 'sprites' as const,
+      background: 'backgrounds' as const,
+      tile: 'backgrounds' as const, // Use backgrounds threshold for tiles
+      animation: 'animations' as const,
+      tileset: 'backgrounds' as const, // Use backgrounds threshold for tilesets
+      ui: 'sprites' as const, // Use sprites threshold for UI elements
+    };
+
+    const thresholdKey = thresholdMap[assetType];
+    return this.config.qualityThresholds[thresholdKey] || 0.7;
   }
 
   /**
@@ -506,6 +512,279 @@ export class AssetQualityValidator {
   }
 
   /**
+   * Enhanced pixel art quality validation
+   */
+  private async validatePixelArtQuality(asset: any, metadata: any): Promise<{
+    score: number;
+    issues: string[];
+    warnings: string[];
+  }> {
+    const issues: string[] = [];
+    const warnings: string[] = [];
+    let score = 1.0;
+
+    const pixelArtScore = metadata.pixelArtScore || 0;
+
+    // Base pixel art score evaluation
+    if (pixelArtScore < 0.3) {
+      issues.push('Very low pixel art quality - may not be pixel art style');
+      score *= 0.5;
+    } else if (pixelArtScore < 0.5) {
+      warnings.push('Low pixel art quality detected');
+      score *= 0.8;
+    } else if (pixelArtScore > 0.8) {
+      // Bonus for excellent pixel art
+      score = Math.min(score * 1.15, 1.0);
+    }
+
+    // Dimension validation for pixel art
+    if (metadata.dimensions) {
+      const { width, height } = metadata.dimensions;
+      
+      // Check for pixel art friendly dimensions
+      const isPixelFriendly = (width % 8 === 0 && height % 8 === 0) ||
+                              (width % 16 === 0 && height % 16 === 0) ||
+                              (width % 32 === 0 && height % 32 === 0);
+      
+      if (!isPixelFriendly && pixelArtScore > 0.7) {
+        warnings.push('Dimensions not optimized for pixel art (prefer multiples of 8, 16, or 32)');
+        score *= 0.95;
+      }
+
+      // Check size appropriateness
+      const maxDimension = Math.max(width, height);
+      if (maxDimension > 512 && pixelArtScore > 0.7) {
+        warnings.push('Large dimensions for pixel art may lose pixel-perfect quality');
+        score *= 0.9;
+      }
+
+      if (maxDimension < 16 && pixelArtScore > 0.5) {
+        warnings.push('Very small dimensions may limit pixel art detail');
+        score *= 0.95;
+      }
+    }
+
+    // Format validation for pixel art
+    if (metadata.format && metadata.format !== 'png' && pixelArtScore > 0.6) {
+      warnings.push('PNG format recommended for pixel art to maintain sharpness');
+      score *= 0.95;
+    }
+
+    // Compression validation
+    if (metadata.compression > 0.8 && pixelArtScore > 0.7) {
+      warnings.push('High compression may affect pixel art quality');
+      score *= 0.9;
+    }
+
+    return { score: Math.max(score, 0), issues, warnings };
+  }
+
+  /**
+   * Enhanced color quality validation
+   */
+  private async validateColorQuality(asset: any, metadata: any): Promise<{
+    score: number;
+    issues: string[];
+    warnings: string[];
+  }> {
+    const issues: string[] = [];
+    const warnings: string[] = [];
+    let score = 1.0;
+
+    const colors = metadata.colors || {};
+    const pixelArtScore = metadata.pixelArtScore || 0;
+
+    // Color count validation based on style
+    const colorCount = colors.count || 0;
+    
+    if (pixelArtScore > 0.7) {
+      // Pixel art specific color validation
+      if (colorCount > 256) {
+        warnings.push('Very high color count for pixel art (256+ colors)');
+        score *= 0.9;
+      } else if (colorCount > 64) {
+        warnings.push('High color count for pixel art (64+ colors)');
+        score *= 0.95;
+      } else if (colorCount < 4) {
+        warnings.push('Very limited color palette (less than 4 colors)');
+        score *= 0.9;
+      }
+
+      // Check for appropriate pixel art palettes
+      if (colors.palette && colors.palette.length > 0) {
+        const paletteQuality = this.assessPixelArtPalette(colors.palette);
+        score *= paletteQuality.score;
+        warnings.push(...paletteQuality.warnings);
+      }
+    } else {
+      // General color validation for non-pixel art
+      if (colorCount < 4) {
+        warnings.push('Very limited color palette');
+        score *= 0.9;
+      } else if (colorCount > 1000) {
+        warnings.push('Extremely high color count may indicate noise');
+        score *= 0.95;
+      }
+    }
+
+    // Dominant color validation
+    if (colors.dominant) {
+      const dominantRgb = this.hexToRgb(colors.dominant);
+      if (dominantRgb) {
+        // Check for overly bright or dark dominant colors
+        const brightness = (dominantRgb.r + dominantRgb.g + dominantRgb.b) / 3;
+        if (brightness < 20) {
+          warnings.push('Very dark dominant color may affect visibility');
+          score *= 0.98;
+        } else if (brightness > 235) {
+          warnings.push('Very bright dominant color may be harsh');
+          score *= 0.98;
+        }
+      }
+    }
+
+    return { score: Math.max(score, 0), issues, warnings };
+  }
+
+  /**
+   * Animation quality validation
+   */
+  private async validateAnimationQuality(asset: any, metadata: any): Promise<{
+    score: number;
+    issues: string[];
+    warnings: string[];
+  }> {
+    const issues: string[] = [];
+    const warnings: string[] = [];
+    let score = 1.0;
+
+    const animationContext = metadata.animationContext || {};
+    const consistencyScore = metadata.consistencyScore;
+
+    // Frame consistency validation
+    if (consistencyScore !== undefined) {
+      if (consistencyScore < 0.5) {
+        issues.push('Poor frame consistency in animation');
+        score *= 0.7;
+      } else if (consistencyScore < 0.7) {
+        warnings.push('Moderate frame consistency issues');
+        score *= 0.9;
+      } else if (consistencyScore > 0.9) {
+        // Bonus for excellent consistency
+        score = Math.min(score * 1.1, 1.0);
+      }
+    }
+
+    // Key frame validation
+    if (animationContext.isKeyFrame) {
+      // Key frames should have higher quality requirements
+      if (metadata.qualityScore && metadata.qualityScore < 0.8) {
+        warnings.push('Key frame quality below optimal level');
+        score *= 0.95;
+      }
+    }
+
+    // Frame progression validation
+    if (animationContext.frameProgress !== undefined) {
+      const progress = animationContext.frameProgress;
+      
+      // First and last frames are critical
+      if ((progress === 0 || progress === 1) && metadata.qualityScore < 0.7) {
+        warnings.push('First/last frame quality below optimal level');
+        score *= 0.9;
+      }
+    }
+
+    // Total frames validation
+    const totalFrames = animationContext.totalFrames || 1;
+    if (totalFrames < 2) {
+      issues.push('Animation requires at least 2 frames');
+      score *= 0.5;
+    } else if (totalFrames > 60) {
+      warnings.push('Very long animation may affect performance');
+      score *= 0.95;
+    }
+
+    return { score: Math.max(score, 0), issues, warnings };
+  }
+
+  /**
+   * Assess pixel art palette quality
+   */
+  private assessPixelArtPalette(palette: string[]): {
+    score: number;
+    warnings: string[];
+  } {
+    const warnings: string[] = [];
+    let score = 1.0;
+
+    // Check for common pixel art palette issues
+    const rgbPalette = palette
+      .map(hex => this.hexToRgb(hex))
+      .filter((color): color is { r: number; g: number; b: number } => color !== null);
+    
+    if (rgbPalette.length !== palette.length) {
+      warnings.push('Some palette colors are invalid');
+      score *= 0.9;
+    }
+
+    // Check for near-duplicate colors
+    const duplicateThreshold = 15; // RGB distance threshold
+    let nearDuplicates = 0;
+
+    for (let i = 0; i < rgbPalette.length; i++) {
+      for (let j = i + 1; j < rgbPalette.length; j++) {
+        const color1 = rgbPalette[i];
+        const color2 = rgbPalette[j];
+        
+        // Skip if either color is null (shouldn't happen after filter, but for type safety)
+        if (!color1 || !color2) continue;
+        
+        const distance = Math.sqrt(
+          Math.pow(color1.r - color2.r, 2) +
+          Math.pow(color1.g - color2.g, 2) +
+          Math.pow(color1.b - color2.b, 2)
+        );
+
+        if (distance < duplicateThreshold) {
+          nearDuplicates++;
+        }
+      }
+    }
+
+    if (nearDuplicates > 0) {
+      warnings.push(`${nearDuplicates} near-duplicate colors in palette`);
+      score *= 0.95;
+    }
+
+    // Check for good contrast in palette
+    const hasGoodContrast = this.checkPaletteContrast(rgbPalette);
+    if (!hasGoodContrast) {
+      warnings.push('Palette may lack sufficient contrast');
+      score *= 0.9;
+    }
+
+    return { score: Math.max(score, 0), warnings };
+  }
+
+  /**
+   * Check if palette has good contrast range
+   */
+  private checkPaletteContrast(rgbPalette: { r: number; g: number; b: number }[]): boolean {
+    if (rgbPalette.length < 2) return true;
+
+    const brightnesses = rgbPalette.map(color => 
+      (color.r + color.g + color.b) / 3
+    );
+
+    const minBrightness = Math.min(...brightnesses);
+    const maxBrightness = Math.max(...brightnesses);
+    
+    // Good contrast if brightness range is at least 100
+    return (maxBrightness - minBrightness) >= 100;
+  }
+
+  /**
    * Create approval workflow entry
    */
   async createApprovalWorkflow(
@@ -519,9 +798,13 @@ export class AssetQualityValidator {
   }> {
     const workflowId = `approval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+    // Enhanced auto-approval criteria for pixel art
+    const isPixelArt = asset.metadata?.pixelArtScore > 0.7;
+    const pixelArtThreshold = isPixelArt ? 0.85 : 0.8; // Higher threshold for pixel art
+
     // Auto-approve if meets all criteria
     if (validationResult.isValid && 
-        validationResult.score >= 0.8 &&
+        validationResult.score >= pixelArtThreshold &&
         validationResult.contentAppropriate >= 0.9) {
       return {
         workflowId,
@@ -532,7 +815,8 @@ export class AssetQualityValidator {
 
     // Auto-reject if severely problematic
     if (validationResult.contentAppropriate < 0.5 || 
-        validationResult.technicalQuality < 0.3) {
+        validationResult.technicalQuality < 0.3 ||
+        (isPixelArt && validationResult.visualQuality < 0.6)) {
       return {
         workflowId,
         status: 'rejected',

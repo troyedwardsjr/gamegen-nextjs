@@ -152,6 +152,7 @@ export class DalleProvider {
         'pixel-art': 'in pixel art style with crisp sharp pixels and limited color palette',
         '8bit': 'in 8-bit video game style with retro pixelated look',
         '16bit': 'in 16-bit video game style with detailed pixel art',
+        '32bit': 'in 32-bit video game style with high-color detailed pixel art',
         'retro': 'in retro vintage video game style',
         'modern': 'in modern video game art style with polished graphics',
         'minimalist': 'in minimalist clean art style',

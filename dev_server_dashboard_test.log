@@ -1,0 +1,150 @@
+
+> next-app-template@0.0.1 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3004 instead.
+   ▲ Next.js 15.3.1 (Turbopack)
+   - Local:        http://localhost:3004
+   - Network:      http://192.168.1.168:3004
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 88ms
+ ✓ Ready in 699ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.1s
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+motion() is deprecated. Use motion.create() instead.
+If you do not provide a visible label, you must specify an aria-label or aria-labelledby attribute for accessibility
+If you do not provide a visible label, you must specify an aria-label or aria-labelledby attribute for accessibility
+ GET /dashboard 200 in 2492ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ ✓ Compiled /api/dashboard/activities in 249ms
+ GET /api/dashboard/activities?page=1&limit=20 401 in 288ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ GET /api/dashboard/activities?page=1&limit=20 401 in 18ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /creator
+ ○ Compiling /creator ...
+ ✓ Compiled /creator in 571ms
+ GET /creator 200 in 587ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard 200 in 205ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ GET /api/dashboard/activities?page=1&limit=20 401 in 15ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ GET /api/dashboard/activities?page=1&limit=20 401 in 15ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ GET /api/dashboard/activities?page=1&limit=20 401 in 14ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/dashboard/activities
+ GET /api/dashboard/activities?page=1&limit=20 401 in 13ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=projects 200 in 372ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/placeholder/300/200
+ ✓ Compiled /_not-found/page in 471ms
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+ GET /api/placeholder/300/200 404 in 514ms
+ ⨯ The requested resource isn't a valid image for /api/placeholder/300/200 received text/html; charset=utf-8
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/placeholder/300/200
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+ GET /api/placeholder/300/200 404 in 84ms
+ ⨯ The requested resource isn't a valid image for /api/placeholder/300/200 received text/html; charset=utf-8
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=projects&search=space&page=1 200 in 320ms
+ GET /dashboard?tab=projects&search=space&page=1 200 in 330ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/placeholder/300/200
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+ GET /api/placeholder/300/200 404 in 48ms
+ ⨯ The requested resource isn't a valid image for /api/placeholder/300/200 received text/html; charset=utf-8
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/placeholder/300/200
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+ GET /api/placeholder/300/200 404 in 52ms
+ ⨯ The requested resource isn't a valid image for /api/placeholder/300/200 received text/html; charset=utf-8
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=projects&search=&page=1 200 in 331ms
+ GET /dashboard?tab=projects&search=&page=1 200 in 324ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/placeholder/300/200
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+ GET /api/placeholder/300/200 404 in 47ms
+ ⨯ The requested resource isn't a valid image for /api/placeholder/300/200 received text/html; charset=utf-8
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=analytics&search=&page=1 200 in 191ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/analytics/trends
+ ✓ Compiled /api/analytics/trends in 161ms
+ GET /api/analytics/trends?timeRange=30d 401 in 177ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/analytics/trends
+ GET /api/analytics/trends?timeRange=30d 401 in 14ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/analytics/trends
+ GET /api/analytics/trends?timeRange=30d 401 in 13ms
+ GET /dashboard?tab=templates&search=&page=1 200 in 207ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates/featured
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates/categories
+ ✓ Compiled /api/templates in 276ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates
+ GET /api/templates/categories 200 in 918ms
+Error fetching featured templates: {
+  code: 'PGRST100',
+  details: 'unexpected "i" expecting "asc", "desc", "nullsfirst" or "nullslast"',
+  hint: null,
+  message: '"failed to parse order (games.is_featured.desc,created_at.desc)" (line 1, column 7)'
+}
+ GET /api/templates/featured?limit=6 200 in 920ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates/categories
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates/featured
+ GET /api/templates/categories 200 in 131ms
+Error fetching featured templates: {
+  code: 'PGRST100',
+  details: 'unexpected "i" expecting "asc", "desc", "nullsfirst" or "nullslast"',
+  hint: null,
+  message: '"failed to parse order (games.is_featured.desc,created_at.desc)" (line 1, column 7)'
+}
+ GET /api/templates/featured?limit=6 200 in 141ms
+ GET /api/templates?page=1&limit=12&sortField=rating&sortDirection=desc 200 in 892ms
+ GET /api/templates?page=1&limit=12 200 in 1221ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/templates
+ GET /api/templates?page=1&limit=12 200 in 287ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=collaborations&search=&page=1 200 in 209ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=billing&search=&page=1 200 in 189ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /dashboard
+ GET /dashboard?tab=notifications&search=&page=1 200 in 217ms
+ ✓ Compiled middleware in 0ms
+ ✓ Compiled middleware in 0ms
+ ✓ Compiled middleware in 0ms
+ ✓ Compiled middleware in 0ms
+ ✓ Compiled middleware in 0ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled middleware in 14ms
+ ✓ Compiled middleware in 3ms
+ ✓ Compiled middleware in 1ms
+ ✓ Compiled middleware in 4ms
+ ✓ Compiled middleware in 2ms

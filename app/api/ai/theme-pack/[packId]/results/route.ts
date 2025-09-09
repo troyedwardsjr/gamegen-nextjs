@@ -71,8 +71,9 @@ interface ThemePackResultsResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ): Promise<Response> {
+  const { packId } = await params;
   const startTime = Date.now();
   let userId: string | undefined;
 
@@ -102,7 +103,7 @@ export async function GET(
     }
 
     userId = user.id;
-    const { packId } = params;
+    // packId is already extracted from params above
 
     // Validate pack ID format
     if (!packId || typeof packId !== 'string' || !packId.startsWith('pack_')) {
@@ -120,6 +121,7 @@ export async function GET(
 
     // Initialize theme processor
     const assetManager = new AssetGenerationManager({
+      defaultProvider: "pixellab",
       providers: {
         pixellab: {
           apiKey: process.env.PIXELLAB_API_KEY,
@@ -256,7 +258,11 @@ export async function GET(
         categoryBreakdown,
         qualityByCategory,
         processingTimeByCategory,
-      } : {},
+      } : {
+        categoryBreakdown: {},
+        qualityByCategory: {},
+        processingTimeByCategory: {},
+      },
     };
 
     // Handle different response formats
@@ -320,8 +326,9 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ): Promise<Response> {
+  const { packId } = await params;
   const startTime = Date.now();
   let userId: string | undefined;
 
@@ -351,7 +358,7 @@ export async function POST(
     }
 
     userId = user.id;
-    const { packId } = params;
+    // packId is already extracted from params above
 
     // Parse request body
     const reviewData = await request.json();

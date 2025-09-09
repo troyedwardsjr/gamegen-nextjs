@@ -119,7 +119,7 @@ export class AnimationGenerator {
       url: animationAsset.url,
       thumbnailUrl: animationAsset.thumbnailUrl,
       metadata: animationAsset.metadata,
-      generatedBy: 'animation-generator',
+      generatedBy: 'pixellab', // Default animation provider
       prompt: request.prompt,
       style: request.style,
       qualityScore: motionAnalysis.smoothness,
@@ -242,12 +242,15 @@ export class AnimationGenerator {
         request.motionType
       );
 
+      const frameTiming = this.interpolate(startFrame.timing, endFrame.timing, progress);
+      const frameTransform = this.interpolateTransforms(progress, startFrame.transform, endFrame.transform);
+      
       const frameRequest = this.createFrameRequest(request, {
         frameNumber,
         prompt: interpolatedPrompt,
-        timing: this.interpolate(startFrame.timing, endFrame.timing, progress),
+        timing: frameTiming,
         easing: 'linear', // Intermediate frames use linear interpolation
-        transform: this.interpolateTransforms(startFrame.transform, endFrame.transform, progress),
+        transform: frameTransform,
       });
 
       try {
@@ -257,9 +260,9 @@ export class AnimationGenerator {
         const frame: AnimationFrame = {
           frameNumber,
           asset: this.convertToGeneratedAsset(processedAsset, frameRequest),
-          timing: frameRequest.timing || 100,
+          timing: frameTiming || 100,
           easing: 'linear',
-          transform: frameRequest.transform,
+          transform: frameTransform,
         };
 
         intermediates.push(frame);
@@ -574,7 +577,7 @@ export class AnimationGenerator {
     return start + (end - start) * progress;
   }
 
-  private interpolateTransforms(start?: any, end?: any, progress: number): any {
+  private interpolateTransforms(progress: number, start?: any, end?: any): any {
     if (!start && !end) return undefined;
     if (!start) return end;
     if (!end) return start;
@@ -620,7 +623,7 @@ export class AnimationGenerator {
       url: processedAsset.url || '',
       thumbnailUrl: processedAsset.thumbnailUrl,
       metadata: processedAsset.metadata || {},
-      generatedBy: 'animation-generator',
+      generatedBy: 'pixellab', // Default animation provider
       prompt: request.prompt,
       style: request.style,
       qualityScore: 0.85,
@@ -654,7 +657,7 @@ export class AnimationGenerator {
         tags: ['animation', request.motionType || 'linear', request.assetType],
         motionQuality: motionAnalysis,
       },
-      generatedBy: 'animation-generator',
+      generatedBy: 'pixellab', // Default animation provider
       prompt: request.prompt,
       style: request.style,
       qualityScore: motionAnalysis.smoothness,

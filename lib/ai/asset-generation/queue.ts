@@ -123,22 +123,26 @@ export class AssetGenerationQueue {
     // Validate user has sufficient credits
     await this.validateUserCredits(userId, estimatedCredits);
 
-    // Create job record
-    const jobData = {
-      user_id: userId,
-      request_type: 'single' as const,
-      request_data: request,
-      status: 'queued' as const,
-      priority,
-      estimated_credits: estimatedCredits,
-      max_retries: 3,
-      retry_count: 0,
-      progress: 0,
-    };
-
+    // Create job record using ai_generations table
     const { data: job, error } = await (supabase as any)
-      .from('ai_generation_jobs')
-      .insert(jobData)
+      .from('ai_generations')
+      .insert({
+        user_id: userId,
+        generation_type: 'asset',
+        prompt: request.prompt,
+        model_used: 'dalle-3',
+        success: false,
+        credits_consumed: estimatedCredits,
+        output_data: {
+          status: 'queued',
+          priority,
+          request_data: request,
+          progress: 0,
+          request_type: 'single',
+          max_retries: 3,
+          retry_count: 0
+        }
+      })
       .select()
       .single();
 
@@ -184,22 +188,26 @@ export class AssetGenerationQueue {
     // Validate user has sufficient credits
     await this.validateUserCredits(userId, estimatedCredits);
 
-    // Create batch job record
-    const jobData = {
-      user_id: userId,
-      request_type: 'batch' as const,
-      request_data: request,
-      status: 'queued' as const,
-      priority,
-      estimated_credits: estimatedCredits,
-      max_retries: 2, // Lower retry count for batch jobs
-      retry_count: 0,
-      progress: 0,
-    };
-
+    // Create batch job record using ai_generations table
     const { data: job, error } = await (supabase as any)
-      .from('ai_generation_jobs')
-      .insert(jobData)
+      .from('ai_generations')
+      .insert({
+        user_id: userId,
+        generation_type: 'asset',
+        prompt: `Batch: ${request.prompts.length} assets`,
+        model_used: 'dalle-3',
+        success: false,
+        credits_consumed: estimatedCredits,
+        output_data: {
+          status: 'queued',
+          priority,
+          request_data: request,
+          progress: 0,
+          request_type: 'batch',
+          max_retries: 2,
+          retry_count: 0
+        }
+      })
       .select()
       .single();
 
@@ -231,7 +239,7 @@ export class AssetGenerationQueue {
     const supabase = await this.getClient();
 
     const { data: job, error } = await (supabase as any)
-      .from('ai_generation_jobs')
+      .from('ai_generations')
       .select('*')
       .eq('id', jobId)
       .eq('user_id', userId)
@@ -245,36 +253,39 @@ export class AssetGenerationQueue {
       );
     }
 
+    const outputData = job.output_data || {};
+    const status = job.success ? 'completed' : (outputData.status || 'failed');
+    
     // Add queue position if still queued
     let queuePosition: number | undefined;
-    if (job.status === 'queued') {
+    if (status === 'queued') {
       queuePosition = await this.getJobQueuePosition(jobId);
     }
 
     // Parse results if completed
     let result: AssetGenerationResponse | BatchGenerationResponse | undefined;
-    if (job.status === 'completed' && job.result_data) {
-      result = job.result_data;
+    if (job.success && outputData.result_data) {
+      result = outputData.result_data;
     }
 
     return {
       id: job.id,
       userId: job.user_id,
-      request: job.request_data,
-      status: job.status,
-      priority: job.priority,
+      request: outputData.request_data,
+      status,
+      priority: outputData.priority || 'normal',
       createdAt: job.created_at,
-      startedAt: job.started_at,
-      completedAt: job.completed_at,
-      estimatedCompletion: job.estimated_completion,
-      progress: job.progress,
-      currentStep: job.current_step,
+      startedAt: outputData.started_at,
+      completedAt: outputData.completed_at,
+      estimatedCompletion: outputData.estimated_completion,
+      progress: outputData.progress || 0,
+      currentStep: outputData.current_step,
       result,
-      error: job.error_data,
-      retryCount: job.retry_count,
-      maxRetries: job.max_retries,
-      creditsUsed: job.credits_used || 0,
-      estimatedCredits: job.estimated_credits,
+      error: outputData.error_data,
+      retryCount: outputData.retry_count || 0,
+      maxRetries: outputData.max_retries || 3,
+      creditsUsed: job.credits_consumed || 0,
+      estimatedCredits: job.credits_consumed || 0,
       queuePosition,
     } as GenerationJob;
   }
@@ -294,14 +305,16 @@ export class AssetGenerationQueue {
 
     // Update job status
     const { error } = await (supabase as any)
-      .from('ai_generation_jobs')
+      .from('ai_generations')
       .update({
-        status: 'cancelled',
-        updated_at: new Date().toISOString(),
+        success: false,
+        output_data: {
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString()
+        }
       })
       .eq('id', jobId)
-      .eq('user_id', userId)
-      .in('status', ['queued', 'processing']);
+      .eq('user_id', userId);
 
     if (error) {
       throw new DatabaseError(
@@ -331,13 +344,12 @@ export class AssetGenerationQueue {
     const supabase = await this.getClient();
 
     let query = (supabase as any)
-      .from('ai_generation_jobs')
+      .from('ai_generations')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('generation_type', 'asset');
 
-    if (options.status && options.status.length > 0) {
-      query = query.in('status', options.status);
-    }
+    // Note: status filtering removed as it doesn't map directly to ai_generations schema
 
     const orderBy = options.orderBy || 'created_at';
     const orderDirection = options.orderDirection || 'desc';
@@ -364,25 +376,30 @@ export class AssetGenerationQueue {
       );
     }
 
-    return (data || []).map((job: any) => ({
-      id: job.id,
-      userId: job.user_id,
-      request: job.request_data,
-      status: job.status,
-      priority: job.priority,
-      createdAt: job.created_at,
-      startedAt: job.started_at,
-      completedAt: job.completed_at,
-      estimatedCompletion: job.estimated_completion,
-      progress: job.progress,
-      currentStep: job.current_step,
-      result: job.result_data,
-      error: job.error_data,
-      retryCount: job.retry_count,
-      maxRetries: job.max_retries,
-      creditsUsed: job.credits_used || 0,
-      estimatedCredits: job.estimated_credits,
-    }));
+    return (data || []).map((job: any) => {
+      const outputData = job.output_data || {};
+      const status = job.success ? 'completed' : (outputData.status || 'failed');
+      
+      return {
+        id: job.id,
+        userId: job.user_id,
+        request: outputData.request_data,
+        status,
+        priority: outputData.priority || 'normal',
+        createdAt: job.created_at,
+        startedAt: outputData.started_at,
+        completedAt: outputData.completed_at,
+        estimatedCompletion: outputData.estimated_completion,
+        progress: outputData.progress || 0,
+        currentStep: outputData.current_step,
+        result: outputData.result_data,
+        error: outputData.error_data,
+        retryCount: outputData.retry_count || 0,
+        maxRetries: outputData.max_retries || 3,
+        creditsUsed: job.credits_consumed || 0,
+        estimatedCredits: job.credits_consumed || 0,
+      };
+    });
   }
 
   /**
@@ -402,14 +419,15 @@ export class AssetGenerationQueue {
 
     // Calculate average processing time
     const { data: avgTimes } = await (supabase as any)
-      .from('ai_generation_jobs')
-      .select('processing_time_ms')
-      .eq('status', 'completed')
-      .gte('completed_at', `${today}T00:00:00Z`)
-      .not('processing_time_ms', 'is', null);
+      .from('ai_generations')
+      .select('generation_time')
+      .eq('generation_type', 'asset')
+      .eq('success', true)
+      .gte('created_at', `${today}T00:00:00Z`)
+      .not('generation_time', 'is', null);
 
     const avgProcessingTime = avgTimes && avgTimes.length > 0
-      ? avgTimes.reduce((sum: number, job: any) => sum + (job.processing_time_ms || 0), 0) / avgTimes.length
+      ? avgTimes.reduce((sum: number, job: any) => sum + (job.generation_time || 0), 0) / avgTimes.length
       : 0;
 
     // Calculate success rate
@@ -483,17 +501,29 @@ export class AssetGenerationQueue {
       const processingTime = Date.now() - startTime;
 
       // Mark job as completed
+      const { data: currentJob } = await (supabase as any)
+        .from('ai_generations')
+        .select('output_data')
+        .eq('id', jobId)
+        .single();
+      
+      const currentOutputData = currentJob?.output_data || {};
+      
       await (supabase as any)
-        .from('ai_generation_jobs')
+        .from('ai_generations')
         .update({
-          status: 'completed',
-          progress: 100,
-          current_step: 'Generation completed',
-          result_data: result,
-          credits_used: result.credits.used,
-          processing_time_ms: processingTime,
-          completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          success: true,
+          generation_time: processingTime,
+          output_data: {
+            ...currentOutputData,
+            status: 'completed',
+            progress: 100,
+            current_step: 'Generation completed',
+            result_data: result,
+            credits_used: 'credits' in result ? result.credits.used : result.totalCreditsUsed,
+            processing_time_ms: processingTime,
+            completed_at: new Date().toISOString()
+          }
         })
         .eq('id', jobId);
 
@@ -512,16 +542,27 @@ export class AssetGenerationQueue {
         await this.scheduleJobRetry(job);
       } else {
         // Mark job as failed
+        const { data: currentJob } = await (supabase as any)
+          .from('ai_generations')
+          .select('output_data')
+          .eq('id', jobId)
+          .single();
+        
+        const currentOutputData = currentJob?.output_data || {};
+        
         await (supabase as any)
-          .from('ai_generation_jobs')
+          .from('ai_generations')
           .update({
-            status: 'failed',
-            error_data: {
-              code: error instanceof AssetGenerationError ? error.code : ERROR_CODES.INTERNAL_ERROR,
-              message: error instanceof Error ? error.message : 'Unknown error',
-              retryable: false,
-            },
-            updated_at: new Date().toISOString(),
+            success: false,
+            output_data: {
+              ...currentOutputData,
+              status: 'failed',
+              error_data: {
+                code: error instanceof AssetGenerationError ? error.code : ERROR_CODES.INTERNAL_ERROR,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                retryable: false,
+              }
+            }
           })
           .eq('id', jobId);
 
@@ -684,7 +725,12 @@ export class AssetGenerationQueue {
   }
 
   private async estimateBatchCredits(request: BatchGenerationRequest): Promise<number> {
-    const singleRequestCredit = await this.estimateCredits(request.baseRequest);
+    // Create a temporary request with a placeholder prompt for estimation
+    const tempRequest: AssetGenerationRequest = {
+      ...request.baseRequest,
+      prompt: 'placeholder prompt for estimation',
+    };
+    const singleRequestCredit = await this.estimateCredits(tempRequest);
     const batchDiscount = 0.85; // 15% discount for batch processing
     
     return Math.round(singleRequestCredit * request.prompts.length * batchDiscount);
@@ -697,10 +743,23 @@ export class AssetGenerationQueue {
   private async getJobCountByStatus(status: string): Promise<number> {
     const supabase = await this.getClient();
     
-    const { count, error } = await (supabase as any)
-      .from('ai_generation_jobs')
+    let query = (supabase as any)
+      .from('ai_generations')
       .select('*', { count: 'exact', head: true })
-      .eq('status', status);
+      .eq('generation_type', 'asset');
+    
+    // Map status to database fields
+    if (status === 'completed') {
+      query = query.eq('success', true);
+    } else if (status === 'failed') {
+      query = query.eq('success', false);
+    } else if (status === 'queued') {
+      query = query.eq('success', false).is('generation_time', null);
+    } else if (status === 'processing') {
+      query = query.eq('success', false).not('generation_time', 'is', null);
+    }
+    
+    const { count, error } = await query;
 
     if (error) {
       console.error(`Failed to count jobs with status ${status}:`, error);
@@ -713,12 +772,21 @@ export class AssetGenerationQueue {
   private async getJobCountByStatusAndDate(status: string, date: string): Promise<number> {
     const supabase = await this.getClient();
     
-    const { count, error } = await (supabase as any)
-      .from('ai_generation_jobs')
+    let query = (supabase as any)
+      .from('ai_generations')
       .select('*', { count: 'exact', head: true })
-      .eq('status', status)
-      .gte('updated_at', `${date}T00:00:00Z`)
-      .lt('updated_at', `${date}T23:59:59Z`);
+      .eq('generation_type', 'asset')
+      .gte('created_at', `${date}T00:00:00Z`)
+      .lt('created_at', `${date}T23:59:59Z`);
+    
+    // Map status to database fields
+    if (status === 'completed') {
+      query = query.eq('success', true);
+    } else if (status === 'failed') {
+      query = query.eq('success', false);
+    }
+    
+    const { count, error } = await query;
 
     if (error) {
       console.error(`Failed to count jobs with status ${status} for date ${date}:`, error);
@@ -732,19 +800,21 @@ export class AssetGenerationQueue {
     const supabase = await this.getClient();
 
     const { data: job } = await (supabase as any)
-      .from('ai_generation_jobs')
-      .select('created_at, priority')
+      .from('ai_generations')
+      .select('created_at, output_data')
       .eq('id', jobId)
       .single();
 
     if (!job) return 0;
 
-    // Count jobs ahead in queue considering priority
+    // Count jobs ahead in queue
     const { count } = await (supabase as any)
-      .from('ai_generation_jobs')
+      .from('ai_generations')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'queued')
-      .or(`priority.gt.${job.priority},and(priority.eq.${job.priority},created_at.lt.${job.created_at})`);
+      .eq('generation_type', 'asset')
+      .eq('success', false)
+      .is('generation_time', null)
+      .lt('created_at', job.created_at);
 
     return (count || 0) + 1;
   }
@@ -752,12 +822,13 @@ export class AssetGenerationQueue {
   private async getNextQueuedJob(): Promise<any> {
     const supabase = await this.getClient();
 
-    // Get highest priority job that's been waiting the longest
+    // Get oldest queued job
     const { data: jobs } = await (supabase as any)
-      .from('ai_generation_jobs')
+      .from('ai_generations')
       .select('*')
-      .eq('status', 'queued')
-      .order('priority', { ascending: false })
+      .eq('generation_type', 'asset')
+      .eq('success', false)
+      .is('generation_time', null)
       .order('created_at', { ascending: true })
       .limit(1);
 
@@ -786,9 +857,31 @@ export class AssetGenerationQueue {
       updateData.started_at = new Date().toISOString();
     }
 
+    // Get current output_data first to preserve it
+    const { data: currentJob } = await (supabase as any)
+      .from('ai_generations')
+      .select('output_data')
+      .eq('id', jobId)
+      .single();
+    
+    const currentOutputData = currentJob?.output_data || {};
+    
+    // Update the job with preserved output_data
+    const newOutputData = {
+      ...currentOutputData,
+      progress,
+      current_step: currentStep,
+      status,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (status === 'processing' && progress === 0) {
+      newOutputData.started_at = new Date().toISOString();
+    }
+    
     await (supabase as any)
-      .from('ai_generation_jobs')
-      .update(updateData)
+      .from('ai_generations')
+      .update({ output_data: newOutputData })
       .eq('id', jobId);
   }
 
@@ -798,14 +891,18 @@ export class AssetGenerationQueue {
     setTimeout(async () => {
       const supabase = await this.getClient();
       
+      const currentOutputData = job.output_data || {};
       await (supabase as any)
-        .from('ai_generation_jobs')
+        .from('ai_generations')
         .update({
-          status: 'queued',
-          retry_count: job.retry_count + 1,
-          progress: 0,
-          current_step: 'Queued for retry',
-          updated_at: new Date().toISOString(),
+          success: false,
+          output_data: {
+            ...currentOutputData,
+            status: 'queued',
+            retry_count: (currentOutputData.retry_count || 0) + 1,
+            progress: 0,
+            current_step: 'Queued for retry'
+          }
         })
         .eq('id', job.id);
 
@@ -815,15 +912,22 @@ export class AssetGenerationQueue {
 
   private calculateEstimatedCompletion(queuePosition: number, request: AssetGenerationRequest): string {
     const estimatedTime = this.generationManager.estimateGenerationTime(request);
-    const waitTime = (queuePosition - 1) * (estimatedTime / this.config.maxConcurrentJobs);
-    const completionTime = new Date(Date.now() + waitTime + estimatedTime);
+    const timeInMs = typeof estimatedTime === 'number' ? estimatedTime : 60000; // Default to 1 minute
+    const waitTime = (queuePosition - 1) * (timeInMs / this.config.maxConcurrentJobs);
+    const completionTime = new Date(Date.now() + waitTime + timeInMs);
     
     return completionTime.toISOString();
   }
 
   private calculateBatchEstimatedCompletion(queuePosition: number, request: BatchGenerationRequest): string {
-    const singleEstimate = this.generationManager.estimateGenerationTime(request.baseRequest);
-    const batchTime = singleEstimate * request.prompts.length / (request.parallelGeneration || 1);
+    // Create a temporary request with a placeholder prompt for estimation
+    const tempRequest: AssetGenerationRequest = {
+      ...request.baseRequest,
+      prompt: 'placeholder prompt for estimation',
+    };
+    const singleEstimate = this.generationManager.estimateGenerationTime(tempRequest);
+    const estimateInMs = typeof singleEstimate === 'number' ? singleEstimate : 60000; // Default to 1 minute
+    const batchTime = estimateInMs * request.prompts.length / (request.parallelGeneration || 1);
     const waitTime = (queuePosition - 1) * (batchTime / this.config.maxConcurrentJobs);
     const completionTime = new Date(Date.now() + waitTime + batchTime);
     

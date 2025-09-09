@@ -15,7 +15,7 @@ import { AssetGenerationQueue } from "@/lib/ai/asset-generation/queue";
 import { AssetPostProcessor } from "@/lib/ai/asset-generation/post-processor";
 import { AnimationGenerator } from "@/lib/ai/asset-generation/animation-generator";
 import { BillingTracker } from "@/lib/llm/billing/tracker";
-import { LLMLogger } from "@/lib/llm/monitoring/logger";
+import { LLMLogger, createLoggerConfig } from "@/lib/llm/monitoring/logger";
 import {
   AnimationGenerationRequest,
   AssetGenerationError,
@@ -76,20 +76,31 @@ export async function POST(request: NextRequest): Promise<Response> {
     credit_system_enabled: true,
     auto_deduct_credits: true,
     minimum_balance: 5.0, // Higher minimum for animations
-    cost_per_generation: {
-      pixellab: 3.0, // Higher cost for animations
-      retrodiffusion: 2.5,
-      dalle: 4.0,
+    low_balance_threshold: 10.0,
+    billing_cycle: "monthly",
+    cost_per_token: {
+      pixellab: { input: 0.003, output: 0.015 }, // Higher cost for animations
+      retrodiffusion: { input: 0.0025, output: 0.0125 },
+      dalle: { input: 0.004, output: 0.020 },
+    },
+    user_tier_discounts: {
+      free: 0,
+      pro: 0.1,
+      max: 0.2,
+    },
+    free_tier_limits: {
+      monthly_tokens: 10000,
+      monthly_requests: 100,
     },
   });
 
-  const logger = new LLMLogger({
+  const logger = new LLMLogger(createLoggerConfig({
     enabled: true,
     log_requests: true,
     log_responses: true,
     log_errors: true,
     sensitive_data_masking: true,
-  });
+  }));
 
   try {
     // Authentication
@@ -269,13 +280,22 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     } else {
       // Add to queue for complex animations
+      if (!animationRequest) {
+        return NextResponse.json(
+          { error: "Animation request is required", code: "INVALID_REQUEST" },
+          { status: 400 }
+        );
+      }
+      
       const priority = (animationRequest.priority as any) || 'normal';
       
       // Create a batch request for the animation frames
+      // TypeScript assertion is safe here because we checked for null above
+      const request = animationRequest as AnimationGenerationRequest;
       const batchRequest = {
-        baseRequest: animationRequest,
-        prompts: Array.from({ length: animationRequest.frameCount }, (_, i) => 
-          `${animationRequest.prompt} frame ${i + 1} of ${animationRequest.frameCount}`
+        baseRequest: request,
+        prompts: Array.from({ length: request.frameCount }, (_, i) => 
+          `${request.prompt} frame ${i + 1} of ${request.frameCount}`
         ),
         maintainConsistency: true,
         parallelGeneration: 2,
@@ -290,15 +310,15 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       // Log batch request
       await logger.logRequest(
-        animationRequest as any,
+        request as any,
         {
           id: queueResult.jobId,
-          content: `Animation generation queued: ${animationRequest.frameCount} frames`,
+          content: `Animation generation queued: ${request.frameCount} frames`,
           usage: { total_tokens: 0 },
-          provider_id: animationRequest.provider || "pixellab",
+          provider_id: request.provider || "pixellab",
         } as any,
         undefined,
-        animationRequest.provider || "pixellab",
+        request.provider || "pixellab",
         userId,
       );
 

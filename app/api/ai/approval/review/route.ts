@@ -150,7 +150,7 @@ export async function GET(request: NextRequest): Promise<Response> {
         },
         { 
           status: error.code === ERROR_CODES.UNAUTHORIZED ? 401 : 
-                 error.code === ERROR_CODES.NOT_FOUND ? 404 : 500 
+                 error.code === ERROR_CODES.INVALID_REQUEST ? 400 : 500 
         }
       );
     }
@@ -180,7 +180,13 @@ export async function POST(request: NextRequest): Promise<Response> {
     log_requests: true,
     log_responses: true,
     log_errors: true,
+    log_performance: true,
     sensitive_data_masking: true,
+    retention_days: 30,
+    max_payload_size: 10000,
+    async_logging: true,
+    buffer_size: 100,
+    flush_interval: 5000,
   });
 
   try {
@@ -345,7 +351,6 @@ export async function POST(request: NextRequest): Promise<Response> {
         },
         { 
           status: error.code === ERROR_CODES.UNAUTHORIZED ? 401 : 
-                 error.code === ERROR_CODES.NOT_FOUND ? 404 :
                  error.code === ERROR_CODES.INVALID_REQUEST ? 400 : 500 
         }
       );

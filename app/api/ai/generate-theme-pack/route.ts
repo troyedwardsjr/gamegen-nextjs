@@ -15,7 +15,7 @@ import { AssetGenerationQueue } from "@/lib/ai/asset-generation/queue";
 import { AssetPostProcessor } from "@/lib/ai/asset-generation/post-processor";
 import { ThemeAssetProcessor, AssetPackConfig } from "@/lib/ai/asset-generation/theme-processor";
 import { BillingTracker } from "@/lib/llm/billing/tracker";
-import { LLMLogger } from "@/lib/llm/monitoring/logger";
+import { LLMLogger, createLoggerConfig } from "@/lib/llm/monitoring/logger";
 import {
   AssetGenerationError,
   ERROR_CODES,
@@ -81,20 +81,31 @@ export async function POST(request: NextRequest): Promise<Response> {
     credit_system_enabled: true,
     auto_deduct_credits: true,
     minimum_balance: 50.0, // Higher minimum for theme packs
-    cost_per_generation: {
-      pixellab: 15.0, // Higher cost for theme packs
-      retrodiffusion: 12.0,
-      dalle: 18.0,
+    low_balance_threshold: 100.0,
+    billing_cycle: "monthly",
+    cost_per_token: {
+      pixellab: { input: 0.015, output: 0.075 }, // Higher cost for theme packs
+      retrodiffusion: { input: 0.012, output: 0.060 },
+      dalle: { input: 0.018, output: 0.090 },
+    },
+    user_tier_discounts: {
+      free: 0,
+      pro: 0.1,
+      max: 0.2,
+    },
+    free_tier_limits: {
+      monthly_tokens: 10000,
+      monthly_requests: 100,
     },
   });
 
-  const logger = new LLMLogger({
+  const logger = new LLMLogger(createLoggerConfig({
     enabled: true,
     log_requests: true,
     log_responses: true,
     log_errors: true,
     sensitive_data_masking: true,
-  });
+  }));
 
   try {
     // Authentication
@@ -168,14 +179,25 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
+    // Validate theme pack request is not null
+    if (!themePackRequest) {
+      return NextResponse.json(
+        { error: "Theme pack request is required", code: "INVALID_REQUEST" },
+        { status: 400 }
+      );
+    }
+    
+    // TypeScript assertion is safe here because we checked for null above
+    const themeRequest = themePackRequest as ThemePackRequest;
+    
     // Get available themes to validate theme ID
     const availableThemes = themeProcessor.getAvailableThemes();
-    const selectedTheme = availableThemes.find(theme => theme.id === themePackRequest.themeId);
+    const selectedTheme = availableThemes.find(theme => theme.id === themeRequest.themeId);
 
     if (!selectedTheme) {
       return NextResponse.json(
         {
-          error: `Theme '${themePackRequest.themeId}' not found`,
+          error: `Theme '${themeRequest.themeId}' not found`,
           code: "INVALID_REQUEST",
           availableThemes: availableThemes.map(t => ({ id: t.id, name: t.name })),
         },
@@ -197,7 +219,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     // Estimate credits for theme pack
-    const estimatedCredits = estimateThemePackCredits(selectedTheme, themePackRequest.customConfig);
+    const estimatedCredits = estimateThemePackCredits(selectedTheme, themeRequest.customConfig);
 
     // Check credits
     const hasCredits = await billingTracker.checkCredits(
@@ -229,10 +251,10 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     // Generate the theme asset pack
     const packResult = await themeProcessor.generateThemeAssetPack(
-      themePackRequest.themeId,
+      themeRequest.themeId,
       userId,
-      themePackRequest.customConfig,
-      themePackRequest.priority || 'normal'
+      themeRequest.customConfig,
+      themeRequest.priority || 'normal'
     );
 
     // Log successful theme pack request
@@ -240,9 +262,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       {
         id: packResult.packId,
         type: "theme_pack_generation",
-        themeId: themePackRequest.themeId,
+        themeId: themeRequest.themeId,
         userId,
-        config: themePackRequest.customConfig,
+        config: themeRequest.customConfig,
       } as any,
       {
         id: packResult.packId,
@@ -280,7 +302,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       await logger.logRequest(
         {
           type: "theme_pack_generation",
-          themeId: themePackRequest.themeId,
+          themeId: themePackRequest?.themeId,
           userId,
         } as any,
         undefined,
@@ -345,6 +367,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // Initialize theme processor
     const assetManager = new AssetGenerationManager({
+      defaultProvider: "pixellab",
       providers: {
         pixellab: { enabled: !!process.env.PIXELLAB_API_KEY },
         retrodiffusion: { enabled: !!process.env.RETRODIFFUSION_API_KEY },

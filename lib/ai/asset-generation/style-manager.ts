@@ -431,7 +431,15 @@ export class AssetStyleManager {
       colorHarmony: this.calculateColorHarmony(colors),
       visualComplexity: complexity,
       pixelArtScore,
-      styleCoherence: this.calculateStyleCoherence([{ pixelArtScore }], asset.style),
+      styleCoherence: this.calculateStyleCoherence([{
+        dominantColors: colors.slice(0, 8),
+        colorHarmony: this.calculateColorHarmony(colors),
+        visualComplexity: complexity,
+        pixelArtScore,
+        styleCoherence: 0, // Temporary placeholder
+        aestheticCategories: [],
+        technicalQuality: asset.qualityScore || 0,
+      }], asset.style),
       aestheticCategories: this.extractAestheticCategories(asset),
       technicalQuality: asset.qualityScore,
     };

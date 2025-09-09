@@ -59,7 +59,7 @@ export class AssetGenerationManager {
    * Initialize all configured providers
    */
   private initializeProviders(): void {
-    const providerClasses = {
+    const providerClasses: Partial<Record<GenerationProvider, any>> = {
       pixellab: PixellabProvider,
       retrodiffusion: RetrodiffusionProvider,
       dalle: DalleProvider,
@@ -324,7 +324,7 @@ export class AssetGenerationManager {
   async getProvidersStatus(): Promise<Record<GenerationProvider, ProviderStatus>> {
     const status: Record<string, ProviderStatus> = {};
 
-    for (const [providerId, provider] of this.providers.entries()) {
+    for (const [providerId, provider] of Array.from(this.providers.entries())) {
       const stats = this.providerStats.get(providerId);
       
       try {
@@ -464,7 +464,7 @@ export class AssetGenerationManager {
     const availableProviders = Array.from(this.providers.keys());
     
     // Provider strengths for different asset types
-    const providerStrengths = {
+    const providerStrengths: Partial<Record<GenerationProvider, any>> = {
       pixellab: {
         assetTypes: ['sprite', 'tile', 'ui'],
         styles: ['pixel-art', '8bit', '16bit'],

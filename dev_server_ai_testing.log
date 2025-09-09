@@ -1,0 +1,325 @@
+
+> next-app-template@0.0.1 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.1 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.168:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 84ms
+ ✓ Ready in 715ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /
+ ○ Compiling / ...
+ ✓ Compiled / in 1610ms
+🚧 GAMEGEN DEV MODE ACTIVATED 🚧
+Context: ConditionalAuthProvider - Using DevAuthProvider
+⚠️  WARNING: Authentication is bypassed
+⚠️  WARNING: Never enable in production
+🔒 Environment checks passed: development + localhost
+motion() is deprecated. Use motion.create() instead.
+ GET / 200 in 1876ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/generate-asset
+ ✓ Compiled /api/ai/generate-asset in 189ms
+ GET /api/ai/generate-asset 500 in 227ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ✓ Compiled /_error in 339ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.ttc02tca3tl'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.ttc02tca3tl'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.oyx4dprggef'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.oyx4dprggef'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.amzpqqkh78'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/static/development/_buildManifest.js.tmp.amzpqqkh78'
+}
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/page/app-build-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/queue-status
+ ✓ Compiled /api/ai/queue-status in 146ms
+ ⨯ Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/queue-status/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/ai/queue-status/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/ai/queue-status'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/queue-status/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/ai/queue-status/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/ai/queue-status'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+ GET /api/ai/queue-status 500 in 222ms
+ GET /api/ai/queue-status 500 in 20ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/generate-asset
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generate-asset/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generate-asset/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generate-asset/[__metadata_id__]/route/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generate-asset/[__metadata_id__]/route/app-paths-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/ai/generation-jobs
+ ✓ Compiled /api/ai/generation-jobs in 138ms
+ ⨯ Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generation-jobs/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/ai/generation-jobs/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/ai/generation-jobs'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/ai/generation-jobs/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/ai/generation-jobs/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/ai/generation-jobs'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+ GET /api/ai/generation-jobs 500 in 195ms
+ GET /api/ai/generation-jobs 500 in 16ms
+🚧 GAMEGEN DEV MODE: Bypassing authentication middleware for /api/test/activities
+ ✓ Compiled /api/test/activities in 140ms
+ ⨯ Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/test/activities/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/test/activities/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/test/activities'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+Error: Cannot find module '../../../../chunks/[turbopack]_runtime.js'
+Require stack:
+- /Users/troyedwards/dev/gamegen_nextjs/.next/server/app/api/test/activities/route.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/require.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/load-components.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/utils.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/options.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/swc/index.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/parse-module.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/build/analysis/get-page-static-info.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/router-server.js
+- /Users/troyedwards/dev/gamegen_nextjs/node_modules/next/dist/server/lib/start-server.js
+    at Object.<anonymous> (.next/server/app/api/test/activities/route.js:2:17) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/test/activities'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/troyedwards/dev/gamegen_nextjs/.next/server/pages/_app/build-manifest.json'
+}
+ GET /api/test/activities 500 in 196ms
+ GET /api/test/activities 500 in 16ms
+[?25h
