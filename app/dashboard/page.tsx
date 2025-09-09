@@ -19,6 +19,7 @@ import NotificationCenter from "@/components/dashboard/NotificationCenter";
 // Hooks
 import { useDashboardProjects } from "@/hooks/useDashboardProjects";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useNotifications } from "@/hooks/useNotifications";
 
 import {
   GameIcon,
@@ -67,6 +68,21 @@ export default function EnhancedDashboardPage() {
   
   // Real data hooks
   const { stats, loading: statsLoading, error: statsError } = useDashboardStats();
+  
+  // Real notifications hook
+  const {
+    notifications,
+    unreadCount,
+    notificationSettings,
+    loading: notificationsLoading,
+    error: notificationsError,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    updateNotificationSettings,
+    handleNotificationAction,
+  } = useNotifications();
+  
   const {
     projects,
     totalCount,
@@ -197,58 +213,6 @@ export default function EnhancedDashboardPage() {
     },
   };
 
-  // Mock Notifications Data
-  const mockNotifications: Notification[] = [
-    {
-      id: 'notif1',
-      userId: 'user1',
-      type: 'collaboration_invite',
-      title: 'Collaboration Invitation',
-      message: 'ArtistPro wants to collaborate on "Epic RPG Adventure"',
-      category: 'collaboration',
-      priority: 'medium',
-      isRead: false,
-      actionUrl: '/dashboard/collaborations',
-      actionLabel: 'View Invitation',
-      createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'notif2',
-      userId: 'user1',
-      type: 'project_featured',
-      title: 'Project Featured',
-      message: 'Your game "Pixel Adventure Quest" has been featured on the homepage!',
-      category: 'social',
-      priority: 'high',
-      isRead: false,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    },
-  ];
-
-  // Mock Notification Settings
-  const mockNotificationSettings: NotificationSettings = {
-    email: {
-      collaborations: true,
-      socialActivity: true,
-      achievements: true,
-      billing: true,
-      system: false,
-    },
-    inApp: {
-      collaborations: true,
-      socialActivity: true,
-      achievements: true,
-      billing: true,
-      system: true,
-    },
-    push: {
-      collaborations: false,
-      socialActivity: false,
-      achievements: true,
-      billing: true,
-      system: false,
-    },
-  };
 
 
   // Event Handlers - now using real API calls
@@ -282,32 +246,23 @@ export default function EnhancedDashboardPage() {
     console.log('Importing project:', file.name);
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
-    // In real app, make API call to mark notification as read
-    console.log('Marking notification as read:', notificationId);
+  // Wrapper functions to match NotificationCenter component expectations
+  const handleMarkAsReadWrapper = async (notificationId: string) => {
+    await markAsRead(notificationId);
   };
 
-  const handleMarkAllAsRead = () => {
-    // In real app, make API call to mark all notifications as read
-    console.log('Marking all notifications as read');
+  const handleMarkAllAsReadWrapper = async () => {
+    await markAllAsRead();
   };
 
-  const handleDeleteNotification = (notificationId: string) => {
-    // In real app, make API call to delete notification
-    console.log('Deleting notification:', notificationId);
+  const handleDeleteNotificationWrapper = async (notificationId: string) => {
+    await deleteNotification(notificationId);
   };
 
-  const handleUpdateNotificationSettings = (settings: NotificationSettings) => {
-    // In real app, make API call to update notification settings
-    console.log('Updating notification settings:', settings);
+  const handleUpdateNotificationSettingsWrapper = async (settings: NotificationSettings) => {
+    await updateNotificationSettings(settings);
   };
 
-  const handleNotificationAction = (notificationId: string, action: string) => {
-    // In real app, handle notification-specific actions
-    console.log('Notification action:', notificationId, action);
-  };
-
-  const unreadNotifications = mockNotifications.filter(n => !n.isRead).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -354,7 +309,7 @@ export default function EnhancedDashboardPage() {
                 Ready to continue building amazing games?
               </p>
             </div>
-            {unreadNotifications > 0 && (
+            {unreadCount > 0 && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -362,7 +317,7 @@ export default function EnhancedDashboardPage() {
               >
                 <BellIcon className="w-5 h-5 text-purple-400" />
                 <span className="text-white font-medium">
-                  {unreadNotifications} new notification{unreadNotifications > 1 ? 's' : ''}
+                  {unreadCount} new notification{unreadCount > 1 ? 's' : ''}
                 </span>
               </motion.div>
             )}
@@ -448,9 +403,9 @@ export default function EnhancedDashboardPage() {
                 <div className="flex items-center space-x-2">
                   <BellIcon className="w-4 h-4" />
                   <span>Notifications</span>
-                  {unreadNotifications > 0 && (
+                  {unreadCount > 0 && (
                     <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-5 h-5 flex items-center justify-center">
-                      {unreadNotifications}
+                      {unreadCount}
                     </span>
                   )}
                 </div>
@@ -873,14 +828,14 @@ export default function EnhancedDashboardPage() {
 
           {activeTab === 'notifications' && (
             <NotificationCenter
-              notifications={mockNotifications}
-              unreadCount={unreadNotifications}
-              loading={loading}
-              notificationSettings={mockNotificationSettings}
-              onMarkAsRead={handleMarkAsRead}
-              onMarkAllAsRead={handleMarkAllAsRead}
-              onDeleteNotification={handleDeleteNotification}
-              onUpdateSettings={handleUpdateNotificationSettings}
+              notifications={notifications}
+              unreadCount={unreadCount}
+              loading={notificationsLoading}
+              notificationSettings={notificationSettings}
+              onMarkAsRead={handleMarkAsReadWrapper}
+              onMarkAllAsRead={handleMarkAllAsReadWrapper}
+              onDeleteNotification={handleDeleteNotificationWrapper}
+              onUpdateSettings={handleUpdateNotificationSettingsWrapper}
               onNotificationAction={handleNotificationAction}
             />
           )}

@@ -39,3 +39,6 @@ If you do not provide a visible label, you must specify an aria-label or aria-la
  GET /api/placeholder/40/40 404 in 58ms
  ✓ Compiled middleware in 6ms
  ✓ Compiled middleware in 1ms
+ ✓ Compiled middleware in 1ms
+ ✓ Compiled middleware in 1ms
+[?25h
