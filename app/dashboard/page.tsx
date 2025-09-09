@@ -66,7 +66,7 @@ export default function EnhancedDashboardPage() {
   const [loading, setLoading] = useState(false);
   
   // Real data hooks
-  const { stats } = useDashboardStats();
+  const { stats, loading: statsLoading, error: statsError } = useDashboardStats();
   const {
     projects,
     totalCount,
@@ -478,6 +478,12 @@ export default function EnhancedDashboardPage() {
               />
 
               {/* Stats Cards */}
+              {statsError && (
+                <div className="bg-red-900/50 border border-red-500/50 rounded-lg p-4 mb-6">
+                  <p className="text-red-400 font-medium">Error loading statistics</p>
+                  <p className="text-red-300 text-sm">{statsError}</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border-purple-500/20 backdrop-blur-xl">
                   <CardBody className="p-6">
@@ -487,7 +493,11 @@ export default function EnhancedDashboardPage() {
                           Games Created
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats?.gamesCreated || 0}
+                          {statsLoading ? (
+                            <Spinner size="sm" color="primary" />
+                          ) : (
+                            stats?.gamesCreated ?? 0
+                          )}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
@@ -505,7 +515,11 @@ export default function EnhancedDashboardPage() {
                           Total Plays
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats?.totalPlays?.toLocaleString() || '0'}
+                          {statsLoading ? (
+                            <Spinner size="sm" color="primary" />
+                          ) : (
+                            (stats?.totalPlays ?? 0).toLocaleString()
+                          )}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -523,7 +537,11 @@ export default function EnhancedDashboardPage() {
                           Followers
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats?.communityFollowers || 0}
+                          {statsLoading ? (
+                            <Spinner size="sm" color="primary" />
+                          ) : (
+                            stats?.communityFollowers ?? 0
+                          )}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
@@ -541,7 +559,11 @@ export default function EnhancedDashboardPage() {
                           Achievements
                         </p>
                         <p className="text-3xl font-bold text-white">
-                          {stats?.achievementsUnlocked || 0}
+                          {statsLoading ? (
+                            <Spinner size="sm" color="primary" />
+                          ) : (
+                            stats?.achievementsUnlocked ?? 0
+                          )}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
@@ -721,10 +743,8 @@ export default function EnhancedDashboardPage() {
 
               {/* Recent Activity */}
               <ActivityFeed
-                activities={mockActivities}
-                loading={loading}
-                hasMore={true}
-                onLoadMore={() => console.log('Load more activities')}
+                autoRefresh={true}
+                refreshInterval={30000}
               />
             </div>
           )}
@@ -820,7 +840,13 @@ export default function EnhancedDashboardPage() {
                 <Card className="bg-gradient-to-br from-green-900/50 to-green-800/30 border-green-500/20">
                   <CardBody className="p-6 text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Credits Remaining</h4>
-                    <p className="text-3xl font-bold text-green-400">{stats?.creditsRemaining || 0}</p>
+                    <p className="text-3xl font-bold text-green-400">
+                      {statsLoading ? (
+                        <Spinner size="sm" color="primary" />
+                      ) : (
+                        (stats?.creditsRemaining ?? 0).toLocaleString()
+                      )}
+                    </p>
                   </CardBody>
                 </Card>
                 <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 border-blue-500/20">
@@ -832,7 +858,13 @@ export default function EnhancedDashboardPage() {
                 <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border-purple-500/20">
                   <CardBody className="p-6 text-center">
                     <h4 className="text-lg font-semibold text-white mb-2">Usage This Month</h4>
-                    <p className="text-2xl font-bold text-purple-400">{stats?.creditsUsed || 0}</p>
+                    <p className="text-2xl font-bold text-purple-400">
+                      {statsLoading ? (
+                        <Spinner size="sm" color="primary" />
+                      ) : (
+                        (stats?.creditsUsed ?? 0).toLocaleString()
+                      )}
+                    </p>
                   </CardBody>
                 </Card>
               </div>

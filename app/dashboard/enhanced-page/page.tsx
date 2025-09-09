@@ -843,10 +843,9 @@ export default function EnhancedDashboardPage() {
 
               {/* Recent Activity */}
               <ActivityFeed
-                activities={mockActivities}
-                loading={loading}
-                hasMore={true}
-                onLoadMore={() => console.log('Load more activities')}
+                initialActivities={mockActivities}
+                autoRefresh={true}
+                refreshInterval={30000}
               />
             </div>
           )}

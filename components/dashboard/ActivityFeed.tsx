@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardBody, CardHeader } from '@heroui/card';
 import { Button } from '@heroui/button';
@@ -23,15 +23,21 @@ import {
   ClockIcon,
   EyeIcon,
   PlusIcon,
+  ExclamationTriangleIcon,
 } from '@/components/icons';
 
 import type { ActivityItem, ActivityType } from '@/types/dashboard';
+import { useActivities } from '@/hooks/useActivities';
 
 interface ActivityFeedProps {
-  activities: ActivityItem[];
+  // Optional props for initial data or overrides
+  initialActivities?: ActivityItem[];
   loading?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  // New props for API integration
+  autoRefresh?: boolean;
+  refreshInterval?: number;
 }
 
 const ACTIVITY_CONFIG: Record<ActivityType, {
@@ -109,12 +115,64 @@ const ACTIVITY_CONFIG: Record<ActivityType, {
 };
 
 export default function ActivityFeed({
-  activities,
-  loading = false,
-  onLoadMore,
-  hasMore = false,
+  initialActivities,
+  loading: externalLoading = false,
+  onLoadMore: externalOnLoadMore,
+  hasMore: externalHasMore = false,
+  autoRefresh = true,
+  refreshInterval = 30000,
 }: ActivityFeedProps) {
   const [filter, setFilter] = useState<'all' | 'projects' | 'social' | 'achievements'>('all');
+  
+  // Get activity type filter for API
+  const getActivityTypeFilter = (filter: string): ActivityType[] | undefined => {
+    switch (filter) {
+      case 'projects':
+        return [
+          'project_created',
+          'project_updated',
+          'project_published',
+          'asset_uploaded',
+        ];
+      case 'social':
+        return [
+          'project_played',
+          'project_liked',
+          'project_commented',
+          'collaboration_invited',
+          'collaboration_accepted',
+        ];
+      case 'achievements':
+        return [
+          'achievement_unlocked',
+          'template_used',
+        ];
+      default:
+        return undefined;
+    }
+  };
+  
+  // Use the activities hook
+  const {
+    activities: apiActivities,
+    loading: apiLoading,
+    error,
+    hasMore: apiHasMore,
+    totalCount,
+    refresh,
+    loadMore: apiLoadMore,
+  } = useActivities({
+    type: getActivityTypeFilter(filter),
+    limit: 20,
+    autoRefresh,
+    refreshInterval,
+  });
+  
+  // Use external data if provided, otherwise use API data
+  const activities = initialActivities || apiActivities;
+  const loading = externalLoading || apiLoading;
+  const hasMore = externalHasMore || apiHasMore;
+  const onLoadMore = externalOnLoadMore || apiLoadMore;
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -128,7 +186,8 @@ export default function ActivityFeed({
     return date.toLocaleDateString();
   };
 
-  const filteredActivities = activities.filter(activity => {
+  // Filter activities client-side if using external data, otherwise filtering is done server-side
+  const filteredActivities = initialActivities ? activities.filter(activity => {
     switch (filter) {
       case 'projects':
         return [
@@ -153,7 +212,14 @@ export default function ActivityFeed({
       default:
         return true;
     }
-  });
+  }) : activities; // Server-side filtering when using API
+  
+  // Refresh data when filter changes (only for API data)
+  useEffect(() => {
+    if (!initialActivities) {
+      refresh();
+    }
+  }, [filter, refresh, initialActivities]);
 
   const ActivityItemComponent = ({ activity }: { activity: ActivityItem }) => {
     const config = ACTIVITY_CONFIG[activity.type];
@@ -272,7 +338,20 @@ export default function ActivityFeed({
 
         {/* Activity List */}
         <div className="space-y-2">
-          {loading && filteredActivities.length === 0 ? (
+          {error ? (
+            <div className="text-center py-8">
+              <ExclamationTriangleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h4 className="text-lg font-semibold text-white mb-2">Unable to load activities</h4>
+              <p className="text-gray-400 mb-4">{error}</p>
+              <Button
+                variant="bordered"
+                onClick={() => refresh()}
+                className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : loading && filteredActivities.length === 0 ? (
             <div className="flex justify-center py-8">
               <Spinner size="md" />
             </div>
@@ -313,7 +392,7 @@ export default function ActivityFeed({
                   : `No ${filter} activity found`
                 }
               </p>
-              {filter === 'all' && (
+              {filter === 'all' && !initialActivities && (
                 <div className="mt-4">
                   <Link href="/creator">
                     <Button
