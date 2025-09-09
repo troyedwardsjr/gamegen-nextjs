@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardBody, CardHeader } from '@heroui/card';
 import { Button } from '@heroui/button';
@@ -48,11 +48,34 @@ import {
 import type { DashboardAnalytics, ProjectAnalytics } from '@/types/dashboard';
 
 interface AnalyticsDashboardProps {
-  dashboardAnalytics: DashboardAnalytics;
+  dashboardAnalytics?: DashboardAnalytics;
   projectAnalytics?: ProjectAnalytics[];
   loading?: boolean;
   timeRange?: '7d' | '30d' | '90d' | '1y';
   onTimeRangeChange?: (range: '7d' | '30d' | '90d' | '1y') => void;
+}
+
+interface TrendData {
+  date: string;
+  plays: number;
+  uniquePlayers: number;
+  projects: number;
+}
+
+interface AnalyticsApiResponse {
+  timeRange: string;
+  trends: TrendData[];
+  summary: {
+    totalPlays: number;
+    totalUniquePlayers: number;
+    totalProjects: number;
+    avgSessionDuration: number;
+  };
+  demographics: {
+    devices: { desktop: number; mobile: number; tablet: number };
+    platforms: { web: number; desktop: number; mobile: number };
+    countries: { [country: string]: number };
+  };
 }
 
 const COLORS = {
@@ -73,14 +96,56 @@ const COLORS = {
 const PIE_COLORS = [COLORS.purple, COLORS.blue, COLORS.green, COLORS.yellow, COLORS.red, COLORS.pink];
 
 export default function AnalyticsDashboard({
-  dashboardAnalytics,
+  dashboardAnalytics: propAnalytics,
   projectAnalytics = [],
-  loading = false,
+  loading: propLoading = false,
   timeRange = '30d',
   onTimeRangeChange,
 }: AnalyticsDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [selectedProject, setSelectedProject] = useState<string>('all');
+  
+  // State for API data
+  const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(propAnalytics || null);
+  const [trendsData, setTrendsData] = useState<AnalyticsApiResponse | null>(null);
+  const [loading, setLoading] = useState(propLoading);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch dashboard analytics if not provided as prop
+        if (!propAnalytics) {
+          const dashboardResponse = await fetch(`/api/analytics/dashboard?timeRange=${timeRange}`);
+          if (!dashboardResponse.ok) {
+            throw new Error('Failed to fetch dashboard analytics');
+          }
+          const dashboardData = await dashboardResponse.json();
+          setDashboardAnalytics(dashboardData);
+        }
+        
+        // Fetch trends data
+        const trendsResponse = await fetch(`/api/analytics/trends?timeRange=${timeRange}`);
+        if (!trendsResponse.ok) {
+          throw new Error('Failed to fetch trends data');
+        }
+        const trendsApiData = await trendsResponse.json();
+        setTrendsData(trendsApiData);
+        
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [timeRange, propAnalytics]);
 
   const timeRangeOptions = [
     { key: '7d', label: 'Last 7 days' },
@@ -102,39 +167,34 @@ export default function AnalyticsDashboard({
     return num.toString();
   };
 
-  // Mock data for demonstration - in real app, this would come from props
-  const mockTrendData = useMemo(() => {
-    const data = [];
-    const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        plays: Math.floor(Math.random() * 100) + 20,
-        uniquePlayers: Math.floor(Math.random() * 80) + 15,
-        projects: Math.floor(Math.random() * 5) + 1,
-      });
-    }
-    
-    return data;
-  }, [timeRange]);
+  // Use real trends data from API
+  const trendChartData = useMemo(() => {
+    if (!trendsData) return [];
+    return trendsData.trends;
+  }, [trendsData]);
 
-  const deviceData = [
-    { name: 'Desktop', value: 65, color: COLORS.purple },
-    { name: 'Mobile', value: 25, color: COLORS.blue },
-    { name: 'Tablet', value: 10, color: COLORS.green },
-  ];
+  // Use real device data from API
+  const deviceData = useMemo(() => {
+    if (!trendsData) return [];
+    const devices = trendsData.demographics.devices;
+    return [
+      { name: 'Desktop', value: devices.desktop, color: COLORS.purple },
+      { name: 'Mobile', value: devices.mobile, color: COLORS.blue },
+      { name: 'Tablet', value: devices.tablet, color: COLORS.green },
+    ];
+  }, [trendsData]);
 
-  const countryData = [
-    { name: 'United States', value: 35, color: COLORS.purple },
-    { name: 'United Kingdom', value: 20, color: COLORS.blue },
-    { name: 'Germany', value: 15, color: COLORS.green },
-    { name: 'Canada', value: 12, color: COLORS.yellow },
-    { name: 'Others', value: 18, color: COLORS.red },
-  ];
+  // Use real country data from API
+  const countryData = useMemo(() => {
+    if (!trendsData) return [];
+    const countries = trendsData.demographics.countries;
+    const colors = [COLORS.purple, COLORS.blue, COLORS.green, COLORS.yellow, COLORS.red, COLORS.pink];
+    return Object.entries(countries).map(([name, value], index) => ({
+      name,
+      value,
+      color: colors[index % colors.length]
+    }));
+  }, [trendsData]);
 
   const OverviewTab = () => (
     <div className="space-y-6">
@@ -146,7 +206,7 @@ export default function AnalyticsDashboard({
               <div>
                 <p className="text-purple-400 text-sm font-medium">Total Projects</p>
                 <p className="text-3xl font-bold text-white">
-                  {dashboardAnalytics.overview.totalProjects}
+                  {dashboardAnalytics?.overview.totalProjects || 0}
                 </p>
                 <div className="flex items-center mt-1">
                   <ArrowUpIcon className="w-3 h-3 text-green-400 mr-1" />
@@ -166,7 +226,7 @@ export default function AnalyticsDashboard({
               <div>
                 <p className="text-blue-400 text-sm font-medium">Total Plays</p>
                 <p className="text-3xl font-bold text-white">
-                  {formatNumber(dashboardAnalytics.overview.totalPlays)}
+                  {formatNumber(dashboardAnalytics?.overview.totalPlays || 0)}
                 </p>
                 <div className="flex items-center mt-1">
                   <ArrowUpIcon className="w-3 h-3 text-green-400 mr-1" />
@@ -186,7 +246,7 @@ export default function AnalyticsDashboard({
               <div>
                 <p className="text-green-400 text-sm font-medium">Total Likes</p>
                 <p className="text-3xl font-bold text-white">
-                  {formatNumber(dashboardAnalytics.overview.totalLikes)}
+                  {formatNumber(dashboardAnalytics?.overview.totalLikes || 0)}
                 </p>
                 <div className="flex items-center mt-1">
                   <ArrowUpIcon className="w-3 h-3 text-green-400 mr-1" />
@@ -206,7 +266,7 @@ export default function AnalyticsDashboard({
               <div>
                 <p className="text-yellow-400 text-sm font-medium">Followers</p>
                 <p className="text-3xl font-bold text-white">
-                  {formatNumber(dashboardAnalytics.overview.followerCount)}
+                  {formatNumber(dashboardAnalytics?.overview.followerCount || 0)}
                 </p>
                 <div className="flex items-center mt-1">
                   <ArrowUpIcon className="w-3 h-3 text-green-400 mr-1" />
@@ -231,7 +291,12 @@ export default function AnalyticsDashboard({
               selectedKeys={[timeRange]}
               onSelectionChange={(keys) => {
                 const selected = Array.from(keys)[0] as string;
-                onTimeRangeChange?.(selected as any);
+                if (onTimeRangeChange) {
+                  onTimeRangeChange(selected as any);
+                } else {
+                  // If no onTimeRangeChange prop, refetch data directly
+                  window.location.href = window.location.pathname + `?timeRange=${selected}`;
+                }
               }}
               className="w-32"
             >
@@ -246,7 +311,7 @@ export default function AnalyticsDashboard({
         <CardBody>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockTrendData}>
+              <AreaChart data={trendChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="date" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
@@ -292,7 +357,7 @@ export default function AnalyticsDashboard({
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
-              {dashboardAnalytics.projectPerformance.topProjects.map((project, index) => (
+              {(dashboardAnalytics?.projectPerformance.topProjects || []).map((project, index) => (
                 <div key={project.projectId} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
@@ -402,7 +467,7 @@ export default function AnalyticsDashboard({
             >
               {[
                 { id: 'all', title: 'All Projects' },
-                ...dashboardAnalytics.projectPerformance.topProjects.map(p => ({ id: p.projectId, title: p.title }))
+                ...(dashboardAnalytics?.projectPerformance.topProjects || []).map(p => ({ id: p.projectId, title: p.title }))
               ].map((project) => (
                 <SelectItem key={project.id}>
                   {project.title}
@@ -483,7 +548,7 @@ export default function AnalyticsDashboard({
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={dashboardAnalytics.projectPerformance.topProjects.map(p => ({
+                data={(dashboardAnalytics?.projectPerformance.topProjects || []).map(p => ({
                   name: p.title.length > 15 ? p.title.substring(0, 15) + '...' : p.title,
                   plays: p.plays,
                   growth: p.growth,
@@ -509,11 +574,53 @@ export default function AnalyticsDashboard({
     </div>
   );
 
+  // Show error state
+  if (error && !loading) {
+    return (
+      <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-red-500/20 backdrop-blur-xl">
+        <CardBody className="flex flex-col items-center justify-center h-64">
+          <div className="text-red-400 text-center">
+            <h3 className="text-lg font-semibold mb-2">Failed to load analytics</h3>
+            <p className="text-sm text-gray-400">{error}</p>
+            <Button 
+              color="primary" 
+              variant="bordered" 
+              size="sm" 
+              className="mt-4"
+              onPress={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Show loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
-      </div>
+      <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-purple-500/20 backdrop-blur-xl">
+        <CardBody className="flex justify-center items-center h-64">
+          <Spinner size="lg" />
+          <p className="text-gray-400 mt-4">Loading analytics...</p>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Show empty state if no data
+  if (!dashboardAnalytics) {
+    return (
+      <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 border-gray-500/20 backdrop-blur-xl">
+        <CardBody className="flex flex-col items-center justify-center h-64">
+          <div className="text-gray-400 text-center">
+            <ChartBarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
+            <p className="text-sm">Start creating and publishing games to see your analytics.</p>
+          </div>
+        </CardBody>
+      </Card>
     );
   }
 
