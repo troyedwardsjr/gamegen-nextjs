@@ -100,13 +100,51 @@ export function UserProfile({
     try {
       // Fetch profile if not provided
       if (!profile) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
 
-        if (profileData) setProfileData(profileData);
+        if (profileError) {
+          // If profile doesn't exist (new user), create a default profile object
+          if (profileError.code === 'PGRST116') {
+            console.info(`No profile found for user ${userId}, this is normal for new users`);
+            // Set a minimal profile data for new users
+            setProfileData({
+              id: userId,
+              username: null,
+              display_name: null,
+              bio: null,
+              avatar_url: null,
+              website_url: null,
+              social_links: null,
+              subscription_tier: 'free',
+              subscription_status: 'active',
+              subscription_ends_at: null,
+              stripe_customer_id: null,
+              credits_remaining: 100,
+              credits_used_today: 0,
+              credits_reset_date: new Date().toISOString().split('T')[0],
+              preferences: {
+                ai: { content_filter: "moderate", generation_style: "balanced" },
+                theme: "system",
+                editor: { show_fps: false, auto_save: true, grid_snap: true },
+                notifications: { push: false, email: true, follows: true, comments: true }
+              },
+              is_verified: false,
+              is_educator: false,
+              last_active_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            } as Profile);
+          } else {
+            // For other errors, log them but don't show error to user
+            console.error("Profile fetch error:", profileError);
+          }
+        } else if (profileData) {
+          setProfileData(profileData);
+        }
       }
 
       // Fetch user games

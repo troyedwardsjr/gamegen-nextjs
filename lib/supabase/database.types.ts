@@ -1828,6 +1828,57 @@ export type Database = {
           },
         ]
       }
+      social_shares: {
+        Row: {
+          created_at: string | null
+          game_id: string
+          id: string
+          ip_address: unknown | null
+          platform_data: Json | null
+          referrer: string | null
+          share_type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          game_id: string
+          id?: string
+          ip_address?: unknown | null
+          platform_data?: Json | null
+          referrer?: string | null
+          share_type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          ip_address?: unknown | null
+          platform_data?: Json | null
+          referrer?: string | null
+          share_type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_shares_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           category: string | null
@@ -1962,6 +2013,99 @@ export type Database = {
           {
             foreignKeyName: "toxoid_patterns_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activities: {
+        Row: {
+          activity_group_id: string | null
+          activity_type: string
+          created_at: string | null
+          description: string
+          id: string
+          is_primary_in_group: boolean | null
+          is_system_generated: boolean | null
+          metadata: Json | null
+          related_asset_id: string | null
+          related_comment_id: string | null
+          related_game_id: string | null
+          related_user_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          visibility: string | null
+        }
+        Insert: {
+          activity_group_id?: string | null
+          activity_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_primary_in_group?: boolean | null
+          is_system_generated?: boolean | null
+          metadata?: Json | null
+          related_asset_id?: string | null
+          related_comment_id?: string | null
+          related_game_id?: string | null
+          related_user_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          visibility?: string | null
+        }
+        Update: {
+          activity_group_id?: string | null
+          activity_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_primary_in_group?: boolean | null
+          is_system_generated?: boolean | null
+          metadata?: Json | null
+          related_asset_id?: string | null
+          related_comment_id?: string | null
+          related_game_id?: string | null
+          related_user_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activities_related_asset_id_fkey"
+            columns: ["related_asset_id"]
+            isOneToOne: false
+            referencedRelation: "game_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activities_related_comment_id_fkey"
+            columns: ["related_comment_id"]
+            isOneToOne: false
+            referencedRelation: "game_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activities_related_game_id_fkey"
+            columns: ["related_game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activities_related_user_id_fkey"
+            columns: ["related_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activities_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2199,6 +2343,32 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
+      }
+      log_user_activity: {
+        Args: {
+          p_activity_type: string
+          p_description: string
+          p_metadata?: Json
+          p_related_asset_id?: string
+          p_related_comment_id?: string
+          p_related_game_id?: string
+          p_related_user_id?: string
+          p_title: string
+          p_user_id: string
+          p_visibility?: string
+        }
+        Returns: string
+      }
+      record_social_share: {
+        Args: {
+          p_game_id: string
+          p_platform_data?: Json
+          p_referrer?: string
+          p_share_type: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       sparsevec_out: {
         Args: { "": unknown }

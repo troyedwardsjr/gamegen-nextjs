@@ -137,9 +137,21 @@ export default function SettingsPage() {
         .single();
 
       if (error) {
-        console.error('Error loading profile:', error);
-        setError('Failed to load profile data');
-        return;
+        // Handle the case where profile doesn't exist (new user)
+        if (error.code === 'PGRST116') {
+          console.info(`No profile found for user ${user.id}, this is normal for new users`);
+          // Initialize with default values for new users
+          setProfileForm({
+            display_name: '',
+            username: user.email?.split('@')[0] || '', // Suggest username from email
+            bio: '',
+            website_url: '',
+          });
+        } else {
+          console.error('Error loading profile:', error);
+          setError('Failed to load profile data');
+          return;
+        }
       }
 
       if (profile) {
