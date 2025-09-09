@@ -93,6 +93,15 @@ export function useNotifications(filters: NotificationFilters = {}): UseNotifica
       const response = await fetch(url);
       const data = await response.json();
       
+      // Handle 401 errors gracefully - user not authenticated
+      if (response.status === 401) {
+        // Set empty state instead of error for unauthenticated users
+        setNotifications([]);
+        setUnreadCount(0);
+        setError(null); // Don't show error for unauthenticated state
+        return;
+      }
+      
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to fetch notifications');
       }
@@ -101,7 +110,10 @@ export function useNotifications(filters: NotificationFilters = {}): UseNotifica
       setUnreadCount(data.unread_count || 0);
       
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      // Only log non-authentication errors
+      if (err instanceof Error && !err.message.includes('Unauthorized')) {
+        console.error('Error fetching notifications:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch notifications');
     } finally {
       setLoading(false);
@@ -117,6 +129,13 @@ export function useNotifications(filters: NotificationFilters = {}): UseNotifica
       const response = await fetch('/api/notifications/settings');
       const data = await response.json();
       
+      // Handle 401 errors gracefully - user not authenticated
+      if (response.status === 401) {
+        // Keep default settings for unauthenticated users
+        setSettingsError(null); // Don't show error for unauthenticated state
+        return;
+      }
+      
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to fetch notification settings');
       }
@@ -126,7 +145,10 @@ export function useNotifications(filters: NotificationFilters = {}): UseNotifica
       }
       
     } catch (err) {
-      console.error('Error fetching notification settings:', err);
+      // Only log non-authentication errors
+      if (err instanceof Error && !err.message.includes('Unauthorized')) {
+        console.error('Error fetching notification settings:', err);
+      }
       setSettingsError(err instanceof Error ? err.message : 'Failed to fetch settings');
     } finally {
       setSettingsLoading(false);

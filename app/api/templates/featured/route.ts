@@ -92,11 +92,28 @@ export async function GET(request: NextRequest) {
 
     if (templatesError) {
       console.error('Error fetching featured templates:', templatesError);
-      return NextResponse.json({ error: 'Failed to fetch featured templates' }, { status: 500 });
+      
+      // Return empty array with proper structure when there's a database error
+      // This allows the frontend to handle the empty state gracefully
+      return NextResponse.json({
+        templates: [],
+        totalCount: 0,
+        message: 'Templates are currently unavailable. Please check back later.',
+      });
+    }
+
+    // Handle empty database case - return empty array with proper structure
+    if (!templatesData || templatesData.length === 0) {
+      console.log('No featured templates found in database - returning empty array');
+      return NextResponse.json({
+        templates: [],
+        totalCount: 0,
+        message: 'No featured templates available at the moment.',
+      });
     }
 
     // Get mock usage and rating data
-    const templates: GameTemplate[] = templatesData?.map((item: any) => {
+    const templates: GameTemplate[] = templatesData.map((item: any) => {
       const usage = Math.floor(Math.random() * 2000) + 500; // Mock high usage for featured
       const rating = 4.0 + Math.random() * 1.0; // Mock high rating for featured
       const ratingCount = Math.floor(Math.random() * 100) + 50;
@@ -109,7 +126,7 @@ export async function GET(request: NextRequest) {
         rating,
         ratingCount
       );
-    }) || [];
+    });
 
     return NextResponse.json({
       templates,
@@ -118,9 +135,13 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Featured templates API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    
+    // Return empty array with proper structure instead of 500 error
+    // This provides better UX by allowing the app to continue functioning
+    return NextResponse.json({
+      templates: [],
+      totalCount: 0,
+      message: 'Unable to load templates at the moment. Please try again later.',
+    });
   }
 }
