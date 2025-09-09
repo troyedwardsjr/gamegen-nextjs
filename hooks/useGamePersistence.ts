@@ -182,8 +182,13 @@ export function useGamePersistence(options: UseGamePersistenceOptions = {}) {
 
   // Create new game
   const createGame = useCallback(async (initialData: Partial<GameData> = {}): Promise<GameData | null> => {
-    if (!user) return null;
+    console.log('[useGamePersistence] createGame called with initialData:', initialData);
+    if (!user) {
+      console.log('[useGamePersistence] No user, returning null');
+      return null;
+    }
 
+    console.log('[useGamePersistence] Creating game with scripts:', initialData.scripts?.length || 0);
     setState(prev => ({ ...prev, isSaving: true, error: null }));
 
     try {
@@ -208,6 +213,47 @@ export function useGamePersistence(options: UseGamePersistenceOptions = {}) {
         throw new Error(createError?.message || 'Failed to create game');
       }
 
+      // Save initial scripts if provided
+      const savedScripts = [];
+      if (initialData.scripts && initialData.scripts.length > 0) {
+        console.log('[useGamePersistence] Saving', initialData.scripts.length, 'initial scripts');
+        for (const script of initialData.scripts) {
+          console.log('[useGamePersistence] Saving script:', script.name);
+          const { data: savedScript, error: scriptError } = await supabase
+            .from('game_scripts')
+            .insert({
+              game_id: newGame.id,
+              creator_id: user.id,
+              name: script.name,
+              javascript_code: script.javascript_code,
+              script_type: script.script_type,
+              description: script.description || undefined,
+              is_active: script.is_active,
+              execution_order: script.execution_order,
+              dependencies: script.dependencies,
+              source_hash: btoa(script.javascript_code)
+            })
+            .select()
+            .single();
+          
+          if (scriptError) {
+            console.warn('[useGamePersistence] Failed to save script:', script.name, scriptError);
+          } else {
+            console.log('[useGamePersistence] Script saved:', savedScript?.name);
+            savedScripts.push({
+              id: savedScript?.id,
+              name: script.name,
+              javascript_code: script.javascript_code,
+              script_type: script.script_type,
+              description: script.description || undefined,
+              is_active: script.is_active,
+              execution_order: script.execution_order,
+              dependencies: script.dependencies
+            });
+          }
+        }
+      }
+
       const createdGame: GameData = {
         id: newGame.id,
         title: newGame.title,
@@ -219,13 +265,15 @@ export function useGamePersistence(options: UseGamePersistenceOptions = {}) {
           visibility: (newGame.visibility as GameData['visibility']) || 'private',
           thumbnail_url: newGame.thumbnail_url || undefined
         },
-        scripts: [],
-        assets: [],
+        scripts: savedScripts,
+        assets: initialData.assets || [],
         thumbnail_url: newGame.thumbnail_url || undefined,
         tags: newGame.tags || [],
         genre: newGame.genre || undefined,
         visibility: (newGame.visibility as GameData['visibility']) || 'private'
       };
+
+      console.log('[useGamePersistence] Game created with', createdGame.scripts.length, 'scripts');
 
       setState(prev => ({
         ...prev,

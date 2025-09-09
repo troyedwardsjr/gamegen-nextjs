@@ -9,6 +9,9 @@ import { GlassmorphicButton } from '@/components/ui/GlassmorphicButton';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface GameContextType extends GamePersistenceState {
+  // Additional state
+  isInitializing: boolean;
+  
   // Game management
   loadGame: (id: string) => Promise<GameData | null>;
   createGame: (initialData?: Partial<GameData>) => Promise<GameData | null>;
@@ -153,12 +156,282 @@ export function GameProvider({ children, gameId: propGameId }: GameProviderProps
     updateGame({ assets: updatedAssets });
   };
 
+  // Helper function to get template script content
+  const getTemplateScript = (template: string): GameData['scripts'][0] | null => {
+    console.log('[GameContext] Getting template script for:', template);
+    
+    switch (template) {
+      case 'platformer':
+        return {
+          name: 'Platformer Game Script',
+          javascript_code: `// Simple Platformer Template
+class SimplePlatformer {
+  constructor() {
+    this.GRAVITY = 800;
+    this.JUMP_FORCE = -350;
+    this.MOVE_SPEED = 200;
+    
+    console.log("Initializing Simple Platformer...");
+    this.init();
+  }
+  
+  init() {
+    // Create components
+    Toxoid.API.createComponent("Player");
+    Toxoid.API.createComponent("Platform");
+    Toxoid.API.createComponent("Gravity");
+    Toxoid.API.createComponent("Grounded");
+    
+    // Register systems
+    this.createInputSystem();
+    this.createGravitySystem();
+    this.createPlatformCollisionSystem();
+    
+    // Create world
+    this.createPlayer();
+    this.createPlatforms();
+    
+    console.log("Simple Platformer initialized!");
+  }
+  
+  createPlayer() {
+    const player = Toxoid.API.createEntity("Player");
+    player.add("Position");
+    player.add("Velocity");
+    player.add("Player");
+    player.add("Gravity");
+    player.add("Collider");
+    
+    const position = player.getComponent("Position");
+    position.x = 100;
+    position.y = 400;
+    
+    const collider = player.getComponent("Collider");
+    collider.width = 32;
+    collider.height = 48;
+    
+    console.log("Player created at:", position.x, position.y);
+    return player;
+  }
+  
+  createPlatforms() {
+    const platformData = [
+      {x: 200, y: 500, width: 200, height: 20},
+      {x: 500, y: 400, width: 150, height: 20},
+      {x: 50, y: 300, width: 100, height: 20},
+      {x: 600, y: 250, width: 180, height: 20}
+    ];
+    
+    platformData.forEach(data => {
+      const platform = Toxoid.API.createEntity("Platform");
+      platform.add("Position");
+      platform.add("Platform");
+      platform.add("Collider");
+      
+      const position = platform.getComponent("Position");
+      position.x = data.x + data.width / 2;
+      position.y = data.y + data.height / 2;
+      
+      const collider = platform.getComponent("Collider");
+      collider.width = data.width;
+      collider.height = data.height;
+    });
+    
+    console.log("Platforms created:", platformData.length);
+  }
+  
+  createInputSystem() {
+    Toxoid.System.create("PlatformerInputSystem", "Position, Player", Toxoid.Phases.PRE_UPDATE,
+      (iter) => {
+        const keyboard = Toxoid.API.getSingleton("KeyboardInput");
+        if (!keyboard) return;
+        
+        iter.entities().forEach(player => {
+          let velocity = player.getComponent("Velocity");
+          if (!velocity) {
+            player.add("Velocity");
+            velocity = player.getComponent("Velocity");
+          }
+          
+          // Horizontal movement
+          velocity.x = 0;
+          if (keyboard.left) velocity.x = -this.MOVE_SPEED;
+          if (keyboard.right) velocity.x = this.MOVE_SPEED;
+          
+          // Jumping (only if grounded)
+          if (keyboard.space && player.has("Grounded")) {
+            velocity.y = this.JUMP_FORCE;
+            player.remove("Grounded");
+          }
+        });
+      }
+    );
+  }
+  
+  createGravitySystem() {
+    Toxoid.System.create("GravitySystem", "Velocity, Gravity", Toxoid.Phases.ON_UPDATE,
+      (iter) => {
+        iter.entities().forEach(entity => {
+          const velocity = entity.getComponent("Velocity");
+          if (velocity) {
+            velocity.y += this.GRAVITY * iter.deltaTime;
+            
+            // Terminal velocity
+            if (velocity.y > 600) velocity.y = 600;
+          }
+        });
+      }
+    );
+  }
+  
+  createPlatformCollisionSystem() {
+    Toxoid.System.create("PlatformCollisionSystem", "Position, Velocity, Player", Toxoid.Phases.POST_UPDATE,
+      (iter) => {
+        const platforms = Toxoid.Query.create("Position, Platform, Collider");
+        
+        iter.entities().forEach(player => {
+          const playerPos = player.getComponent("Position");
+          const playerVel = player.getComponent("Velocity");
+          const playerCol = player.getComponent("Collider");
+          
+          if (!playerPos || !playerVel || !playerCol) return;
+          
+          player.remove("Grounded");
+          
+          platforms.each(platform => {
+            const platPos = platform.getComponent("Position");
+            const platCol = platform.getComponent("Collider");
+            
+            if (this.checkAABB(playerPos, playerCol, platPos, platCol)) {
+              // Simple collision resolution - landing on top
+              if (playerVel.y > 0 && playerPos.y < platPos.y) {
+                playerPos.y = platPos.y - platCol.height / 2 - playerCol.height / 2;
+                playerVel.y = 0;
+                player.add("Grounded");
+              }
+            }
+          });
+        });
+      }
+    );
+  }
+  
+  checkAABB(posA, colA, posB, colB) {
+    return Math.abs(posA.x - posB.x) < (colA.width + colB.width) / 2 &&
+           Math.abs(posA.y - posB.y) < (colA.height + colB.height) / 2;
+  }
+}
+
+// Initialize the platformer
+const platformer = new SimplePlatformer();`,
+          script_type: 'initialization' as const,
+          description: 'Complete platformer game with player movement, gravity, and platform collision',
+          is_active: true,
+          execution_order: 0,
+          dependencies: []
+        };
+      
+      case 'shooter':
+        return {
+          name: 'Shooter Game Script',
+          javascript_code: `// Basic Shooter Game
+console.log("Starting Shooter Game...");
+
+// Create player
+const player = Toxoid.API.createEntity("Player");
+player.add("Position");
+player.add("Velocity");
+player.add("Player");
+
+const playerPos = player.getComponent("Position");
+playerPos.x = 400;
+playerPos.y = 500;
+
+const playerData = player.getComponent("Player");
+playerData.speed = 200;
+playerData.health = 100;
+
+// Player movement system
+Toxoid.System.create("ShooterInputSystem", "Position, Player", Toxoid.Phases.ON_UPDATE,
+  function(iter) {
+    const keyboard = Toxoid.API.getKeyboardInput();
+    
+    iter.entities().forEach(entity => {
+      const pos = entity.getComponent("Position");
+      const playerData = entity.getComponent("Player");
+      const speed = playerData.speed;
+      
+      if (keyboard && keyboard.isKeyPressed) {
+        if (keyboard.isKeyPressed("ArrowLeft") || keyboard.isKeyPressed("a")) {
+          pos.x -= speed * iter.deltaTime;
+        }
+        if (keyboard.isKeyPressed("ArrowRight") || keyboard.isKeyPressed("d")) {
+          pos.x += speed * iter.deltaTime;
+        }
+        if (keyboard.isKeyPressed("ArrowUp") || keyboard.isKeyPressed("w")) {
+          pos.y -= speed * iter.deltaTime;
+        }
+        if (keyboard.isKeyPressed("ArrowDown") || keyboard.isKeyPressed("s")) {
+          pos.y += speed * iter.deltaTime;
+        }
+      }
+    });
+  }
+);
+
+console.log("Shooter game initialized!");`,
+          script_type: 'initialization' as const,
+          description: 'Basic shooter game with player movement',
+          is_active: true,
+          execution_order: 0,
+          dependencies: []
+        };
+      
+      default:
+        return {
+          name: 'Game Script',
+          javascript_code: `// Basic Game Template
+console.log("Starting new game...");
+
+// Create a simple entity with position and movement
+const entity = Toxoid.API.createEntity("GameEntity");
+entity.add("Position");
+entity.add("Velocity");
+
+const position = entity.getComponent("Position");
+position.x = 100;
+position.y = 100;
+
+console.log("Game initialized!");`,
+          script_type: 'initialization' as const,
+          description: 'Basic game initialization script',
+          is_active: true,
+          execution_order: 0,
+          dependencies: []
+        };
+    }
+  };
+
+  // State to track if we're initializing from template
+  const [isInitializing, setIsInitializing] = useState(false);
+
   // Create default game if none provided and user is authenticated
   useEffect(() => {
-    if (user && !gameId && !currentGame && !isLoading) {
+    if (user && !gameId && !currentGame && !isLoading && !isInitializing) {
       // Check for URL parameters from creator page
       const template = searchParams.get('template');
       const title = searchParams.get('title');
+      
+      console.log('[GameContext] Creating game from template:', template, 'with title:', title);
+      
+      // Set initializing state
+      setIsInitializing(true);
+      
+      // Get template script if available
+      const templateScript = template ? getTemplateScript(template) : null;
+      const scripts = templateScript ? [templateScript] : [];
+      
+      console.log('[GameContext] Template scripts to include:', scripts.length);
       
       // Create game with template data if available
       createGame({
@@ -193,11 +466,13 @@ export function GameProvider({ children, gameId: propGameId }: GameProviderProps
           tags: template ? [template] : [],
           visibility: 'private'
         },
-        scripts: [],
+        scripts,
         assets: []
+      }).finally(() => {
+        setIsInitializing(false);
       });
     }
-  }, [user, gameId, currentGame, isLoading, createGame, searchParams]);
+  }, [user, gameId, currentGame, isLoading, isInitializing, createGame, searchParams]);
 
   const contextValue: GameContextType = {
     // State
@@ -209,6 +484,7 @@ export function GameProvider({ children, gameId: propGameId }: GameProviderProps
     error,
     saveStatus,
     conflictData,
+    isInitializing,
     
     // Actions
     loadGame,

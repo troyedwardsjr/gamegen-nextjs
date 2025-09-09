@@ -285,9 +285,9 @@ const MapEditorTab = () => {
                     input.onchange = (e) => {
                       const files = (e.target as HTMLInputElement).files;
                       if (files && files.length > 0) {
-                        console.log('Importing tileset:', files[0]);
+                        console.log('Importing tileset:', files[0].name, files[0].size + ' bytes');
                         // TODO: Implement actual tileset import
-                        alert('Tileset import functionality coming soon!');
+                        console.log('Tileset import functionality coming soon!');
                       }
                     };
                     input.click();
@@ -301,8 +301,12 @@ const MapEditorTab = () => {
                   variant="glass-ghost"
                   onClick={() => {
                     console.log('Generating tiles with AI');
+                    // Non-blocking notification instead of blocking alert
                     // TODO: Implement AI tile generation
-                    alert('AI tile generation functionality coming soon!');
+                    setTimeout(() => {
+                      console.log('AI tile generation started...');
+                      // This could trigger a toast notification instead
+                    }, 0);
                   }}
                 >
                   Generate Tiles
@@ -317,28 +321,15 @@ const MapEditorTab = () => {
 };
 
 const CodeEditorTab = () => {
-  const { currentGame, updateGameScript, addGameScript } = useGame();
+  const { currentGame, updateGameScript, addGameScript, isInitializing, isLoading } = useGame();
   const [selectedScriptIndex, setSelectedScriptIndex] = useState<number>(0);
   const toxoidEngineRef = useRef<any>(null);
 
-  // Ensure we have at least one script
-  useEffect(() => {
-    if (currentGame && currentGame.scripts.length === 0) {
-      addGameScript({
-        name: 'Main Script',
-        javascript_code: defaultCode,
-        script_type: 'initialization',
-        description: 'Main game initialization script',
-        is_active: true,
-        execution_order: 0,
-        dependencies: []
-      });
-    }
-  }, [currentGame, addGameScript]);
+  console.log('[CodeEditorTab] Render - currentGame exists:', !!currentGame);
+  console.log('[CodeEditorTab] Render - currentGame scripts length:', currentGame?.scripts?.length || 0);
+  console.log('[CodeEditorTab] Render - selectedScriptIndex:', selectedScriptIndex);
 
-  const currentScript = currentGame?.scripts[selectedScriptIndex] || null;
-
-  // Default Toxoid script
+  // Default Toxoid script (moved above useEffect to fix reference issue)
   const defaultCode = `// Toxoid Game Script
 console.log("Starting new game script...");
 
@@ -400,6 +391,29 @@ Toxoid.System.create("PlayerMovement", "Position, Player", Toxoid.Phases.ON_UPDA
 
 console.log("Game script loaded successfully!");`;
 
+  // Ensure we have at least one script
+  useEffect(() => {
+    console.log('[CodeEditorTab] useEffect - currentGame:', !!currentGame);
+    console.log('[CodeEditorTab] useEffect - scripts length:', currentGame?.scripts?.length || 0);
+    
+    if (currentGame && Array.isArray(currentGame.scripts) && currentGame.scripts.length === 0) {
+      console.log('[CodeEditorTab] Adding default script...');
+      addGameScript({
+        name: 'Main Script',
+        javascript_code: defaultCode,
+        script_type: 'initialization',
+        description: 'Main game initialization script',
+        is_active: true,
+        execution_order: 0,
+        dependencies: []
+      });
+    }
+  }, [currentGame?.id, currentGame?.scripts?.length, addGameScript]);
+
+  const currentScript = currentGame?.scripts[selectedScriptIndex] || null;
+  console.log('[CodeEditorTab] Current script exists:', !!currentScript);
+  console.log('[CodeEditorTab] Current script name:', currentScript?.name || 'none');
+
   const handleScriptExecute = useCallback(
     async (code: string): Promise<boolean> => {
       try {
@@ -448,9 +462,15 @@ console.log("Game script loaded successfully!");`;
   );
 
   if (!currentGame) {
+    const loadingMessage = isInitializing ? 
+      'Initializing game from template...' : 
+      isLoading ? 
+      'Loading game data...' : 
+      'Preparing Code Editor...';
+    
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-white/60">Loading game data...</div>
+        <div className="text-white/60">{loadingMessage}</div>
       </div>
     );
   }
