@@ -15,34 +15,56 @@ import {
 } from '../types';
 
 interface PixellabGenerationRequest {
-  prompt: string;
-  style: string;
-  width: number;
-  height: number;
-  pixel_size?: number;
-  color_count?: number;
-  negative_prompt?: string;
+  // Base properties for both models
+  description: string;
+  negative_description?: string;
+  image_size: {
+    width: number;
+    height: number;
+  };
+  text_guidance_scale?: number;
+  outline?: "no outline" | "thin outline" | "thick outline";
+  shading?: "flat" | "cell shading" | "soft shading";
+  detail?: "low detail" | "medium detail" | "highly detailed";
+  view?: "side" | "low top-down" | "high top-down";
+  direction?: "north" | "north-east" | "east" | "south-east" | 
+            "south" | "south-west" | "west" | "north-west";
+  isometric?: boolean;
+  no_background?: boolean;
   seed?: number;
-  quality?: 'draft' | 'standard' | 'high';
-  format?: 'png' | 'webp';
+
+  // Pixflux-specific properties
+  init_image?: Base64Image;
+  init_image_strength?: number;
+  color_image?: Base64Image;
+
+  // Bitforge-specific properties
+  extra_guidance_scale?: number;
+  style_strength?: number;
+  oblique_projection?: boolean;
+  coverage_percentage?: number;
+  style_image?: Base64Image;
+  inpainting_image?: Base64Image;
+  mask_image?: Base64Image;
+  skeleton_guidance_scale?: number;
+  skeleton_keypoints?: Point[];
+}
+
+interface Base64Image {
+  type: "base64";
+  base64: string; // data:image/png;base64,...
+}
+
+interface Point {
+  x: number;
+  y: number;
 }
 
 interface PixellabResponse {
-  success: boolean;
-  data?: {
-    image_url: string;
-    image_data: string; // Base64 encoded
-    metadata: {
-      width: number;
-      height: number;
-      color_count: number;
-      style_score: number;
-      processing_time: number;
-    };
-  };
-  error?: {
-    code: string;
-    message: string;
+  image: Base64Image;
+  usage: {
+    type: "credits";
+    credits: number;
   };
 }
 
@@ -53,96 +75,386 @@ export class PixellabProvider {
   private apiKey: string;
 
   constructor(config: ProviderConfig) {
-    this.config = config;
-    this.baseUrl = config.endpoint || 'https://api.pixellab.ai/v1';
-    
-    if (!config.apiKey) {
-      throw new AssetGenerationError(
-        'Pixellab API key is required',
-        ERROR_CODES.INVALID_REQUEST,
-      );
-    }
-    
-    this.apiKey = config.apiKey;
+  this.config = config;
+  this.baseUrl = config.endpoint || 'https://api.pixellab.ai/v1';
+  
+  if (!config.apiKey) {
+    throw new AssetGenerationError(
+      'Pixellab API key is required',
+      ERROR_CODES.INVALID_REQUEST,
+    );
   }
+  
+  this.apiKey = config.apiKey;
+}
 
   /**
    * Generate asset using Pixellab API
    */
   async generateAsset(request: AssetGenerationRequest): Promise<any> {
-    const pixellabRequest = this.convertRequest(request);
+  // Determine which model to use
+  const modelSelection = this.selectModel(request);
+  const endpoint = modelSelection.model === 'pixflux' ? '/generate-image-pixflux' : '/generate-image-bitforge';
+  
+  // Convert request to appropriate format
+  const pixellabRequest = this.convertRequest(request, modelSelection.model);
+  
+  try {
+    const response = await this.makeApiCall(endpoint, pixellabRequest);
     
-    try {
-      const response = await this.makeApiCall('/generate', pixellabRequest);
-      
-      if (!response.success || !response.data) {
-        throw new AssetGenerationError(
-          response.error?.message || 'Generation failed',
-          ERROR_CODES.GENERATION_FAILED,
-          'pixellab',
-          true,
-        );
-      }
-
-      return this.processResponse(response, request);
-    } catch (error) {
-      if (error instanceof AssetGenerationError) {
-        throw error;
-      }
-
+    if (!response.image || !response.image.base64) {
       throw new AssetGenerationError(
-        `Pixellab generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'No image data in PixelLab response',
         ERROR_CODES.GENERATION_FAILED,
         'pixellab',
         true,
       );
     }
+
+    return this.processResponse(response, request, modelSelection.model);
+  } catch (error) {
+    if (error instanceof AssetGenerationError) {
+      throw error;
+    }
+
+    throw new AssetGenerationError(
+      `PixelLab generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      ERROR_CODES.GENERATION_FAILED,
+      'pixellab',
+      true,
+    );
   }
+}
+
+  /**
+   * Select the appropriate PixelLab model based on request requirements
+   */
+  private selectModel(request: AssetGenerationRequest): { model: 'pixflux' | 'bitforge'; reason: string } {
+  // Use Bitforge if we have existing assets to maintain style consistency
+  if (request.existingAssets && request.existingAssets.length > 0) {
+    return { model: 'bitforge', reason: 'Style consistency with existing assets required' };
+  }
+
+  // Use Bitforge for smaller images where quality matters more than speed
+  if (request.dimensions && 
+      request.dimensions.width <= 200 && 
+      request.dimensions.height <= 200) {
+    return { model: 'bitforge', reason: 'Small image size, prioritizing quality' };
+  }
+
+  // Use Bitforge for character sprites that need detailed work
+  if (request.assetType === 'sprite' && 
+      (request.prompt.toLowerCase().includes('character') || 
+       request.prompt.toLowerCase().includes('person') ||
+       request.prompt.toLowerCase().includes('warrior') ||
+       request.prompt.toLowerCase().includes('hero') ||
+       request.prompt.toLowerCase().includes('npc'))) {
+    return { model: 'bitforge', reason: 'Character sprite with detailed requirements' };
+  }
+
+  // Use Bitforge for high quality requests
+  if (request.quality === 'high' || request.quality === 'ultra') {
+    return { model: 'bitforge', reason: 'High quality requested, using Bitforge for better results' };
+  }
+
+  // Use Pixflux for larger images (Pixflux supports up to 400x400)
+  if (request.dimensions && 
+      (request.dimensions.width > 200 || request.dimensions.height > 200)) {
+    return { model: 'pixflux', reason: 'Large image size, using Pixflux for better support' };
+  }
+
+  // Use Pixflux for backgrounds and tilesets (typically larger)
+  if (request.assetType === 'background' || request.assetType === 'tileset') {
+    return { model: 'pixflux', reason: 'Background/tileset typically needs larger dimensions' };
+  }
+
+  // Use Pixflux for multiple variants (faster generation)
+  if (request.variants && request.variants > 1) {
+    return { model: 'pixflux', reason: 'Multiple variants requested, using faster Pixflux model' };
+  }
+
+  // Default to Pixflux for general pixel art generation
+  return { model: 'pixflux', reason: 'General pixel art generation, default to Pixflux' };
+}
 
   /**
    * Convert our request format to Pixellab format
    */
-  private convertRequest(request: AssetGenerationRequest): PixellabGenerationRequest {
-    const pixellabRequest: PixellabGenerationRequest = {
-      prompt: this.enhancePrompt(request),
-      style: this.mapStyle(request.style || 'pixel-art'),
+  private convertRequest(request: AssetGenerationRequest, model: 'pixflux' | 'bitforge'): PixellabGenerationRequest {
+  const pixellabRequest: PixellabGenerationRequest = {
+    description: this.enhancePrompt(request),
+    image_size: {
       width: request.dimensions?.width || this.getDefaultDimensions(request.assetType).width,
       height: request.dimensions?.height || this.getDefaultDimensions(request.assetType).height,
-    };
+    },
+  };
 
-    // Pixel art specific parameters
-    if (request.style === 'pixel-art' || request.style === '8bit' || request.style === '16bit') {
-      pixellabRequest.pixel_size = request.style === '8bit' ? 8 : 4;
+  // Validate image size constraints based on model
+  this.validateImageSizeForModel(pixellabRequest.image_size, model);
+
+  // Map style parameters
+  pixellabRequest.outline = this.mapOutlineStyle(request.style);
+  pixellabRequest.shading = this.mapShadingStyle(request.style);
+  pixellabRequest.detail = this.mapDetailLevel(request.quality);
+  
+  // Map view and direction from prompt context or explicit settings
+  const viewDirection = this.extractViewDirection(request);
+  if (viewDirection.view) pixellabRequest.view = viewDirection.view;
+  if (viewDirection.direction) pixellabRequest.direction = viewDirection.direction;
+
+  // Set guidance scale based on quality
+  const guidanceScale = this.mapQualityToGuidance(request.quality);
+  pixellabRequest.text_guidance_scale = guidanceScale;
+
+  // Background handling
+  if (request.assetType === 'sprite' || request.assetType === 'ui') {
+    pixellabRequest.no_background = true;
+  }
+
+  // Handle isometric view for certain asset types
+  if (request.assetType === 'tile' || 
+      (request.assetType === 'background' && request.prompt.toLowerCase().includes('isometric'))) {
+    pixellabRequest.isometric = true;
+  }
+
+  // Add negative prompt
+  if (request.negativePrompt) {
+    pixellabRequest.negative_description = request.negativePrompt;
+  }
+
+  // Seed for reproducibility
+  if (request.seed) {
+    pixellabRequest.seed = request.seed;
+  }
+
+  // Model-specific parameters
+  if (model === 'pixflux') {
+    this.addPixfluxSpecificParams(pixellabRequest, request);
+  } else {
+    this.addBitforgeSpecificParams(pixellabRequest, request);
+  }
+
+  return pixellabRequest;
+}
+
+  /**
+   * Validate image size constraints for the selected model
+   */
+  private validateImageSizeForModel(imageSize: { width: number; height: number }, model: 'pixflux' | 'bitforge'): void {
+    const area = imageSize.width * imageSize.height;
+    
+    if (model === 'pixflux') {
+      // Pixflux: 32x32 to 400x400 (minimum area 1024, maximum area 160000)
+      if (area < 1024) {
+        throw new AssetGenerationError(
+          'Image too small for Pixflux model (minimum 32x32)',
+          ERROR_CODES.INVALID_REQUEST,
+          'pixellab',
+        );
+      }
+      if (area > 160000) {
+        throw new AssetGenerationError(
+          'Image too large for Pixflux model (maximum 400x400)',
+          ERROR_CODES.INVALID_REQUEST,
+          'pixellab',
+        );
+      }
+    } else {
+      // Bitforge: Maximum 200x200 (40000 pixels)
+      if (area > 40000) {
+        throw new AssetGenerationError(
+          'Image too large for Bitforge model (maximum 200x200)',
+          ERROR_CODES.INVALID_REQUEST,
+          'pixellab',
+        );
+      }
+    }
+  }
+
+  /**
+   * Map our style to PixelLab outline parameter
+   */
+  private mapOutlineStyle(style?: AssetStyle): "no outline" | "thin outline" | "thick outline" {
+    switch (style) {
+      case 'minimalist':
+        return "no outline";
+      case 'pixel-art':
+      case '8bit':
+      case '16bit':
+        return "thick outline";
+      case 'modern':
+      case 'cartoon':
+        return "thin outline";
+      default:
+        return "thick outline"; // Default for pixel art
+    }
+  }
+
+  /**
+   * Map our style to PixelLab shading parameter
+   */
+  private mapShadingStyle(style?: AssetStyle): "flat" | "cell shading" | "soft shading" {
+    switch (style) {
+      case '8bit':
+      case 'minimalist':
+        return "flat";
+      case 'pixel-art':
+      case '16bit':
+      case 'cartoon':
+        return "cell shading";
+      case 'modern':
+      case 'realistic':
+        return "soft shading";
+      default:
+        return "cell shading"; // Default for pixel art
+    }
+  }
+
+  /**
+   * Map our quality to PixelLab detail level
+   */
+  private mapDetailLevel(quality?: string): "low detail" | "medium detail" | "highly detailed" {
+    switch (quality) {
+      case 'draft':
+        return "low detail";
+      case 'standard':
+        return "medium detail";
+      case 'high':
+      case 'ultra':
+        return "highly detailed";
+      default:
+        return "medium detail";
+    }
+  }
+
+  /**
+   * Map quality to text guidance scale
+   */
+  private mapQualityToGuidance(quality?: string): number {
+    switch (quality) {
+      case 'draft':
+        return 6.0;
+      case 'standard':
+        return 8.0;
+      case 'high':
+        return 12.0;
+      case 'ultra':
+        return 15.0;
+      default:
+        return 8.0;
+    }
+  }
+
+  /**
+   * Extract view and direction from request context
+   */
+  private extractViewDirection(request: AssetGenerationRequest): { 
+    view?: "side" | "low top-down" | "high top-down";
+    direction?: "north" | "north-east" | "east" | "south-east" | "south" | "south-west" | "west" | "north-west";
+  } {
+    const prompt = request.prompt.toLowerCase();
+    const result: any = {};
+
+    // Determine view based on asset type and prompt
+    if (request.assetType === 'tile' || prompt.includes('top-down') || prompt.includes('overhead')) {
+      result.view = prompt.includes('high') ? "high top-down" : "low top-down";
+    } else if (request.assetType === 'sprite' || prompt.includes('side view') || prompt.includes('profile')) {
+      result.view = "side";
     }
 
-    // Color constraints
-    if (request.colorCount) {
-      pixellabRequest.color_count = Math.min(Math.max(request.colorCount, 4), 256);
+    // Extract direction from prompt
+    if (prompt.includes('facing right') || prompt.includes('east')) result.direction = "east";
+    else if (prompt.includes('facing left') || prompt.includes('west')) result.direction = "west";
+    else if (prompt.includes('facing up') || prompt.includes('north')) result.direction = "north";
+    else if (prompt.includes('facing down') || prompt.includes('south')) result.direction = "south";
+    else if (prompt.includes('northeast')) result.direction = "north-east";
+    else if (prompt.includes('southeast')) result.direction = "south-east";
+    else if (prompt.includes('southwest')) result.direction = "south-west";
+    else if (prompt.includes('northwest')) result.direction = "north-west";
+
+    return result;
+  }
+
+  /**
+   * Add Pixflux-specific parameters
+   */
+  private addPixfluxSpecificParams(pixellabRequest: PixellabGenerationRequest, request: AssetGenerationRequest): void {
+  // Note: Current AssetGenerationRequest interface doesn't have baseImage or imageStrength
+  // These would need to be added to the interface if needed for img2img functionality
+  
+  // Handle color palette
+  if (request.colorPalette && request.colorPalette.length > 0) {
+    // Create a simple color palette image from the colors
+    const paletteImage = this.createColorPaletteImage(request.colorPalette);
+    if (paletteImage) {
+      pixellabRequest.color_image = {
+        type: "base64",
+        base64: paletteImage
+      };
     }
+  }
+}
 
-    // Quality mapping
-    const qualityMap = {
-      'draft': 'draft' as const,
-      'standard': 'standard' as const,
-      'high': 'high' as const,
-      'ultra': 'high' as const, // Map ultra to high for PixelLab
-    };
-    pixellabRequest.quality = qualityMap[request.quality || 'standard'];
+  /**
+   * Add Bitforge-specific parameters
+   */
+  private addBitforgeSpecificParams(pixellabRequest: PixellabGenerationRequest, request: AssetGenerationRequest): void {
+  // Set extra guidance scale for Bitforge
+  pixellabRequest.extra_guidance_scale = 3.0;
 
-    // Negative prompt
-    if (request.negativePrompt) {
-      pixellabRequest.negative_prompt = request.negativePrompt;
-    }
+  // Style strength based on quality and style bias
+  let styleStrength = 60.0; // Default
+  if (request.styleBias) {
+    // styleBias is -1 to 1, map to style strength 20-90
+    styleStrength = 55.0 + (request.styleBias * 35.0);
+  }
+  if (request.quality === 'high' || request.quality === 'ultra') {
+    styleStrength += 15.0; // Higher style strength for quality
+  }
+  pixellabRequest.style_strength = Math.max(20, Math.min(90, styleStrength));
 
-    // Seed for reproducibility
-    if (request.seed) {
-      pixellabRequest.seed = request.seed;
-    }
+  // Coverage percentage based on asset type
+  switch (request.assetType) {
+    case 'sprite':
+      pixellabRequest.coverage_percentage = 70.0;
+      break;
+    case 'background':
+      pixellabRequest.coverage_percentage = 90.0;
+      break;
+    case 'tile':
+      pixellabRequest.coverage_percentage = 60.0;
+      break;
+    case 'ui':
+      pixellabRequest.coverage_percentage = 50.0;
+      break;
+    default:
+      pixellabRequest.coverage_percentage = 75.0;
+  }
 
-    // Preferred format
-    pixellabRequest.format = 'png'; // Pixellab works best with PNG for pixel art
+  // Add oblique projection for certain views
+  if (request.assetType === 'background' && 
+      (request.prompt.toLowerCase().includes('building') || 
+       request.prompt.toLowerCase().includes('structure') ||
+       request.prompt.toLowerCase().includes('city'))) {
+    pixellabRequest.oblique_projection = true;
+  }
 
-    return pixellabRequest;
+  // Set skeleton guidance scale for character sprites
+  if (request.assetType === 'sprite' && 
+      (request.prompt.toLowerCase().includes('character') || 
+       request.prompt.toLowerCase().includes('person'))) {
+    pixellabRequest.skeleton_guidance_scale = 2.0;
+  }
+}
+
+  /**
+   * Create a simple color palette image from color array
+   */
+  private createColorPaletteImage(colors: string[]): string | null {
+    // This is a simplified implementation
+    // In a real implementation, you'd generate a small image with the color swatches
+    // For now, we'll skip this and let the API handle natural color constraints
+    return null;
   }
 
   /**
@@ -233,93 +545,140 @@ export class PixellabProvider {
   /**
    * Make API call to Pixellab
    */
-  private async makeApiCall(endpoint: string, data: any): Promise<PixellabResponse> {
-    const url = `${this.baseUrl}${endpoint}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'User-Agent': 'GameGen-Platform/1.0',
-      },
-      body: JSON.stringify(data),
-    });
+  private async makeApiCall(endpoint: string, data: PixellabGenerationRequest): Promise<PixellabResponse> {
+  const url = `${this.baseUrl}${endpoint}`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+      'User-Agent': 'GameGen-Platform/1.0',
+    },
+    body: JSON.stringify(data),
+  });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new AssetGenerationError(
-          'Invalid Pixellab API key',
-          ERROR_CODES.UNAUTHORIZED,
-          'pixellab',
-        );
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new AssetGenerationError(
+        'Invalid PixelLab API key',
+        ERROR_CODES.UNAUTHORIZED,
+        'pixellab',
+      );
+    }
+    
+    if (response.status === 402) {
+      throw new AssetGenerationError(
+        'Insufficient PixelLab credits',
+        ERROR_CODES.INSUFFICIENT_CREDITS,
+        'pixellab',
+      );
+    }
+    
+    if (response.status === 422) {
+      // Try to get validation error details
+      let errorMessage = 'PixelLab validation error';
+      try {
+        const errorBody = await response.json();
+        if (errorBody.detail && Array.isArray(errorBody.detail)) {
+          errorMessage = `Validation error: ${errorBody.detail.map((e: any) => e.msg).join(', ')}`;
+        } else if (errorBody.message) {
+          errorMessage = errorBody.message;
+        }
+      } catch {
+        // Use default message if we can't parse error
       }
       
-      if (response.status === 429) {
-        throw new AssetGenerationError(
-          'Pixellab rate limit exceeded',
-          ERROR_CODES.RATE_LIMIT_EXCEEDED,
-          'pixellab',
-          true,
-        );
-      }
-
-      if (response.status === 503) {
-        throw new AssetGenerationError(
-          'Pixellab service temporarily unavailable',
-          ERROR_CODES.PROVIDER_NOT_AVAILABLE,
-          'pixellab',
-          true,
-        );
-      }
-
       throw new AssetGenerationError(
-        `Pixellab API error: ${response.status}`,
-        ERROR_CODES.GENERATION_FAILED,
+        errorMessage,
+        ERROR_CODES.INVALID_REQUEST,
         'pixellab',
-        response.status >= 500,
+      );
+    }
+    
+    if (response.status === 429) {
+      throw new AssetGenerationError(
+        'PixelLab rate limit exceeded',
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        'pixellab',
+        true,
       );
     }
 
-    return await response.json();
+    if (response.status === 529) {
+      throw new AssetGenerationError(
+        'PixelLab rate limit exceeded (529)',
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        'pixellab',
+        true,
+      );
+    }
+
+    if (response.status >= 500) {
+      throw new AssetGenerationError(
+        'PixelLab service temporarily unavailable',
+        ERROR_CODES.PROVIDER_NOT_AVAILABLE,
+        'pixellab',
+        true,
+      );
+    }
+
+    throw new AssetGenerationError(
+      `PixelLab API error: ${response.status}`,
+      ERROR_CODES.GENERATION_FAILED,
+      'pixellab',
+      response.status >= 500,
+    );
   }
+
+  const responseData = await response.json();
+  return responseData as PixellabResponse;
+}
 
   /**
    * Process Pixellab response
    */
-  private processResponse(response: PixellabResponse, request: AssetGenerationRequest): any {
-    if (!response.data) {
-      throw new AssetGenerationError(
-        'No image data in Pixellab response',
-        ERROR_CODES.GENERATION_FAILED,
-        'pixellab',
-      );
-    }
-
-    const { data } = response;
-    
-    // Convert base64 to buffer
-    const imageBuffer = Buffer.from(data.image_data, 'base64');
-    
-    return {
-      buffer: imageBuffer,
-      url: data.image_url,
-      metadata: {
-        width: data.metadata.width,
-        height: data.metadata.height,
-        format: 'png',
-        mimeType: 'image/png',
-        fileSize: imageBuffer.length,
-        provider: 'pixellab',
-        styleScore: data.metadata.style_score,
-        colors: {
-          count: data.metadata.color_count,
-        },
-        processingTime: data.metadata.processing_time,
-        qualityScore: Math.min(data.metadata.style_score, 1.0),
-      },
-    };
+  private processResponse(response: PixellabResponse, request: AssetGenerationRequest, model: 'pixflux' | 'bitforge'): any {
+  if (!response.image || !response.image.base64) {
+    throw new AssetGenerationError(
+      'No image data in PixelLab response',
+      ERROR_CODES.GENERATION_FAILED,
+      'pixellab',
+    );
   }
+
+  // Extract base64 data (handle data URL format)
+  let base64Data = response.image.base64;
+  if (base64Data.startsWith('data:image/')) {
+    base64Data = base64Data.split(',')[1];
+  }
+  
+  // Convert base64 to buffer
+  const imageBuffer = Buffer.from(base64Data, 'base64');
+  
+  return {
+    buffer: imageBuffer,
+    metadata: {
+      width: request.dimensions?.width || this.getDefaultDimensions(request.assetType).width,
+      height: request.dimensions?.height || this.getDefaultDimensions(request.assetType).height,
+      format: 'png',
+      mimeType: 'image/png',
+      fileSize: imageBuffer.length,
+      provider: 'pixellab',
+      model: model,
+      creditsUsed: response.usage?.credits || 1,
+      generatedBy: {
+        provider: 'pixellab',
+        model: model,
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+      },
+      processingTime: Date.now(),
+      qualityScore: 0.85, // Default quality score for PixelLab
+      pixelArt: true,
+    },
+  };
+}
 
   /**
    * Health check for Pixellab service

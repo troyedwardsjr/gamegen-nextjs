@@ -41,7 +41,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     providers: {
       pixellab: {
         apiKey: process.env.PIXELLAB_API_KEY,
-        endpoint: "https://api.pixellab.ai/v1/generate",
+        endpoint: "https://api.pixellab.ai/v1",
         enabled: !!process.env.PIXELLAB_API_KEY,
       },
       retrodiffusion: {
