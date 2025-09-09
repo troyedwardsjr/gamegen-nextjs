@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ProjectGridItem, ProjectFilter, ProjectSort, ProjectSearchResult } from '@/types/dashboard';
 import { Database } from '@/lib/supabase/database.types';
+import { getAuthenticatedUser, createAuthErrorResponse } from '@/lib/auth/dev-server-auth';
 
 type GameRow = Database['public']['Tables']['games']['Row'];
 
@@ -205,11 +206,12 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get authenticated user (with dev mode support)
+    const { user, error: authError } = await getAuthenticatedUser(supabase, request);
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const errorResponse = createAuthErrorResponse(authError, true);
+      return NextResponse.json(errorResponse, { status: 401 });
     }
 
     // Parse query parameters

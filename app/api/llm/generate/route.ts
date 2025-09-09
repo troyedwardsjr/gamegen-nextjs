@@ -10,6 +10,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { ProviderManager } from "@/lib/llm/providers/manager";
+import { getAuthenticatedUser, createAuthErrorResponse } from "@/lib/auth/dev-server-auth";
 import { ClaudeProvider } from "@/lib/llm/providers/claude";
 import { LLMConfigManager } from "@/lib/llm/config";
 import { BillingTracker } from "@/lib/llm/billing/tracker";
@@ -125,14 +126,12 @@ export async function POST(request: NextRequest): Promise<Response> {
       },
     );
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthenticatedUser(supabase, request);
 
     if (authError || !user) {
+      const errorResponse = createAuthErrorResponse(authError, true);
       return NextResponse.json(
-        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { error: "Authentication required", code: "UNAUTHORIZED", ...errorResponse },
         { status: 401 },
       );
     }

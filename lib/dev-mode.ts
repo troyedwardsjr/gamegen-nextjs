@@ -62,7 +62,7 @@ export function isDevModeEnabled(): boolean {
  */
 export function createMockDevUser(): User {
   return {
-    id: "dev-user-gamegen-123456789",
+    id: "00000000-0000-4000-8000-000000000001",
     aud: "authenticated",
     email: "developer@gamegen.com",
     created_at: "2025-01-01T00:00:00.000Z",
@@ -82,12 +82,12 @@ export function createMockDevUser(): User {
     },
     identities: [
       {
-        id: "dev-user-gamegen-123456789",
-        user_id: "dev-user-gamegen-123456789",
-        identity_id: "dev-user-gamegen-123456789",
+        id: "00000000-0000-4000-8000-000000000001",
+        user_id: "00000000-0000-4000-8000-000000000001",
+        identity_id: "00000000-0000-4000-8000-000000000001",
         identity_data: {
           email: "developer@gamegen.com",
-          sub: "dev-user-gamegen-123456789",
+          sub: "00000000-0000-4000-8000-000000000001",
         },
         provider: "dev-mode",
         created_at: "2025-01-01T00:00:00.000Z",
@@ -129,7 +129,7 @@ export function createMockDevSession(): Session {
  */
 export function createMockDevProfile() {
   return {
-    id: "dev-user-gamegen-123456789",
+    id: "00000000-0000-4000-8000-000000000001",
     email: "developer@gamegen.com",
     username: "dev_creator",
     display_name: "GameGen Developer",
@@ -216,7 +216,7 @@ export function createMockGameData() {
       updated_at: new Date().toISOString(),
       likes_count: 23,
       plays_count: 156,
-      creator_id: "dev-user-gamegen-123456789",
+      creator_id: "00000000-0000-4000-8000-000000000001",
     },
     {
       id: "game-dev-2",
@@ -229,7 +229,7 @@ export function createMockGameData() {
       updated_at: new Date().toISOString(),
       likes_count: 0,
       plays_count: 0,
-      creator_id: "dev-user-gamegen-123456789",
+      creator_id: "00000000-0000-4000-8000-000000000001",
     },
   ];
 }
