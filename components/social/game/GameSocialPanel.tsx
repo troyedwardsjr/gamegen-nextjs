@@ -26,6 +26,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/database.types";
 import { GameSocialStats } from "@/src/types/social";
+import { useGameSocialStats } from "@/hooks/useSocialRealtime";
 
 type Game = Database["public"]["Tables"]["games"]["Row"];
 
@@ -69,12 +70,29 @@ export function GameSocialPanel({
   const supabase = createClient();
   const isOwnGame = currentUserId === game.creator_id;
 
+  // Use real-time social stats hook
+  const { stats: realtimeStats, loading: statsLoading } = useGameSocialStats(game.id);
+
   useEffect(() => {
     if (currentUserId) {
       fetchUserInteractions();
     }
     fetchSocialStats();
   }, [game.id, currentUserId]);
+
+  // Update social stats when real-time stats change
+  useEffect(() => {
+    if (!statsLoading && realtimeStats) {
+      setSocialStats(prev => ({
+        ...prev,
+        like_count: realtimeStats.likeCount,
+        comment_count: realtimeStats.commentCount,
+        rating_average: realtimeStats.averageRating,
+        rating_count: realtimeStats.ratingCount,
+        collection_count: 0, // This would need to be added to the hook
+      }));
+    }
+  }, [realtimeStats, statsLoading]);
 
   const fetchUserInteractions = async () => {
     if (!currentUserId) return;
@@ -376,9 +394,24 @@ export function GameSocialPanel({
                         >
                           Copy Link
                         </Button>
-                        <SocialShareButton game={game} platform="twitter" />
-                        <SocialShareButton game={game} platform="facebook" />
-                        <SocialShareButton game={game} platform="discord" />
+                        <SocialShareButton 
+                          game={game} 
+                          platform="twitter"
+                          currentUserId={currentUserId}
+                          onShareSuccess={() => setShowShareMenu(false)}
+                        />
+                        <SocialShareButton 
+                          game={game} 
+                          platform="facebook"
+                          currentUserId={currentUserId}
+                          onShareSuccess={() => setShowShareMenu(false)}
+                        />
+                        <SocialShareButton 
+                          game={game} 
+                          platform="discord"
+                          currentUserId={currentUserId}
+                          onShareSuccess={() => setShowShareMenu(false)}
+                        />
                         <Divider />
                         <Button
                           className="w-full justify-start"

@@ -22,6 +22,7 @@ import {
   ActivityVisibility,
 } from "@/src/types/social";
 import { useInfiniteScroll } from "@/src/hooks/useInfiniteScroll";
+import { useSocialRealtime } from "@/hooks/useSocialRealtime";
 
 interface ActivityFeedProps {
   userId: string;
@@ -144,6 +145,35 @@ export function ActivityFeed({
     onLoadMore: loadMore,
     hasMore,
     threshold: 200,
+  });
+
+  // Setup real-time updates
+  const { isConnected } = useSocialRealtime({
+    userId,
+    onLikeUpdate: (like, action) => {
+      // Refresh feed when there are social interactions
+      if (!refreshing && !loading) {
+        refresh();
+      }
+    },
+    onCommentUpdate: (comment, action) => {
+      // Refresh feed for new comments
+      if (!refreshing && !loading) {
+        refresh();
+      }
+    },
+    onFollowUpdate: (follow, action) => {
+      // Refresh feed when follow relationships change
+      if (!refreshing && !loading && feedType === 'following') {
+        refresh();
+      }
+    },
+    onShareUpdate: (share, action) => {
+      // Refresh feed for new shares
+      if (!refreshing && !loading) {
+        refresh();
+      }
+    },
   });
 
   const getFeedTitle = () => {

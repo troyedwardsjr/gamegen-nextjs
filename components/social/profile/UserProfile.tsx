@@ -29,6 +29,7 @@ import {
 import { Database } from "@/lib/supabase/database.types";
 import { UserSocialStats, UserAchievement } from "@/src/types/social";
 import { createClient } from "@/lib/supabase/client";
+import { useUserSocialStats } from "@/hooks/useSocialRealtime";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Game = Database["public"]["Tables"]["games"]["Row"];
@@ -59,6 +60,9 @@ export function UserProfile({
     games_created: 0,
     challenges_completed: 0,
   });
+
+  // Use real-time social stats hook
+  const { stats: realtimeStats, loading: statsLoading } = useUserSocialStats(userId);
   const [loading, setLoading] = useState(!profile);
   const [activeTab, setActiveTab] = useState("games");
   const [isFollowing, setIsFollowing] = useState(false);
@@ -69,6 +73,21 @@ export function UserProfile({
   useEffect(() => {
     fetchProfileData();
   }, [userId]);
+
+  // Update social stats when real-time stats change
+  useEffect(() => {
+    if (!statsLoading && realtimeStats) {
+      setSocialStats(prev => ({
+        ...prev,
+        followers_count: realtimeStats.followersCount,
+        following_count: realtimeStats.followingCount,
+        total_likes_received: realtimeStats.totalLikesReceived,
+        total_achievements: realtimeStats.totalAchievements,
+        games_created: realtimeStats.gamesCreated,
+        challenges_completed: 0, // This would need to be added to the hook
+      }));
+    }
+  }, [realtimeStats, statsLoading]);
 
   const fetchProfileData = async () => {
     if (profile) {

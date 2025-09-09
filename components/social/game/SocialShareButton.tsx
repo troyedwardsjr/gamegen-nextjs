@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { createClient } from "@/lib/supabase/client";
+
 type SocialPlatform =
   | "twitter"
   | "facebook"
@@ -36,6 +38,7 @@ interface SocialShareButtonProps {
     tags?: string[] | null;
   };
   shareData?: SocialShareData;
+  currentUserId?: string;
   variant?:
     | "flat"
     | "solid"
@@ -47,6 +50,7 @@ interface SocialShareButtonProps {
   size?: "sm" | "md" | "lg";
   isIconOnly?: boolean;
   className?: string;
+  onShareSuccess?: (platform: SocialPlatform) => void;
 }
 
 const PLATFORM_CONFIG = {
@@ -92,13 +96,42 @@ export function SocialShareButton({
   platform,
   game,
   shareData,
+  currentUserId,
   variant = "flat",
   size = "md",
   isIconOnly = false,
   className,
+  onShareSuccess,
 }: SocialShareButtonProps) {
   const config = PLATFORM_CONFIG[platform];
   const IconComponent = config.icon;
+  const supabase = createClient();
+
+  // Track share in database
+  const recordShare = async (shareType: string) => {
+    if (!currentUserId || !game) return;
+
+    try {
+      const { error } = await (supabase as any).from("social_shares").insert({
+        user_id: currentUserId,
+        game_id: game.id,
+        share_type: shareType,
+        platform_data: {
+          referrer: window.location.href,
+          timestamp: new Date().toISOString(),
+        },
+        user_agent: navigator.userAgent,
+      });
+
+      if (error) {
+        console.error("Error recording share:", error);
+      } else {
+        onShareSuccess?.(platform);
+      }
+    } catch (error) {
+      console.error("Error recording share:", error);
+    }
+  };
 
   // Generate share data from game if not provided
   const getShareData = (): SocialShareData => {
@@ -172,6 +205,7 @@ export function SocialShareButton({
       try {
         await navigator.clipboard.writeText(data.url);
         toast.success("Link copied to clipboard!");
+        await recordShare("link");
       } catch (error) {
         toast.error("Failed to copy link");
       }
@@ -186,6 +220,7 @@ export function SocialShareButton({
       try {
         await navigator.clipboard.writeText(discordMessage);
         toast.success("Discord message copied! Paste it in your server.");
+        await recordShare("discord");
       } catch (error) {
         toast.error("Failed to copy Discord message");
       }
@@ -207,10 +242,8 @@ export function SocialShareButton({
       return;
     }
 
-    // Track sharing (could be enhanced with analytics)
-    if (game) {
-      console.log(`Shared game ${game.id} on ${platform}`);
-    }
+    // Track sharing in database
+    await recordShare(platform);
   };
 
   // Use native Web Share API if available and on mobile
@@ -232,6 +265,7 @@ export function SocialShareButton({
         text: data.text,
         url: data.url,
       });
+      await recordShare("native");
     } catch (error) {
       // Fallback to regular sharing if native sharing fails
       handleShare();
