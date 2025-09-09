@@ -157,32 +157,52 @@ export default function EnhancedDashboardPage() {
     },
   ];
 
-  // Mock Templates Data
-  const mockTemplates: GameTemplate[] = [
-    {
-      id: 'template1',
-      title: 'Platformer Starter',
-      description: 'A basic platformer template with character movement and level design',
-      category: 'official',
-      gameType: 'platformer',
-      difficulty: 'beginner',
-      thumbnailUrl: '/api/placeholder/300/200',
-      screenshots: [],
-      tags: ['platformer', 'starter', 'beginner'],
-      usageCount: 1247,
-      rating: 4.5,
-      ratingCount: 89,
-      author: { id: 'gamegen', displayName: 'GameGen Team', avatarUrl: '/api/placeholder/40/40' },
-      isOfficial: true,
-      isFeatured: true,
-      estimatedTimeToComplete: 30,
-      features: ['Character Movement', 'Level System', 'Collision Detection'],
-      requirements: ['Basic Game Logic'],
-      gameConfig: {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  // Templates Data - now loaded from API
+  const [templates, setTemplates] = useState<GameTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+
+  // Load templates data
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setTemplatesLoading(true);
+        // Import the API function dynamically to avoid SSR issues
+        const { getFeaturedTemplates } = await import('@/lib/api/templates');
+        const data = await getFeaturedTemplates(6); // Get 6 featured templates for QuickActions
+        setTemplates(data.templates);
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+        // Fallback to mock data if API fails
+        setTemplates([{
+          id: 'template1',
+          title: 'Platformer Starter',
+          description: 'A basic platformer template with character movement and level design',
+          category: 'official',
+          gameType: 'platformer',
+          difficulty: 'beginner',
+          thumbnailUrl: '/api/placeholder/300/200',
+          screenshots: [],
+          tags: ['platformer', 'starter', 'beginner'],
+          usageCount: 1247,
+          rating: 4.5,
+          ratingCount: 89,
+          author: { id: 'gamegen', displayName: 'GameGen Team', avatarUrl: '/api/placeholder/40/40' },
+          isOfficial: true,
+          isFeatured: true,
+          estimatedTimeToComplete: 30,
+          features: ['Character Movement', 'Level System', 'Collision Detection'],
+          requirements: ['Basic Game Logic'],
+          gameConfig: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }]);
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+
+    loadTemplates();
+  }, []);
 
   // Mock Analytics Data
   const mockAnalytics: DashboardAnalytics = {
@@ -233,8 +253,41 @@ export default function EnhancedDashboardPage() {
   };
 
   const handleCreateFromTemplate = async (templateId: string, projectData: { title: string; description: string }) => {
-    // In real app, make API call to create project from template
-    console.log('Creating project from template:', templateId, projectData);
+    try {
+      // Import the API function dynamically
+      const { useTemplate } = await import('@/lib/api/templates');
+      
+      // Record template usage
+      await useTemplate(templateId, {
+        usageType: 'create_project',
+        metadata: {
+          projectTitle: projectData.title,
+          projectDescription: projectData.description,
+        },
+      });
+
+      // TODO: Create actual game project from template
+      // For now, redirect to creator with template data
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        // Store template data in localStorage for creator to use
+        localStorage.setItem('selectedTemplate', JSON.stringify({
+          templateId,
+          templateTitle: template.title,
+          projectTitle: projectData.title,
+          projectDescription: projectData.description,
+          gameConfig: template.gameConfig,
+        }));
+        
+        window.location.href = '/creator?template=' + templateId;
+      } else {
+        window.location.href = '/creator';
+      }
+    } catch (error) {
+      console.error('Failed to create project from template:', error);
+      // Fallback to creator without template
+      window.location.href = '/creator';
+    }
   };
 
   const handleCreateBlank = () => {
@@ -425,8 +478,8 @@ export default function EnhancedDashboardPage() {
             <div className="space-y-8">
               {/* Quick Actions */}
               <QuickActions
-                templates={mockTemplates}
-                loading={loading}
+                templates={templates}
+                loading={templatesLoading}
                 onCreateFromTemplate={handleCreateFromTemplate}
                 onCreateBlank={handleCreateBlank}
                 onImportProject={handleImportProject}
