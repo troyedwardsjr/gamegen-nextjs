@@ -323,10 +323,13 @@ const MapEditorTab = () => {
 const CodeEditorTab = () => {
   const { currentGame, updateGameScript, addGameScript, isInitializing, isLoading } = useGame();
   const [selectedScriptIndex, setSelectedScriptIndex] = useState<number>(0);
+  const [isLoadingScripts, setIsLoadingScripts] = useState(false);
   const toxoidEngineRef = useRef<any>(null);
 
   console.log('[CodeEditorTab] Render - currentGame exists:', !!currentGame);
   console.log('[CodeEditorTab] Render - currentGame scripts length:', currentGame?.scripts?.length || 0);
+  console.log('[CodeEditorTab] Render - isInitializing:', isInitializing);
+  console.log('[CodeEditorTab] Render - isLoading:', isLoading);
   console.log('[CodeEditorTab] Render - selectedScriptIndex:', selectedScriptIndex);
 
   // Default Toxoid script (moved above useEffect to fix reference issue)
@@ -391,13 +394,21 @@ Toxoid.System.create("PlayerMovement", "Position, Player", Toxoid.Phases.ON_UPDA
 
 console.log("Game script loaded successfully!");`;
 
-  // Ensure we have at least one script
+  // Ensure we have at least one script - but only after initialization is complete
   useEffect(() => {
     console.log('[CodeEditorTab] useEffect - currentGame:', !!currentGame);
     console.log('[CodeEditorTab] useEffect - scripts length:', currentGame?.scripts?.length || 0);
+    console.log('[CodeEditorTab] useEffect - isInitializing:', isInitializing);
+    console.log('[CodeEditorTab] useEffect - isLoading:', isLoading);
     
-    if (currentGame && Array.isArray(currentGame.scripts) && currentGame.scripts.length === 0) {
+    // Only add default script if we're not initializing/loading and have no scripts
+    if (currentGame && 
+        !isInitializing && 
+        !isLoading && 
+        Array.isArray(currentGame.scripts) && 
+        currentGame.scripts.length === 0) {
       console.log('[CodeEditorTab] Adding default script...');
+      setIsLoadingScripts(true);
       addGameScript({
         name: 'Main Script',
         javascript_code: defaultCode,
@@ -407,8 +418,9 @@ console.log("Game script loaded successfully!");`;
         execution_order: 0,
         dependencies: []
       });
+      setIsLoadingScripts(false);
     }
-  }, [currentGame?.id, currentGame?.scripts?.length, addGameScript]);
+  }, [currentGame?.id, currentGame?.scripts?.length, isInitializing, isLoading, addGameScript]);
 
   const currentScript = currentGame?.scripts[selectedScriptIndex] || null;
   console.log('[CodeEditorTab] Current script exists:', !!currentScript);
@@ -461,11 +473,14 @@ console.log("Game script loaded successfully!");`;
     [currentScript, selectedScriptIndex, updateGameScript],
   );
 
-  if (!currentGame) {
+  // Show loading state during initialization or when game doesn't exist
+  if (!currentGame || isInitializing || isLoading || isLoadingScripts) {
     const loadingMessage = isInitializing ? 
       'Initializing game from template...' : 
       isLoading ? 
       'Loading game data...' : 
+      isLoadingScripts ?
+      'Loading scripts...' :
       'Preparing Code Editor...';
     
     return (

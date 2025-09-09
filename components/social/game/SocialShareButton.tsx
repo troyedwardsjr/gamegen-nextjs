@@ -112,7 +112,7 @@ export function SocialShareButton({
     if (!currentUserId || !game) return;
 
     try {
-      const { error } = await (supabase as any).from("social_shares").insert({
+      const { error } = await supabase.from("social_shares").insert({
         user_id: currentUserId,
         game_id: game.id,
         share_type: shareType,

@@ -1,0 +1,16 @@
+[0;34mINFO: === Supabase Migration Deployment Script ===[0m
+[0;34mINFO: Project: ajwskzlxlvhkhlbedtrg[0m
+[0;34mINFO: Log file: deployment_20250909_062921.log[0m
+[0;34mINFO: Timestamp: Tue Sep  9 06:29:21 EDT 2025[0m
+[0;34mINFO: Checking prerequisites...[0m
+[0;32mSUCCESS: Prerequisites check passed[0m
+[0;34mINFO: Testing API connectivity...[0m
+[0;32mSUCCESS: API connectivity test passed[0m
+[0;34mINFO: Project name: GameGen[0m
+[0;34mINFO: Project status: ACTIVE_HEALTHY[0m
+[0;34mINFO: Creating backup checkpoint (this would be implemented with pg_dump in production)[0m
+[0;34mINFO: Starting migration deployment...[0m
+[0;34mINFO: Found 31 migration files[0m
+[0;34mINFO: Processing migration 1/31: 20250109120000_create_user_activities_table.sql[0m
+[0;34mINFO: Executing migration: 20250109120000_create_user_activities_table.sql[0m
+[0;31mERROR: Migration failed: 20250109120000_create_user_activities_table.sql. HTTP code: 201, Response: [][0m

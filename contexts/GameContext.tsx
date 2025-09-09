@@ -432,6 +432,9 @@ console.log("Game initialized!");`,
       const scripts = templateScript ? [templateScript] : [];
       
       console.log('[GameContext] Template scripts to include:', scripts.length);
+      if (scripts.length > 0) {
+        console.log('[GameContext] First script name:', scripts[0].name);
+      }
       
       // Create game with template data if available
       createGame({
@@ -468,7 +471,11 @@ console.log("Game initialized!");`,
         },
         scripts,
         assets: []
-      }).finally(() => {
+      }).then((gameData) => {
+        console.log('[GameContext] Game creation completed with scripts:', gameData?.scripts?.length || 0);
+        setIsInitializing(false);
+      }).catch((error) => {
+        console.error('[GameContext] Game creation failed:', error);
         setIsInitializing(false);
       });
     }

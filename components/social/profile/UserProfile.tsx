@@ -113,7 +113,7 @@ export function UserProfile({
             // Set a minimal profile data for new users
             setProfileData({
               id: userId,
-              username: null,
+              username: `user_${userId.slice(0, 8)}`, // Generate a temporary username
               display_name: null,
               bio: null,
               avatar_url: null,
