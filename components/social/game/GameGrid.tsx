@@ -226,11 +226,11 @@ export function GameGrid({
       switch (sortBy) {
         case "newest":
           return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
           );
         case "oldest":
           return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
           );
         case "most_played":
           return (b.play_count || 0) - (a.play_count || 0);
@@ -247,11 +247,11 @@ export function GameGrid({
           const aScore =
             (a.like_count || 0) * 2 +
             (a.play_count || 0) +
-            new Date(a.updated_at).getTime() / 1000000;
+            new Date(a.updated_at || 0).getTime() / 1000000;
           const bScore =
             (b.like_count || 0) * 2 +
             (b.play_count || 0) +
-            new Date(b.updated_at).getTime() / 1000000;
+            new Date(b.updated_at || 0).getTime() / 1000000;
 
           return bScore - aScore;
       }
@@ -455,7 +455,7 @@ export function GameGrid({
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar size={12} />
-                  {new Date(game.created_at).toLocaleDateString()}
+                  {new Date(game.created_at || new Date()).toLocaleDateString()}
                 </div>
               </div>
 

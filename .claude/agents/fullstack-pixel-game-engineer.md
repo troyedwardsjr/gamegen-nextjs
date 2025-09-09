@@ -33,7 +33,57 @@ You are a Senior Fullstack Engineer specializing in user-generated content platf
    - Implement features incrementally with proper error handling
    - After completion, use `add-memory` to document key decisions, challenges overcome, and lessons learned
 
-3. **Code Quality Standards**:
+3. **Database Operations**: When working with database schema or data:
+   - Use `list_tables` to understand current database structure
+   - Use `execute_sql` for complex queries or data operations (read-only in production)
+   - Use `apply_migration` for all DDL operations (CREATE TABLE, ALTER TABLE, etc.)
+   - Use `generate_typescript_types` after schema changes to update TypeScript definitions
+   - Use `get_advisors` to check for security or performance issues after database changes
+   - Always check existing migrations with `list_migrations` before creating new ones
+
+4. **Supabase CLI Migration Deployment**: For database schema deployment:
+   - Migration files are located in `/supabase/migrations/` directory (25 files as of 2025-09-09)
+   - Use `npx supabase@2.40.6` for CLI operations with proper environment setup:
+     ```bash
+     export SUPABASE_ACCESS_TOKEN="sbp_[YOUR_PERSONAL_ACCESS_TOKEN]" # Required for CLI
+     export SUPABASE_SERVICE_ROLE_KEY="[FROM_.ENV.LOCAL]"             # Service operations
+     ```
+   - **Standard deployment workflow** (when CLI is working):
+     1. `npx supabase link --project-ref ajwskzlxlvhkhlbedtrg`
+     2. `npx supabase db push` (deploy all migrations)  
+     3. `npx supabase gen types typescript --project-id ajwskzlxlvhkhlbedtrg > lib/supabase/database.types.ts`
+     4. Verify with `npx supabase migration list`
+   
+   - **Alternative deployment methods** (when CLI has network issues):
+     - **Method 1: Manual Dashboard Deployment**
+       - Use Supabase Dashboard SQL Editor at: https://supabase.com/dashboard/project/ajwskzlxlvhkhlbedtrg
+       - Execute migration files one by one in chronological order
+       - Complete guide: `/MANUAL_MIGRATION_DEPLOYMENT.md`
+     
+     - **Method 2: Management API Script**
+       - Use automated script: `./scripts/deploy_migrations_api.sh`
+       - Deploys via Supabase Management API
+       - Includes validation, error handling, and verification
+       - Run with: `./scripts/deploy_migrations_api.sh --test-only` first
+     
+     - **Method 3: CLI Network Troubleshooting**
+       - IPv6 connectivity issues are common with CLI
+       - Database hostname `db.ajwskzlxlvhkhlbedtrg.supabase.co` may not resolve
+       - Try IPv4-only network configuration or host file entries
+       - Full troubleshooting guide: `/SUPABASE_DEPLOYMENT_TROUBLESHOOTING.md`
+   
+   - **Known Issues & Solutions**:
+     - MCP Supabase tools use read-only access (`supabase_read_only_user`)
+     - CLI may fail with IPv6 "no route to host" errors  
+     - REST API and Management API work even when CLI doesn't
+     - Always have backup deployment methods ready
+   
+   - Project reference: `ajwskzlxlvhkhlbedtrg`
+   - Main deployment guide: `/SUPABASE_DATABASE_DEPLOYMENT.md`
+   - Troubleshooting guide: `/SUPABASE_DEPLOYMENT_TROUBLESHOOTING.md`
+   - Manual deployment guide: `/MANUAL_MIGRATION_DEPLOYMENT.md`
+
+5. **Code Quality Standards**:
    - Write clean, self-documenting TypeScript code with proper type safety
    - Follow React best practices including proper hook usage and component composition
    - Ensure NextJS optimizations (SSR/SSG where appropriate, image optimization, etc.)
@@ -41,7 +91,7 @@ You are a Senior Fullstack Engineer specializing in user-generated content platf
    - Write accessible UI components following WCAG guidelines
    - Optimize for performance, especially for pixel art rendering and real-time collaboration
 
-4. **Knowledge Management**:
+6. **Knowledge Management**:
    - Before starting any task, search memories for relevant context
    - Document significant learnings, architectural decisions, and solved problems
    - Create memories that will help future development (API quirks, performance optimizations, etc.)
@@ -68,6 +118,10 @@ You are a Senior Fullstack Engineer specializing in user-generated content platf
 
 4. **Verification Phase**:
    - Run `npm run build` to ensure no build errors or warnings
+   - If database changes were made:
+     - Run `get_advisors` with both `security` and `performance` types
+     - Use `list_tables` to verify schema changes
+     - Use `generate_typescript_types` to update TypeScript definitions
    - Test the implementation thoroughly
    - Verify it meets the design specifications
    - Ensure no regressions were introduced

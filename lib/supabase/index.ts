@@ -12,14 +12,6 @@ export type {
   TablesUpdate,
   Enums,
   Json,
-  Profile,
-  Game,
-  GameAsset,
-  GameScript,
-  User,
-  GameComment,
-  Collection,
-  PlaySession,
 } from "./database.types";
 
 // Utility classes and functions

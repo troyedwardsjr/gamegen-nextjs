@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
+import { Divider } from "@heroui/divider";
 
 import { useAuth } from "@/lib/auth/context";
+import { SOCIAL_PROVIDERS } from "@/lib/auth/social";
 import {
   EyeIcon,
   EyeOffIcon,
@@ -24,7 +26,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
 
   const router = useRouter();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithProvider } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +66,20 @@ export default function AuthPage() {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSocialAuth = async (provider: string) => {
+    setError("");
+    try {
+      const result = await signInWithProvider(provider);
+      if (!result.success) {
+        setError(result.error || `${provider} authentication failed`);
+      }
+      // Note: On success, the user will be redirected to the OAuth provider
+      // and then back to our callback URL
+    } catch (err) {
+      setError(`${provider} authentication failed. Please try again.`);
     }
   };
 
@@ -229,6 +245,52 @@ export default function AuthPage() {
                   : "Create Account"}
             </Button>
           </form>
+
+          {/* Social Authentication */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Divider className="w-full border-white/20" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 text-gray-300">
+                  or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-3">
+              {/* Discord Button */}
+              <Button
+                className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-[#5865F2]/25 transition-all duration-300 flex items-center justify-center gap-3"
+                data-testid="discord-auth-button"
+                onClick={() => handleSocialAuth("discord")}
+              >
+                <span className="text-xl">🎮</span>
+                Continue with Discord
+              </Button>
+
+              {/* Google Button */}
+              <Button
+                className="w-full bg-white hover:bg-gray-50 text-gray-900 font-semibold py-3 rounded-xl shadow-lg hover:shadow-gray-500/25 transition-all duration-300 flex items-center justify-center gap-3 border border-gray-200"
+                data-testid="google-auth-button"
+                onClick={() => handleSocialAuth("google")}
+              >
+                <span className="text-xl">🔍</span>
+                Continue with Google
+              </Button>
+
+              {/* GitHub Button */}
+              <Button
+                className="w-full bg-[#171515] hover:bg-black text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-gray-500/25 transition-all duration-300 flex items-center justify-center gap-3"
+                data-testid="github-auth-button"
+                onClick={() => handleSocialAuth("github")}
+              >
+                <span className="text-xl">⚡</span>
+                Continue with GitHub
+              </Button>
+            </div>
+          </div>
 
           {/* Switch between Login/Signup */}
           <div className="text-center mt-8">

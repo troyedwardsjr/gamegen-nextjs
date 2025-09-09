@@ -267,7 +267,7 @@ export function UserProfile({
                   <div className="flex items-center gap-1">
                     <CalendarDays size={14} />
                     Joined{" "}
-                    {new Date(profileData.created_at).toLocaleDateString(
+                    {new Date(profileData.created_at || new Date()).toLocaleDateString(
                       "en-US",
                       {
                         year: "numeric",

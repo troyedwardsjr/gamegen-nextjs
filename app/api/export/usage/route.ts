@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userTier: SubscriptionTier = profile.subscription_tier;
+    const userTier: SubscriptionTier = (profile.subscription_tier as SubscriptionTier) || 'free';
 
     // Get today's usage
     const today = new Date().toISOString().split("T")[0];

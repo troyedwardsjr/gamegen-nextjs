@@ -33,7 +33,7 @@ export async function GET() {
       );
     }
 
-    const userTier: SubscriptionTier = profile.subscription_tier;
+    const userTier: SubscriptionTier = (profile.subscription_tier as SubscriptionTier) || 'free';
     const isActive =
       profile.subscription_status === "active" || userTier === "free";
 
