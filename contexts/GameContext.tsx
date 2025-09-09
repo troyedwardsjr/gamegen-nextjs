@@ -156,20 +156,48 @@ export function GameProvider({ children, gameId: propGameId }: GameProviderProps
   // Create default game if none provided and user is authenticated
   useEffect(() => {
     if (user && !gameId && !currentGame && !isLoading) {
+      // Check for URL parameters from creator page
+      const template = searchParams.get('template');
+      const title = searchParams.get('title');
+      
+      // Create game with template data if available
       createGame({
-        title: 'New Game',
-        description: 'A new game created with GameGen',
-        game_data: {},
+        title: title || 'New Game',
+        description: template ? `A ${template} game created with GameGen` : 'A new game created with GameGen',
+        game_data: {
+          template,
+          // Add template-specific configurations
+          ...(template === 'platformer' && {
+            physics: { gravity: 9.8, friction: 0.1 },
+            controls: { jumpHeight: 10, moveSpeed: 5 }
+          }),
+          ...(template === 'puzzle' && {
+            gridSize: 8,
+            moveLimit: 100
+          }),
+          ...(template === 'shooter' && {
+            playerSpeed: 7,
+            bulletSpeed: 15
+          }),
+          ...(template === 'rpg' && {
+            startingLevel: 1,
+            skillPoints: 10
+          }),
+          ...(template === 'racing' && {
+            trackCount: 3,
+            maxSpeed: 200
+          })
+        },
         settings: {
-          genre: 'platformer',
-          tags: [],
+          genre: template || 'platformer',
+          tags: template ? [template] : [],
           visibility: 'private'
         },
         scripts: [],
         assets: []
       });
     }
-  }, [user, gameId, currentGame, isLoading, createGame]);
+  }, [user, gameId, currentGame, isLoading, createGame, searchParams]);
 
   const contextValue: GameContextType = {
     // State

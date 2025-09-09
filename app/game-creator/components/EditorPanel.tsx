@@ -276,6 +276,22 @@ const MapEditorTab = () => {
                   className="w-full"
                   size="sm"
                   variant="glass"
+                  onClick={() => {
+                    // Trigger file input for tileset import
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.multiple = false;
+                    input.onchange = (e) => {
+                      const files = (e.target as HTMLInputElement).files;
+                      if (files && files.length > 0) {
+                        console.log('Importing tileset:', files[0]);
+                        // TODO: Implement actual tileset import
+                        alert('Tileset import functionality coming soon!');
+                      }
+                    };
+                    input.click();
+                  }}
                 >
                   Import Tileset
                 </GlassmorphicButton>
@@ -283,6 +299,11 @@ const MapEditorTab = () => {
                   className="w-full"
                   size="sm"
                   variant="glass-ghost"
+                  onClick={() => {
+                    console.log('Generating tiles with AI');
+                    // TODO: Implement AI tile generation
+                    alert('AI tile generation functionality coming soon!');
+                  }}
                 >
                   Generate Tiles
                 </GlassmorphicButton>

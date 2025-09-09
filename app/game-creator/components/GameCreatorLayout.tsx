@@ -26,7 +26,7 @@ type MobileView = "chat" | "editor" | "assets";
 
 export function GameCreatorLayout() {
   // Game context for save status and data management
-  const { currentGame, forceSave, hasUnsavedChanges } = useGame();
+  const { currentGame, forceSave, hasUnsavedChanges, saveStatus, isSaving, lastSaved, error } = useGame();
   
   // Panel state management
   const [panelState, setPanelState] = useState<PanelState>({
@@ -282,6 +282,7 @@ export function GameCreatorLayout() {
                 variant={hasUnsavedChanges ? "gaming" : "glass-ghost"}
                 onClick={() => forceSave()}
                 disabled={!hasUnsavedChanges}
+                className={hasUnsavedChanges ? "animate-pulse" : ""}
               >
                 {hasUnsavedChanges ? "Save Changes" : "Saved"} (Ctrl+S)
               </GlassmorphicButton>
@@ -365,6 +366,56 @@ export function GameCreatorLayout() {
           <AssetsPanel />
         </ResizablePanel>
       </div>
+
+      {/* Auto-Save Status Toast */}
+      <AnimatePresence>
+        {isSaving && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-4 right-4 z-50"
+            exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
+          >
+            <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="px-4 py-2">
+              <div className="flex items-center space-x-2 text-sm">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 text-yellow-400"
+                >
+                  💾
+                </motion.div>
+                <span className="text-white/90">Auto-saving...</span>
+              </div>
+            </GlassmorphicCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Save Success Toast */}
+      <AnimatePresence>
+        {saveStatus === 'saved' && lastSaved && Date.now() - lastSaved.getTime() < 3000 && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-4 right-4 z-50"
+            exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
+            onAnimationComplete={() => {
+              // Auto-hide after animation completes
+              setTimeout(() => {
+                // The AnimatePresence condition will handle hiding it
+              }, 2000);
+            }}
+          >
+            <GlassmorphicCard {...GameGenCardPresets.floatingPanel} className="px-4 py-2">
+              <div className="flex items-center space-x-2 text-sm">
+                <div className="w-4 h-4 text-green-400">✅</div>
+                <span className="text-white/90">Changes saved!</span>
+              </div>
+            </GlassmorphicCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
