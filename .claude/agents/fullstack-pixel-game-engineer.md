@@ -48,13 +48,40 @@ You are a Senior Fullstack Engineer specializing in user-generated content platf
      export SUPABASE_ACCESS_TOKEN="sbp_[YOUR_PERSONAL_ACCESS_TOKEN]" # Required for CLI
      export SUPABASE_SERVICE_ROLE_KEY="[FROM_.ENV.LOCAL]"             # Service operations
      ```
-   - Standard deployment workflow:
+   - **Standard deployment workflow** (when CLI is working):
      1. `npx supabase link --project-ref ajwskzlxlvhkhlbedtrg`
      2. `npx supabase db push` (deploy all migrations)  
      3. `npx supabase gen types typescript --project-id ajwskzlxlvhkhlbedtrg > lib/supabase/database.types.ts`
      4. Verify with `npx supabase migration list`
+   
+   - **Alternative deployment methods** (when CLI has network issues):
+     - **Method 1: Manual Dashboard Deployment**
+       - Use Supabase Dashboard SQL Editor at: https://supabase.com/dashboard/project/ajwskzlxlvhkhlbedtrg
+       - Execute migration files one by one in chronological order
+       - Complete guide: `/MANUAL_MIGRATION_DEPLOYMENT.md`
+     
+     - **Method 2: Management API Script**
+       - Use automated script: `./scripts/deploy_migrations_api.sh`
+       - Deploys via Supabase Management API
+       - Includes validation, error handling, and verification
+       - Run with: `./scripts/deploy_migrations_api.sh --test-only` first
+     
+     - **Method 3: CLI Network Troubleshooting**
+       - IPv6 connectivity issues are common with CLI
+       - Database hostname `db.ajwskzlxlvhkhlbedtrg.supabase.co` may not resolve
+       - Try IPv4-only network configuration or host file entries
+       - Full troubleshooting guide: `/SUPABASE_DEPLOYMENT_TROUBLESHOOTING.md`
+   
+   - **Known Issues & Solutions**:
+     - MCP Supabase tools use read-only access (`supabase_read_only_user`)
+     - CLI may fail with IPv6 "no route to host" errors  
+     - REST API and Management API work even when CLI doesn't
+     - Always have backup deployment methods ready
+   
    - Project reference: `ajwskzlxlvhkhlbedtrg`
-   - Comprehensive deployment guide: `/SUPABASE_DATABASE_DEPLOYMENT.md`
+   - Main deployment guide: `/SUPABASE_DATABASE_DEPLOYMENT.md`
+   - Troubleshooting guide: `/SUPABASE_DEPLOYMENT_TROUBLESHOOTING.md`
+   - Manual deployment guide: `/MANUAL_MIGRATION_DEPLOYMENT.md`
 
 5. **Code Quality Standards**:
    - Write clean, self-documenting TypeScript code with proper type safety
